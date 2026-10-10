@@ -10,10 +10,6 @@ import remarkBreaks from 'remark-breaks'
 import type { PluggableList } from 'unified'
 
 import { cn } from 'weimo-ui-core/lib/utils'
-import {
-  normalizeCenteredQuoteSyntax,
-  WEIMO_CENTERED_QUOTE_MARKER,
-} from '../markdown/centered-quote'
 import { markdownSanitizeSchema } from '../markdown/sanitize'
 
 import 'weimo-ui-markdown/styles/markdown-content.css'
@@ -54,73 +50,6 @@ function MarkdownOrderedList({ children, start }: ComponentPropsWithoutRef<'ol'>
   )
 }
 
-function stripCenteredQuoteMarker(paragraph: MarkdownAstNode): boolean {
-  const children = paragraph.children
-
-  if (!children) return false
-
-  let didStrip = false
-  const nextChildren: MarkdownAstNode[] = []
-
-  for (const child of children) {
-    if (!didStrip && child.type === 'text' && typeof child.value === 'string') {
-      const markerIndex = child.value.indexOf(WEIMO_CENTERED_QUOTE_MARKER)
-
-      if (markerIndex >= 0) {
-        const nextValue = `${child.value.slice(0, markerIndex)}${child.value.slice(
-          markerIndex + WEIMO_CENTERED_QUOTE_MARKER.length,
-        )}`.replace(/^\s+/, '')
-
-        didStrip = true
-
-        if (nextValue) {
-          nextChildren.push({ ...child, value: nextValue })
-        }
-
-        continue
-      }
-    }
-
-    nextChildren.push(child)
-  }
-
-  if (didStrip) {
-    paragraph.children = nextChildren
-  }
-
-  return didStrip
-}
-
-function visitMarkdownAst(node: MarkdownAstNode): void {
-  if (node.type === 'blockquote' && node.children) {
-    const firstParagraph = node.children.find((child) => child.type === 'paragraph')
-
-    if (firstParagraph && stripCenteredQuoteMarker(firstParagraph)) {
-      node.data = {
-        ...node.data,
-        hProperties: {
-          ...node.data?.hProperties,
-          'data-weimo-centered': 'true',
-        },
-      }
-
-      if (firstParagraph.children?.length === 0) {
-        node.children = node.children.filter((child) => child !== firstParagraph)
-      }
-    }
-  }
-
-  for (const child of node.children ?? []) {
-    visitMarkdownAst(child)
-  }
-}
-
-function markCenteredBlockquotes() {
-  return (tree: MarkdownAstNode) => {
-    visitMarkdownAst(tree)
-  }
-}
-
 function unwrapInlineCodeNodes(node: MarkdownAstNode): void {
   for (const child of node.children ?? []) {
     if (child.type === 'inlineCode') {
@@ -139,24 +68,14 @@ function unwrapInlineCodeRemarkPlugin() {
 
 const simpleRemarkPlugins: PluggableList = [
   unwrapInlineCodeRemarkPlugin,
-  markCenteredBlockquotes,
   remarkBreaks,
 ]
 const simpleRehypePlugins: PluggableList = [rehypeRaw, [rehypeSanitize, markdownSanitizeSchema]]
 
 const baseMarkdownComponents: Components = {
-  blockquote({ children, node }) {
-    const centered =
-      (node?.properties?.['data-weimo-centered'] ??
-        node?.properties?.dataWeimoCentered) === 'true'
-
+  blockquote({ children }) {
     return (
-      <blockquote
-        className={cn(
-          'weimo-card-markdown__blockquote',
-          centered && 'weimo-card-markdown__blockquote--centered',
-        )}
-      >
+      <blockquote className="weimo-card-markdown__blockquote">
         {children}
       </blockquote>
     )
@@ -277,7 +196,7 @@ export const MdRenderSimple = forwardRef<HTMLDivElement, MdRenderSimpleProps>(fu
         remarkRehypeOptions={markdownRemarkRehypeOptions}
         remarkPlugins={simpleRemarkPlugins}
       >
-        {normalizeCenteredQuoteSyntax(content)}
+        {content}
       </ReactMarkdown>
     </div>
   )

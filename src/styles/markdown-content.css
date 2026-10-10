@@ -69,20 +69,6 @@
     text-align: left;
   }
 
-  .weimo-card-markdown__blockquote--centered,
-  .md-editor__content.weimo-markdown-content blockquote[data-weimo-centered="true"] {
-    text-align: center;
-  }
-
-  .weimo-card-markdown__blockquote--centered .weimo-card-markdown__p,
-  .md-editor__content.weimo-markdown-content blockquote[data-weimo-centered="true"] p {
-    text-align: center;
-  }
-
-  .weimo-markdown-content__centered-quote-marker {
-    display: none;
-  }
-
   .weimo-card-markdown__strong,
   .md-editor__content.weimo-markdown-content strong {
     font-weight: 650;

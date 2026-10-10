@@ -20,7 +20,7 @@ const mdEditorSimpleSample: MdEditorSimpleContent = {
     {
       type: 'heading',
       attrs: { level: 1 },
-      content: [{ type: 'text', text: '春夜' }],
+      content: [{ type: 'text', text: '一级标题' }],
     },
     {
       type: 'paragraph',
