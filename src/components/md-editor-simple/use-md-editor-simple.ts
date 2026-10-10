@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useEditor } from '@tiptap/react'
-import type { Editor, JSONContent } from '@tiptap/core'
+import {
+  isAndroid,
+  isSafari,
+  isiOS,
+  type Editor,
+  type JSONContent,
+} from '@tiptap/core'
 
-import type { MdEditorFocusPosition } from '../md-editor/md-editor-types'
-import { focusEditor } from '../md-editor/use-md-editor'
 import { createMdEditorSimpleExtensions } from './md-editor-simple-extensions'
 
 export type MdEditorSimpleContent = JSONContent
+export type MdEditorSimpleFocusPosition = 'start' | 'end'
 export type MdEditorSimpleBlockFormat = 'paragraph' | 'heading' | 'list' | 'quote'
 export type MdEditorSimpleSelectionFormat = Readonly<{
   block: MdEditorSimpleBlockFormat
@@ -15,7 +20,7 @@ export type MdEditorSimpleSelectionFormat = Readonly<{
 
 export type UseMdEditorSimpleProps = {
   autoFocus?: boolean
-  autoFocusPosition?: MdEditorFocusPosition
+  autoFocusPosition?: MdEditorSimpleFocusPosition
   defaultValue?: MdEditorSimpleContent
   disabled?: boolean
   onCancel?: () => void
@@ -29,6 +34,41 @@ export type UseMdEditorSimpleProps = {
 const EMPTY_SIMPLE_DOCUMENT: MdEditorSimpleContent = {
   type: 'doc',
   content: [{ type: 'paragraph' }],
+}
+
+function focusEditor(editor: Editor, position?: MdEditorSimpleFocusPosition) {
+  const needsNativeFocusBeforeFrame = isSafari() || isiOS() || isAndroid()
+
+  if (!needsNativeFocusBeforeFrame) {
+    editor.commands.focus(position)
+    return
+  }
+
+  if (position) {
+    editor.commands.setTextSelection(position === 'start' ? 0 : editor.state.doc.content.size)
+  }
+
+  const view = editor.view
+  const dom = view.dom as HTMLElement
+
+  if (isiOS() || isAndroid()) {
+    dom.focus()
+  } else {
+    try {
+      dom.focus({ preventScroll: true })
+    } catch {
+      dom.focus()
+    }
+  }
+
+  const ownerWindow = dom.ownerDocument.defaultView ?? window
+
+  ownerWindow.requestAnimationFrame(() => {
+    if (editor.isDestroyed) return
+
+    view.focus()
+    editor.commands.scrollIntoView()
+  })
 }
 
 function serializeContent(content: MdEditorSimpleContent) {
@@ -212,7 +252,7 @@ export function useMdEditorSimple({
     emitContent(editor.getJSON(), editor.isEmpty)
   }, [disabled, editor, emitContent])
 
-  const focus = useCallback((position?: MdEditorFocusPosition) => {
+  const focus = useCallback((position?: MdEditorSimpleFocusPosition) => {
     if (disabled) return
 
     if (editor) focusEditor(editor, position)

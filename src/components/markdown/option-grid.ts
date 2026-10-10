@@ -13,7 +13,7 @@ export type OptionGridMeasurementOptions = {
 }
 
 const OPTION_GRID_BLOCK_CONTENT_SELECTOR =
-  'br, ul, ol, pre, table, figure, img, .katex-display, [data-type="block-math"]'
+  'br, ul, ol, pre, table, figure, img'
 const OPTION_GRID_INLINE_SAFETY_PX = 1
 
 export function hasOptionGridBlockContent(

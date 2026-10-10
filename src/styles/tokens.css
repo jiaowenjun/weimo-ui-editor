@@ -28,8 +28,6 @@
   --md-table-border-radius: 8px;
   --md-table-font-size: 13px;
   --md-table-header-color: hsl(0 0% 28%);
-  --md-math-border-radius: 8px;
-  --md-math-hover-bg: hsl(40 12% 96%);
   --md-selection-bg: hsl(0 0% 15% / 0.2);
 }
 
@@ -45,6 +43,5 @@
   --md-table-frame-border-color: hsl(0 0% 28%);
   --md-table-cell-border-color: hsl(0 0% 28%);
   --md-table-header-color: hsl(0 0% 64%);
-  --md-math-hover-bg: hsl(0 0% 20%);
   --md-selection-bg: hsl(0 0% 96% / 0.2);
 }

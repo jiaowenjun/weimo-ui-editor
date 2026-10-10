@@ -2,32 +2,41 @@ import { forwardRef, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { EditorContent } from '@tiptap/react'
 
 import { cn } from 'weimo-ui-core/lib/utils'
-import type { MdEditorBaseProps, MdEditorFocusPosition } from '../md-editor/md-editor-types'
 import {
   useMdEditorSimple,
   type MdEditorSimpleBlockFormat,
   type MdEditorSimpleContent,
+  type MdEditorSimpleFocusPosition,
   type MdEditorSimpleSelectionFormat,
 } from './use-md-editor-simple'
 
-import 'weimo-ui-markdown/styles/md-editor.css'
+import 'weimo-ui-markdown/styles/md-editor-simple.css'
 
 export type {
   MdEditorSimpleBlockFormat,
   MdEditorSimpleContent,
+  MdEditorSimpleFocusPosition,
   MdEditorSimpleSelectionFormat,
 } from './use-md-editor-simple'
 
-export type MdEditorSimpleProps = MdEditorBaseProps & {
+export type MdEditorSimpleProps = {
+  autoFocus?: boolean
+  autoFocusPosition?: MdEditorSimpleFocusPosition
+  className?: string
   value?: MdEditorSimpleContent
   defaultValue?: MdEditorSimpleContent
+  disabled?: boolean
+  editorClassName?: string
+  onCancel?: () => void
   onChange?: (content: MdEditorSimpleContent) => void
+  onContentHeightChange?: (height: number) => void
   onSelectionFormatChange?: (format: MdEditorSimpleSelectionFormat | null) => void
   onSave?: (content: MdEditorSimpleContent) => void
+  placeholder?: string
 }
 export type MdEditorSimpleHandle = {
   clear: () => void
-  focus: (position?: MdEditorFocusPosition) => void
+  focus: (position?: MdEditorSimpleFocusPosition) => void
   getContent: () => MdEditorSimpleContent
   getContentHeight: () => number
   getSelectionFormat: () => MdEditorSimpleSelectionFormat | null

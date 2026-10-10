@@ -1,5 +1,3 @@
-@import "katex/dist/katex.min.css";
-
 @layer components {
   .weimo-markdown-content {
     min-width: 0;
@@ -17,7 +15,7 @@
     container-type: inline-size;
   }
 
-  .weimo-markdown-content :where(p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, pre, table, hr, figure, .tableWrapper, .katex-display, .tiptap-mathematics-render[data-type="block-math"]) {
+  .weimo-markdown-content :where(p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, pre, table, hr, figure, .tableWrapper) {
     margin: 0;
   }
 
@@ -384,42 +382,6 @@
     border-bottom: 0;
   }
 
-  .weimo-markdown-content .tiptap-mathematics-render {
-    display: inline-block;
-    border-radius: var(--md-math-border-radius);
-  }
-
-  .weimo-markdown-content .tiptap-mathematics-render:not([data-type="block-math"]) {
-    padding: 0;
-    vertical-align: baseline;
-  }
-
-  .weimo-markdown-content .tiptap-mathematics-render--editable {
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-
-  .weimo-markdown-content .tiptap-mathematics-render--editable:hover {
-    background: var(--md-math-hover-bg);
-  }
-
-  .weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"],
-  .weimo-markdown-content .katex-display {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  .weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"] {
-    padding: 0;
-    text-align: center;
-  }
-
-  .weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"] .katex-display {
-    margin: 0;
-  }
-
   .weimo-markdown-content > :is(.weimo-card-markdown__p,
   .weimo-card-markdown__heading,
   .weimo-card-markdown__blockquote,
@@ -443,9 +405,7 @@
   table,
   hr,
   figure,
-  img,
-  .katex-display,
-  .tiptap-mathematics-render[data-type="block-math"]) + :is(.weimo-card-markdown__p,
+  img) + :is(.weimo-card-markdown__p,
   .weimo-card-markdown__heading,
   .weimo-card-markdown__blockquote,
   .weimo-card-markdown__list,
@@ -468,9 +428,7 @@
   table,
   hr,
   figure,
-  img,
-  .katex-display,
-  .tiptap-mathematics-render[data-type="block-math"]) {
+  img) {
     margin-top: 1em;
   }
 
@@ -504,38 +462,4 @@
       margin-top: 1em;
     }
   }
-}
-
-.weimo-markdown-content > .katex-display,
-.weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"] .katex-display {
-  margin: 0;
-}
-
-.weimo-markdown-content > :is(.weimo-card-markdown__p,
-.weimo-card-markdown__heading,
-.weimo-card-markdown__blockquote,
-.weimo-card-markdown__list,
-.weimo-card-markdown__list-image-pair,
-.weimo-card-markdown__pre,
-.weimo-card-markdown__scroll-block,
-.weimo-card-markdown__hr,
-.tableWrapper,
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-blockquote,
-ul,
-ol,
-pre,
-table,
-hr,
-figure,
-img,
-.katex-display,
-.tiptap-mathematics-render[data-type="block-math"]) + .katex-display {
-  margin-top: 1em;
 }

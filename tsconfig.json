@@ -9,10 +9,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "paths": {
-      "weimo-ui-markdown/components/md-editor": ["./src/components/md-editor/index.tsx"],
-      "weimo-ui-markdown/components/md-render": ["./src/components/md-render/md-render.tsx"]
-    },
     "skipLibCheck": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

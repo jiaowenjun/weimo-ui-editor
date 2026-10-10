@@ -24,33 +24,13 @@
     "LICENSE"
   ],
   "exports": {
-    "./components/deferred-md-editor-toolbar": {
-      "types": "./dist/components/deferred-md-editor-toolbar.d.ts",
-      "import": "./dist/components/deferred-md-editor-toolbar.js"
-    },
-    "./components/md-editor": {
-      "types": "./dist/components/md-editor/index.d.ts",
-      "import": "./dist/components/md-editor/index.js"
-    },
     "./components/md-editor-simple": {
       "types": "./dist/components/md-editor-simple/md-editor-simple.d.ts",
       "import": "./dist/components/md-editor-simple/md-editor-simple.js"
     },
-    "./components/md-render": {
-      "types": "./dist/components/md-render/md-render.d.ts",
-      "import": "./dist/components/md-render/md-render.js"
-    },
     "./components/md-render-simple": {
       "types": "./dist/components/md-render-simple/md-render-simple.d.ts",
       "import": "./dist/components/md-render-simple/md-render-simple.js"
-    },
-    "./components/md-view": {
-      "types": "./dist/components/md-view/md-view.d.ts",
-      "import": "./dist/components/md-view/md-view.js"
-    },
-    "./components/math-editor": {
-      "types": "./dist/components/md-editor/math-editor.d.ts",
-      "import": "./dist/components/md-editor/math-editor.js"
     },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
@@ -60,13 +40,9 @@
       "types": "./dist/styles/markdown-content.d.css.ts",
       "default": "./dist/styles/markdown-content.css"
     },
-    "./styles/md-view.css": {
-      "types": "./dist/components/md-view/md-view.d.css.ts",
-      "default": "./dist/components/md-view/md-view.css"
-    },
-    "./styles/md-editor.css": {
-      "types": "./dist/components/md-editor/md-editor.d.css.ts",
-      "default": "./dist/components/md-editor/md-editor.css"
+    "./styles/md-editor-simple.css": {
+      "types": "./dist/components/md-editor-simple/md-editor-simple.d.css.ts",
+      "default": "./dist/components/md-editor-simple/md-editor-simple.css"
     }
   },
   "scripts": {
@@ -82,7 +58,6 @@
   "dependencies": {
     "@tiptap/core": "3.31.4",
     "@tiptap/extension-list": "3.31.4",
-    "@tiptap/extension-mathematics": "3.31.4",
     "@tiptap/extension-placeholder": "3.31.4",
     "@tiptap/extension-table": "3.31.4",
     "@tiptap/extension-table-cell": "3.31.4",
@@ -94,16 +69,13 @@
     "@tiptap/pm": "3.31.4",
     "@tiptap/react": "3.31.4",
     "@tiptap/starter-kit": "3.31.4",
-    "katex": "^0.16.47",
     "lucide-react": "^1.54.0",
     "marked": "^17.0.1",
     "react-markdown": "^10.1.0",
-    "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
     "rehype-sanitize": "^6.0.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5"
