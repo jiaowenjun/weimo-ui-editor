@@ -28,5 +28,6 @@
 .md-style-preview__selection-highlight { padding-block: 0.4em; box-decoration-break: clone; -webkit-box-decoration-break: clone; background: var(--md-selection-bg); }
 .md-style-preview__selection-sample ::selection { background: var(--md-selection-bg); }
 .docs-card-footer { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px; }
+.docs-component-class { margin-left: 6px; color: var(--color-text-subtle); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: 400; }
 .docs-card-footer__result { min-width: 0; flex: 1 1 220px; color: var(--color-text-secondary); font-size: var(--font-size-xs); overflow-wrap: anywhere; }
 @media (max-width: 699px) { .markdown-render-stage, .markdown-editor-viewport { padding: 14px; } }

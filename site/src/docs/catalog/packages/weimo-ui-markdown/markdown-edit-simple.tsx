@@ -144,7 +144,12 @@ function MdEditorSimpleDemo() {
             </GhostIconButton>
           </div>
         }
-        label="简化Markdown编辑器"
+        label={
+          <>
+            Markdown编辑器{' '}
+            <code className="docs-component-class">md-editor</code>
+          </>
+        }
       >
         <div
           className="md-editor-docs-preview"

@@ -7,7 +7,14 @@ import { MarkdownSimpleStylePreview } from './markdown-styles'
 
 function MdRenderSimplePreview() {
   return (
-    <ComponentPreviewCard label="简化Markdown渲染">
+    <ComponentPreviewCard
+      label={
+        <>
+          Markdown渲染{' '}
+          <code className="docs-component-class">md-render</code>
+        </>
+      }
+    >
       <MdRenderSimple aria-label="MdRenderSimple 预览" content={mdRenderSimpleSample} />
     </ComponentPreviewCard>
   )
