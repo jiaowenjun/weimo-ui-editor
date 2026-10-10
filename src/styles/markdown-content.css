@@ -1,0 +1,541 @@
+@import "katex/dist/katex.min.css";
+
+@layer components {
+  .weimo-markdown-content {
+    min-width: 0;
+    overflow-x: clip;
+    overflow-y: visible;
+    color: var(--md-color);
+    font-size: var(--md-font-size);
+    line-height: var(--md-line-height);
+    overflow-wrap: anywhere;
+  }
+
+  .weimo-card-markdown {
+    width: 100%;
+    container-name: weimo-markdown-content;
+    container-type: inline-size;
+  }
+
+  .weimo-markdown-content :where(p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, pre, table, hr, figure, .tableWrapper, .katex-display, .tiptap-mathematics-render[data-type="block-math"]) {
+    margin: 0;
+  }
+
+  .weimo-markdown-content :where(p, li, blockquote, td, th, code, a) {
+    overflow-wrap: anywhere;
+  }
+
+  .weimo-markdown-content > :first-child {
+    margin-top: 0;
+  }
+
+  .weimo-markdown-content > :last-child {
+    margin-bottom: 0;
+  }
+
+  .weimo-card-markdown__p,
+  .md-editor__content.weimo-markdown-content p {
+    margin: 0;
+    color: var(--md-paragraph-color);
+    text-align: justify;
+    text-justify: inter-ideograph;
+  }
+
+  .weimo-card-markdown__heading,
+  .md-editor__content.weimo-markdown-content :where(h1, h2, h3),
+  .md-editor__content.weimo-markdown-content :where(h4, h5, h6) {
+    margin: 0;
+    font-weight: 650;
+    text-align: center;
+  }
+
+  .weimo-card-markdown__heading--h1,
+  .md-editor__content.weimo-markdown-content h1 {
+    color: var(--md-h1-color);
+    font-size: var(--md-h1-font-size);
+    line-height: var(--md-h1-line-height);
+  }
+
+
+  .weimo-card-markdown__blockquote,
+  .md-editor__content.weimo-markdown-content blockquote {
+    margin: 0;
+    padding: 0 var(--md-quote-pad-inline);
+    color: var(--md-quote-color);
+    text-align: left;
+  }
+
+  .weimo-card-markdown__blockquote .weimo-card-markdown__p,
+  .md-editor__content.weimo-markdown-content blockquote p {
+    color: var(--md-quote-color);
+    text-align: left;
+  }
+
+  .weimo-card-markdown__blockquote--centered,
+  .md-editor__content.weimo-markdown-content blockquote[data-weimo-centered="true"] {
+    text-align: center;
+  }
+
+  .weimo-card-markdown__blockquote--centered .weimo-card-markdown__p,
+  .md-editor__content.weimo-markdown-content blockquote[data-weimo-centered="true"] p {
+    text-align: center;
+  }
+
+  .weimo-markdown-content__centered-quote-marker {
+    display: none;
+  }
+
+  .weimo-card-markdown__strong,
+  .md-editor__content.weimo-markdown-content strong {
+    font-weight: 650;
+  }
+
+  .weimo-card-markdown__em,
+  .md-editor__content.weimo-markdown-content em {
+    font-style: italic;
+  }
+
+
+  .weimo-card-markdown__list,
+  .md-editor__content.weimo-markdown-content :where(ul, ol) {
+    margin: 0;
+    padding-left: var(--md-list-indent);
+  }
+
+  .weimo-card-markdown__list--ul,
+  .md-editor__content.weimo-markdown-content ul:not([data-type="taskList"]) {
+    list-style-type: disc;
+  }
+
+  @counter-style weimo-paren-upper-roman {
+    system: extends upper-roman;
+    prefix: "(";
+    suffix: ") ";
+  }
+
+  @counter-style weimo-paren-decimal {
+    system: extends decimal;
+    prefix: "(";
+    suffix: ") ";
+  }
+
+  .weimo-card-markdown__list--ol:not([type]),
+  .md-editor__content.weimo-markdown-content ol:not([type]) {
+    list-style-type: decimal;
+  }
+
+  .weimo-card-markdown__list--ol[data-marker-type="A"],
+  .md-editor__content.weimo-markdown-content ol[data-marker-type="A"] {
+    padding-left: var(--md-list-wide-marker-indent);
+    list-style-type: upper-alpha;
+  }
+
+  .weimo-card-markdown__list--ol[data-option-grid="true"],
+  .md-editor__content.weimo-markdown-content ol[data-option-grid="true"] {
+    display: grid;
+    align-items: baseline;
+    column-gap: 2em;
+    row-gap: 0.25em;
+  }
+
+  .weimo-card-markdown__list--ol[data-option-grid="true"][data-option-columns="1"],
+  .md-editor__content.weimo-markdown-content ol[data-option-grid="true"][data-option-columns="1"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .weimo-card-markdown__list--ol[data-option-grid="true"][data-option-columns="2"],
+  .md-editor__content.weimo-markdown-content ol[data-option-grid="true"][data-option-columns="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weimo-card-markdown__list--ol[data-option-grid="true"][data-option-columns="4"],
+  .md-editor__content.weimo-markdown-content ol[data-option-grid="true"][data-option-columns="4"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .weimo-card-markdown__list--ol[data-option-grid="true"] > .weimo-card-markdown__list-item,
+  .md-editor__content.weimo-markdown-content ol[data-option-grid="true"] > li {
+    min-width: 0;
+  }
+
+  .weimo-card-markdown__list--ol[data-option-grid="true"] > .weimo-card-markdown__list-item + .weimo-card-markdown__list-item,
+  .md-editor__content.weimo-markdown-content ol[data-option-grid="true"] > li + li {
+    margin-top: 0;
+  }
+
+  .weimo-card-markdown__list--ol[data-marker-type="a"],
+  .md-editor__content.weimo-markdown-content ol[data-marker-type="a"] {
+    padding-left: var(--md-list-wide-marker-indent);
+    list-style-type: lower-alpha;
+  }
+
+  .weimo-card-markdown__list--ol[data-marker-type="I"],
+  .md-editor__content.weimo-markdown-content ol[type="I"] {
+    padding-left: var(--md-list-wide-marker-indent);
+    list-style-type: upper-roman;
+  }
+
+  .weimo-card-markdown__list--ol[data-marker-type="i"],
+  .md-editor__content.weimo-markdown-content ol[type="i"] {
+    padding-left: var(--md-list-wide-marker-indent);
+    list-style-type: lower-roman;
+  }
+
+  .weimo-card-markdown__list--ol[data-marker-style="paren-upper-roman"],
+  .md-editor__content.weimo-markdown-content ol[data-marker-style="paren-upper-roman"] {
+    padding-left: var(--md-list-wide-marker-indent);
+    list-style-type: weimo-paren-upper-roman;
+  }
+
+  .weimo-card-markdown__list--ol[data-marker-style="paren-decimal"],
+  .md-editor__content.weimo-markdown-content ol[data-marker-style="paren-decimal"] {
+    padding-left: var(--md-list-wide-marker-indent);
+    list-style-type: weimo-paren-decimal;
+  }
+
+  .weimo-card-markdown__list-item,
+  .md-editor__content.weimo-markdown-content li {
+    padding-left: 0;
+  }
+
+  .weimo-card-markdown__list-item + .weimo-card-markdown__list-item,
+  .md-editor__content.weimo-markdown-content li + li {
+    margin-top: 0.25em;
+  }
+
+  .weimo-card-markdown__list-item .weimo-card-markdown__p,
+  .md-editor__content.weimo-markdown-content li p {
+    margin: 0;
+  }
+
+  .weimo-card-markdown__list-item .weimo-card-markdown__list,
+  .md-editor__content.weimo-markdown-content li :where(ul, ol) {
+    margin-top: 0.25em;
+  }
+
+  .weimo-card-markdown__list--ul.contains-task-list,
+  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] {
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+
+  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] li > label {
+    flex: none;
+    margin-top: 0.12rem;
+  }
+
+  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] li > div {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+
+  .weimo-markdown-content :not(pre) > :where(.weimo-card-markdown__code, code) {
+    padding: 2px 6px;
+    border: 1px solid var(--md-code-border-color);
+    border-radius: var(--md-code-border-radius);
+    font-family: var(--md-code-font-family);
+    font-size: var(--md-code-font-size);
+    word-break: break-all;
+  }
+
+  .weimo-card-markdown__pre,
+  .md-editor__content.weimo-markdown-content pre {
+    margin: 0;
+    overflow: auto;
+  }
+
+  .weimo-card-markdown__pre .weimo-card-markdown__code,
+  .md-editor__content.weimo-markdown-content pre code {
+    display: block;
+    line-height: 1.72;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .weimo-card-markdown__link,
+  .md-editor__content.weimo-markdown-content a {
+    color: var(--md-link-color);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .weimo-card-markdown__link-text {
+    color: var(--md-link-color);
+  }
+
+
+  .weimo-card-markdown__image-placeholder {
+    padding: 2px 6px;
+    border-radius: var(--md-img-placeholder-border-radius);
+    color: var(--md-img-placeholder-color);
+    font-size: var(--md-img-placeholder-font-size);
+  }
+
+  .weimo-card-markdown__image,
+  .md-editor__content.weimo-markdown-content img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+    border-radius: var(--md-img-border-radius);
+  }
+
+  .weimo-card-markdown__list-image-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) fit-content(50%);
+    align-items: start;
+    column-gap: var(--md-list-img-gap);
+  }
+
+  .weimo-card-markdown__list-image-pair > .weimo-card-markdown__list {
+    min-width: 0;
+  }
+
+  .weimo-card-markdown__list-image-pair > .weimo-card-markdown__p {
+    min-width: 0;
+    justify-self: end;
+  }
+
+  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) fit-content(50%);
+    align-items: start;
+    column-gap: var(--md-list-img-gap);
+  }
+
+  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"] > * {
+    grid-column: 1 / -1;
+  }
+
+  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
+    > [data-list-image-role="list"] {
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
+    > [data-list-image-role="image"] {
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
+    grid-column: 2;
+    justify-self: end;
+    margin-top: 0;
+  }
+
+  .weimo-card-markdown__scroll-block {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    overflow-x: auto;
+    border: 1px solid var(--md-table-frame-border-color);
+    border-radius: var(--md-table-border-radius);
+  }
+
+  .md-editor__content.weimo-markdown-content .tableWrapper {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    overflow-x: auto;
+    border: 1px solid var(--md-table-frame-border-color);
+    border-radius: var(--md-table-border-radius);
+  }
+
+  .weimo-card-markdown__table,
+  .md-editor__content.weimo-markdown-content table {
+    width: max-content;
+    border-collapse: collapse;
+    font-size: var(--md-table-font-size);
+  }
+
+  .weimo-card-markdown__table-cell,
+  .md-editor__content.weimo-markdown-content :where(td, th) {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--md-table-cell-border-color);
+    word-break: break-all;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .weimo-card-markdown__table-cell + .weimo-card-markdown__table-cell,
+  .md-editor__content.weimo-markdown-content :where(td, th) + :where(td, th) {
+    border-left: 1px solid var(--md-table-cell-border-color);
+  }
+
+  .weimo-card-markdown__table-cell--header,
+  .md-editor__content.weimo-markdown-content th {
+    color: var(--md-table-header-color);
+    font-weight: 600;
+  }
+
+  .md-editor__content.weimo-markdown-content th :where(p) {
+    color: inherit;
+  }
+
+  .weimo-card-markdown__table-body .weimo-card-markdown__table-row:last-child .weimo-card-markdown__table-cell,
+  .md-editor__content.weimo-markdown-content tbody tr:last-child :where(td, th) {
+    border-bottom: 0;
+  }
+
+  .weimo-markdown-content .tiptap-mathematics-render {
+    display: inline-block;
+    border-radius: var(--md-math-border-radius);
+  }
+
+  .weimo-markdown-content .tiptap-mathematics-render:not([data-type="block-math"]) {
+    padding: 0;
+    vertical-align: baseline;
+  }
+
+  .weimo-markdown-content .tiptap-mathematics-render--editable {
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .weimo-markdown-content .tiptap-mathematics-render--editable:hover {
+    background: var(--md-math-hover-bg);
+  }
+
+  .weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"],
+  .weimo-markdown-content .katex-display {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"] {
+    padding: 0;
+    text-align: center;
+  }
+
+  .weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"] .katex-display {
+    margin: 0;
+  }
+
+  .weimo-markdown-content > :is(.weimo-card-markdown__p,
+  .weimo-card-markdown__heading,
+  .weimo-card-markdown__blockquote,
+  .weimo-card-markdown__list,
+  .weimo-card-markdown__list-image-pair,
+  .weimo-card-markdown__pre,
+  .weimo-card-markdown__scroll-block,
+  .weimo-card-markdown__hr,
+  .tableWrapper,
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  blockquote,
+  ul,
+  ol,
+  pre,
+  table,
+  hr,
+  figure,
+  img,
+  .katex-display,
+  .tiptap-mathematics-render[data-type="block-math"]) + :is(.weimo-card-markdown__p,
+  .weimo-card-markdown__heading,
+  .weimo-card-markdown__blockquote,
+  .weimo-card-markdown__list,
+  .weimo-card-markdown__list-image-pair,
+  .weimo-card-markdown__pre,
+  .weimo-card-markdown__scroll-block,
+  .weimo-card-markdown__hr,
+  .tableWrapper,
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  blockquote,
+  ul,
+  ol,
+  pre,
+  table,
+  hr,
+  figure,
+  img,
+  .katex-display,
+  .tiptap-mathematics-render[data-type="block-math"]) {
+    margin-top: 1em;
+  }
+
+  @container weimo-markdown-content (max-width: 40rem) {
+    .weimo-card-markdown__list--ol[data-option-grid="true"][data-option-columns],
+    .md-editor__content.weimo-markdown-content ol[data-option-grid="true"][data-option-columns] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .weimo-card-markdown__list-image-pair {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 1em;
+    }
+
+    .weimo-card-markdown__list-image-pair > .weimo-card-markdown__p {
+      justify-self: center;
+    }
+
+    .md-editor__content.weimo-markdown-content[data-list-image-layout="true"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
+      > [data-list-image-role] {
+      grid-column: 1;
+    }
+
+    .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
+      > [data-list-image-role="image"] {
+      justify-self: center;
+      margin-top: 1em;
+    }
+  }
+}
+
+.weimo-markdown-content > .katex-display,
+.weimo-markdown-content .tiptap-mathematics-render[data-type="block-math"] .katex-display {
+  margin: 0;
+}
+
+.weimo-markdown-content > :is(.weimo-card-markdown__p,
+.weimo-card-markdown__heading,
+.weimo-card-markdown__blockquote,
+.weimo-card-markdown__list,
+.weimo-card-markdown__list-image-pair,
+.weimo-card-markdown__pre,
+.weimo-card-markdown__scroll-block,
+.weimo-card-markdown__hr,
+.tableWrapper,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+blockquote,
+ul,
+ol,
+pre,
+table,
+hr,
+figure,
+img,
+.katex-display,
+.tiptap-mathematics-render[data-type="block-math"]) + .katex-display {
+  margin-top: 1em;
+}

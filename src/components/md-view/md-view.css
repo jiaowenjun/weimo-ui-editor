@@ -1,0 +1,26 @@
+@layer components {
+  .md-view__editor-layer {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .md-view > .weimo-card-markdown {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    font-feature-settings: "liga" 0;
+    font-variant-ligatures: none;
+  }
+
+  .md-view > .weimo-card-markdown .weimo-card-markdown__p {
+    white-space: break-spaces;
+  }
+
+  .md-view > .weimo-card-markdown .katex {
+    display: inline-block;
+    white-space: normal;
+  }
+}

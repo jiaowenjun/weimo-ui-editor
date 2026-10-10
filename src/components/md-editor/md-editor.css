@@ -1,0 +1,227 @@
+@import "weimo-ui-markdown/styles/markdown-content.css";
+
+@layer components {
+  .md-editor {
+    position: relative;
+    display: flex;
+    /* container-type:inline-size 会把内在宽度归零,flex 行容器里 flex-basis:auto 随之塌缩成 0 宽;
+       显式 width 让编辑器在任何宿主布局下都占满主轴 */
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    container-name: weimo-markdown-content;
+    container-type: inline-size;
+    color: var(--color-text-primary);
+  }
+
+  .md-editor[data-disabled="true"] {
+    color: var(--color-text-secondary);
+  }
+
+  .md-editor__viewport {
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block-end: 14px;
+    padding-inline: 0;
+    padding-block-start: 0;
+  }
+
+  .md-editor__content {
+    caret-color: var(--color-primary);
+    letter-spacing: 0;
+    outline: none;
+  }
+
+  .md-editor__content:focus {
+    outline: none;
+  }
+
+  .md-editor__content ::selection {
+    background: var(--md-selection-bg);
+  }
+
+  .md-editor__content p.is-editor-empty:first-child::before {
+    float: left;
+    height: 0;
+    color: var(--color-text-placeholder);
+    content: attr(data-placeholder);
+    pointer-events: none;
+  }
+
+  .md-editor__content .ProseMirror-selectednode {
+    border-radius: var(--radius-sm);
+    outline: 2px solid var(--color-border-accent);
+  }
+
+  .md-editor__image-frame {
+    display: block;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .md-editor__image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  .md-editor__image-placeholder {
+    display: inline-flex;
+    max-width: 100%;
+    min-height: 30px;
+    align-items: center;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-raised);
+    color: var(--color-text-placeholder);
+    font-size: var(--font-size-md);
+    line-height: 1.4;
+    vertical-align: middle;
+  }
+
+  .md-editor__content .tiptap-mathematics-render.ProseMirror-selectednode {
+    outline: none;
+  }
+
+  .md-editor__math {
+    position: relative;
+  }
+
+  .md-editor:not([data-disabled="true"]) .md-editor__math {
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .md-editor:not([data-disabled="true"]) .md-editor__math:hover {
+    background: var(--color-bg-hover);
+  }
+
+  .md-editor__math-menu {
+    min-width: 9rem;
+  }
+
+  .md-editor__toolbar {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 3px;
+    border-radius: var(--radius);
+    scrollbar-width: none;
+  }
+
+  .md-editor__toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .md-editor__toolbar-group {
+    display: flex;
+    min-width: max-content;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .md-editor__toolbar-button {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    min-width: 34px;
+    padding: 0;
+    color: var(--color-text-secondary);
+    justify-content: center;
+  }
+
+  .md-editor__toolbar .md-editor__toolbar-button {
+    min-height: 34px;
+    padding-inline: 0;
+  }
+
+  .md-editor__toolbar-button svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .md-editor__toolbar-button[data-active="true"] {
+    color: var(--color-text-primary);
+    background: var(--color-bg-raised);
+  }
+
+  .md-editor__toolbar-button:disabled {
+    cursor: default;
+    color: var(--color-text-placeholder);
+  }
+
+  .md-editor__skeleton {
+    min-height: 120px;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-raised);
+  }
+
+  .md-editor__math-dialog {
+    display: contents;
+  }
+
+  .md-editor__math-dialog-panel {
+    display: grid;
+    gap: 8px;
+    padding-block-start: 65px;
+    padding-block-end: 76px;
+  }
+
+  .md-editor__math-dialog-field {
+    min-width: 0;
+  }
+
+  .md-editor__math-dialog-textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 11px;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    resize: vertical;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    background: var(--color-bg-card);
+  }
+
+  .md-editor__math-dialog-textarea:focus {
+    border-color: var(--color-border-accent);
+  }
+
+  .md-editor__math-dialog-textarea[aria-invalid="true"] {
+    border-color: var(--color-border-danger);
+  }
+
+  .md-editor__math-dialog-error {
+    margin: 0;
+    color: var(--color-text-danger);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+  }
+
+  /* 公式对话框底栏改单列堆叠:经 ActionDialog 底栏公开 frame/slot 钩子
+     挂载自有类名。 */
+  .md-editor__math-dialog-float-bar .md-editor__math-dialog-frame {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .md-editor__math-dialog-float-bar .md-editor__math-dialog-slot-right {
+    width: 100%;
+    grid-column: 1 / -1;
+  }
+
+  .md-editor__math-dialog-action-row {
+    display: flex;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}

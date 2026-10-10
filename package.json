@@ -1,0 +1,77 @@
+{
+  "name": "weimo-ui-markdown",
+  "private": false,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jiaowenjun/weimo-ui-markdown.git"
+  },
+  "packageManager": "pnpm@12.4.2+sha512.08adc6613180275c7c9edada39dcf08c9c61ad4e7eaf330a4f3461f102b0f907423454d117f98e72d47fef0616070644d7bffc973a6a57f5090a6d7c368b07c9",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    "./components/deferred-md-editor-toolbar": "./src/components/deferred-md-editor-toolbar.tsx",
+    "./components/md-editor": "./src/components/md-editor/index.tsx",
+    "./components/md-editor-simple": "./src/components/md-editor-simple/md-editor-simple.tsx",
+    "./components/md-render": "./src/components/md-render/md-render.tsx",
+    "./components/md-render-simple": "./src/components/md-render-simple/md-render-simple.tsx",
+    "./components/md-view": "./src/components/md-view/md-view.tsx",
+    "./components/math-editor": "./src/components/md-editor/math-editor.tsx",
+    "./styles/tokens.css": "./src/styles/tokens.css",
+    "./styles/markdown-content.css": "./src/styles/markdown-content.css",
+    "./styles/md-view.css": "./src/components/md-view/md-view.css",
+    "./styles/md-editor.css": "./src/components/md-editor/md-editor.css"
+  },
+  "scripts": {
+    "test:typecheck": "tsc -p tsconfig.json --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@tiptap/core": "3.31.4",
+    "@tiptap/extension-list": "3.31.4",
+    "@tiptap/extension-mathematics": "3.31.4",
+    "@tiptap/extension-placeholder": "3.31.4",
+    "@tiptap/extension-table": "3.31.4",
+    "@tiptap/extension-table-cell": "3.31.4",
+    "@tiptap/extension-table-header": "3.31.4",
+    "@tiptap/extension-table-row": "3.31.4",
+    "@tiptap/extension-task-item": "3.31.4",
+    "@tiptap/extension-task-list": "3.31.4",
+    "@tiptap/markdown": "3.31.4",
+    "@tiptap/pm": "3.31.4",
+    "@tiptap/react": "3.31.4",
+    "@tiptap/starter-kit": "3.31.4",
+    "katex": "^0.16.47",
+    "lucide-react": "1.24.0",
+    "marked": "^17.0.1",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "weimo-ui-core": "git+ssh://git@github.com/jiaowenjun/weimo-ui-core.git"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "~6.0.3"
+  }
+}
