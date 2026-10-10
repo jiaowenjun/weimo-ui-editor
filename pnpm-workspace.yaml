@@ -3,4 +3,4 @@ minimumReleaseAgeExclude:
   - '@base-ui/utils@0.5.0'
   - lucide-react@1.54.0
 allowBuilds:
-  weimo-ui-core@https://codeload.github.com/jiaowenjun/weimo-ui-core/tar.gz/e83cb52a0ece296d8ade6fd5e3cf9d1b34082e5d: true
+  weimo-ui-core@https://codeload.github.com/jiaowenjun/weimo-ui-core/tar.gz/214e96706195b972c0c5bd64db0d613c1d6fd612: true
