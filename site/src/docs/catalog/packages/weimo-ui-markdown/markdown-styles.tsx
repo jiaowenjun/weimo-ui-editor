@@ -29,19 +29,6 @@ const markdownStyleTokens = [
   },
   { token: '--md-quote-pad-inline', value: '20px' },
   { token: '--md-list-indent', value: '1.35em' },
-  { token: '--md-list-wide-marker-indent', value: '2em' },
-  {
-    token: '--md-link-color',
-    value: { light: 'hsl(0 0% 15%)', dark: 'hsl(0 0% 96%)' },
-  },
-  {
-    token: '--md-img-placeholder-color',
-    value: { light: 'hsl(0 0% 74%)', dark: 'hsl(0 0% 35%)' },
-  },
-  { token: '--md-img-placeholder-font-size', value: '14px' },
-  { token: '--md-img-placeholder-border-radius', value: '8px' },
-  { token: '--md-img-border-radius', value: '8px' },
-  { token: '--md-list-img-gap', value: '1em' },
   {
     token: '--md-selection-bg',
     value: { light: 'hsl(0 0% 15% / 0.2)', dark: 'hsl(0 0% 96% / 0.2)' },
@@ -65,22 +52,7 @@ const markdownStyleTokenGroups = [
     label: '引用块',
     tokens: ['--md-quote-color', '--md-quote-pad-inline'],
   },
-  {
-    label: '列表',
-    tokens: ['--md-list-indent', '--md-list-wide-marker-indent'],
-  },
-  { label: '链接', tokens: ['--md-link-color'] },
-  {
-    label: '图片',
-    tokens: [
-      '--md-img-placeholder-color',
-      '--md-img-placeholder-font-size',
-      '--md-img-placeholder-border-radius',
-      '--md-img-border-radius',
-    ],
-  },
-  { label: '列表与图片布局', tokens: ['--md-list-img-gap'] },
-  { label: '编辑选区', tokens: ['--md-selection-bg'] },
+  { label: '列表', tokens: ['--md-list-indent'] },
 ] satisfies readonly {
   label: string
   tokens: readonly MarkdownStyleTokenName[]
@@ -111,37 +83,7 @@ function renderMarkdownTokenGroupPreview(group: MarkdownStyleTokenGroup) {
     case '引用块':
       return <MdRenderSimple content="> 引用块使用独立字色与横向内边距。" />
     case '列表':
-      return <MdRenderSimple content={'- 普通列表\n\nA. 宽序号列表'} />
-    case '链接':
-      return <MdRenderSimple content="[Markdown 链接](https://weimo.ink)" />
-    case '图片':
-      return (
-        <MdRenderSimple
-          content={'![图片占位](missing-image)\n\n![图片预览](preview-image)'}
-          renderImage={({ alt, className }) => (
-            <span
-              aria-label={alt}
-              className={`${className ?? ''} md-style-preview__image`}
-              role="img"
-            />
-          )}
-          resolveImageSrc={(src) => src === 'preview-image' ? src : undefined}
-        />
-      )
-    case '列表与图片布局':
-      return (
-        <MdRenderSimple
-          content={'1. 第一项\n2. 第二项\n\n![布局图片](preview-image)'}
-          renderImage={({ alt, className }) => (
-            <span
-              aria-label={alt}
-              className={`${className ?? ''} md-style-preview__image`}
-              role="img"
-            />
-          )}
-          resolveImageSrc={(src) => src === 'preview-image' ? src : undefined}
-        />
-      )
+      return <MdRenderSimple content="- 普通列表" />
     case '编辑选区':
       return (
         <p className="md-style-preview__selection-sample">
@@ -183,4 +125,13 @@ function renderMarkdownStyleGroupCard(group: MarkdownStyleTokenGroup) {
 
 export function MarkdownSimpleStylePreview() {
   return markdownStyleTokenGroups.map((group) => renderMarkdownStyleGroupCard(group))
+}
+
+const markdownEditSelectionStyleTokenGroup = {
+  label: '编辑选区',
+  tokens: ['--md-selection-bg'],
+} satisfies MarkdownStyleTokenGroup
+
+export function MarkdownEditSelectionStylePreview() {
+  return renderMarkdownStyleGroupCard(markdownEditSelectionStyleTokenGroup)
 }

@@ -36,8 +36,6 @@
 .md-style-preview__group-effect { display: flex; min-width: 0; min-height: 112px; align-items: center; justify-content: center; overflow: hidden; padding: 16px; color: var(--color-text-primary); }
 .md-style-preview__content-wrapper { box-sizing: border-box; width: 80%; min-width: 0; margin-inline: auto; overflow: hidden; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
 .md-style-preview__content-wrapper > * { width: 100%; }
-.md-style-preview__image { display: block; width: 120px; height: 72px; background: linear-gradient(135deg, hsl(198 72% 72%), hsl(160 48% 76%)); }
-.md-style-preview__group-effect .weimo-card-markdown__image-placeholder { background: hsl(0 0% 50% / 0.08); }
 .md-style-preview__selection-sample { display: flex; height: 80px; align-items: center; padding-inline: 14px; color: var(--color-text-primary); font-size: var(--font-size-md); line-height: 1.8; user-select: text; }
 .md-style-preview__selection-copy { display: block; cursor: text; }
 .md-style-preview__selection-highlight { padding-block: 0.4em; box-decoration-break: clone; -webkit-box-decoration-break: clone; background: var(--md-selection-bg); }

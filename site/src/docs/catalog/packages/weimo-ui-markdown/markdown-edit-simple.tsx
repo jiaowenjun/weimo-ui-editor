@@ -11,6 +11,8 @@ import {
 } from 'weimo-ui-markdown/components/md-editor-simple'
 import type { ComponentDefinition } from '../../component-docs'
 
+import { MarkdownEditSelectionStylePreview } from './markdown-styles'
+
 // 内容以 tiptap 原生 JSON 进出，编辑器不做任何 Markdown 解析与序列化。
 const mdEditorSimpleSample: MdEditorSimpleContent = {
   type: 'doc',
@@ -57,50 +59,53 @@ function MdEditorSimpleDemo() {
   const editorRef = useRef<MdEditorSimpleHandle | null>(null)
 
   return (
-    <ComponentPreviewCard
-      action={
-        <>
-          <GhostIconButton
-            active={selectionFormat?.block === 'heading'}
-            aria-label="切换标题"
-            disabled={!selectionFormat}
-            onClick={() => editorRef.current?.toggleBlockFormat('heading')}
-            size="sm"
-          >
-            <Heading1 />
-          </GhostIconButton>
-          <GhostIconButton
-            active={selectionFormat?.block === 'list'}
-            aria-label="切换无序列表"
-            disabled={!selectionFormat}
-            onClick={() => editorRef.current?.toggleBlockFormat('list')}
-            size="sm"
-          >
-            <List />
-          </GhostIconButton>
-          <GhostIconButton
-            active={selectionFormat?.block === 'quote'}
-            aria-label="切换引用"
-            disabled={!selectionFormat}
-            onClick={() => editorRef.current?.toggleBlockFormat('quote')}
-            size="sm"
-          >
-            <Quote />
-          </GhostIconButton>
-        </>
-      }
-      label="简化Markdown编辑器"
-    >
-      <div className="md-editor-docs-preview">
-        <MdEditorSimple
-          onChange={setContent}
-          onSelectionFormatChange={setSelectionFormat}
-          placeholder="写点什么..."
-          ref={editorRef}
-          value={content}
-        />
-      </div>
-    </ComponentPreviewCard>
+    <>
+      <ComponentPreviewCard
+        action={
+          <>
+            <GhostIconButton
+              active={selectionFormat?.block === 'heading'}
+              aria-label="切换标题"
+              disabled={!selectionFormat}
+              onClick={() => editorRef.current?.toggleBlockFormat('heading')}
+              size="sm"
+            >
+              <Heading1 />
+            </GhostIconButton>
+            <GhostIconButton
+              active={selectionFormat?.block === 'list'}
+              aria-label="切换无序列表"
+              disabled={!selectionFormat}
+              onClick={() => editorRef.current?.toggleBlockFormat('list')}
+              size="sm"
+            >
+              <List />
+            </GhostIconButton>
+            <GhostIconButton
+              active={selectionFormat?.block === 'quote'}
+              aria-label="切换引用"
+              disabled={!selectionFormat}
+              onClick={() => editorRef.current?.toggleBlockFormat('quote')}
+              size="sm"
+            >
+              <Quote />
+            </GhostIconButton>
+          </>
+        }
+        label="简化Markdown编辑器"
+      >
+        <div className="md-editor-docs-preview">
+          <MdEditorSimple
+            onChange={setContent}
+            onSelectionFormatChange={setSelectionFormat}
+            placeholder="写点什么..."
+            ref={editorRef}
+            value={content}
+          />
+        </div>
+      </ComponentPreviewCard>
+      <MarkdownEditSelectionStylePreview />
+    </>
   )
 }
 
