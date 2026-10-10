@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      ui-runtime:
+        patterns:
+          - '@base-ui/react'
+          - lucide-react
+          - react
+          - react-dom
+          - weimo-ui-core
+      build-tooling:
+        dependency-type: development
+        patterns:
+          - '@arethetypeswrong/cli'
+          - publint
+          - rimraf
+          - typescript
+          - vitest

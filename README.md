@@ -2,7 +2,15 @@
 
 `weimo-ui-markdown` 是独立的 Markdown 组件包，拥有 Markdown 渲染、Tiptap 编辑、数学公式和查看/编辑模式编排。它唯一的 `weimo-ui` 依赖是 `weimo-ui-core`。
 
-`weimo-ui-core` 通过 `git@github.com:jiaowenjun/weimo-ui-core.git` 获取。包通过显式子路径导出组件和样式；包根不提供 `.` 导出。
+`weimo-ui-core` 通过 npm semver peer 契约协作。包发布编译后的 ESM、类型声明和 CSS，并通过显式子路径导出组件和样式；包根不提供 `.` 导出。
+
+## 安装
+
+```bash
+pnpm add weimo-ui-markdown weimo-ui-core @base-ui/react react react-dom
+```
+
+`weimo-ui-markdown@0.1.x` 支持 `weimo-ui-core@0.1.x`；应用必须只安装一份兼容的 core。
 
 ## 组件入口
 
@@ -30,7 +38,7 @@ import { MdView } from 'weimo-ui-markdown/components/md-view'
 import 'weimo-ui-markdown/styles/tokens.css'
 ```
 
-组件会导入各自的结构样式，并以 TypeScript、TSX 与 CSS 源码交付。
+组件会导入各自的结构样式；npm 包交付编译后的 ESM、类型声明和 CSS，不要求宿主编译依赖中的 TSX。
 
 ## 依赖边界
 
@@ -55,7 +63,8 @@ src/
 
 ```bash
 pnpm install
-pnpm test:typecheck
+pnpm verify
+npm pack --dry-run
 ```
 
-组件的公开入口和依赖边界以本仓库的 `package.json#exports` 为准。
+`verify` 会检查类型、构建产物、公开入口和类型声明解析；组件的公开入口和依赖边界以本仓库的 `package.json#exports` 为准。

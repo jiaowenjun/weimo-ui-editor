@@ -1,6 +1,6 @@
 import { defaultSchema, type Options } from 'rehype-sanitize'
 
-export const markdownSanitizeSchema = {
+export const markdownSanitizeSchema: Options = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
@@ -22,4 +22,4 @@ export const markdownSanitizeSchema = {
       ['dataOptionGrid', 'true'],
     ],
   },
-} satisfies Options
+}

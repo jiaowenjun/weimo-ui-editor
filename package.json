@@ -6,7 +6,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/jiaowenjun/weimo-ui-markdown.git"
+    "url": "git+https://github.com/jiaowenjun/weimo-ui-markdown.git"
+  },
+  "packageManager": "pnpm@12.4.2",
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=20.19"
@@ -15,24 +19,65 @@
     "**/*.css"
   ],
   "files": [
-    "src",
-    "README.md"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
-    "./components/deferred-md-editor-toolbar": "./src/components/deferred-md-editor-toolbar.tsx",
-    "./components/md-editor": "./src/components/md-editor/index.tsx",
-    "./components/md-editor-simple": "./src/components/md-editor-simple/md-editor-simple.tsx",
-    "./components/md-render": "./src/components/md-render/md-render.tsx",
-    "./components/md-render-simple": "./src/components/md-render-simple/md-render-simple.tsx",
-    "./components/md-view": "./src/components/md-view/md-view.tsx",
-    "./components/math-editor": "./src/components/md-editor/math-editor.tsx",
-    "./styles/tokens.css": "./src/styles/tokens.css",
-    "./styles/markdown-content.css": "./src/styles/markdown-content.css",
-    "./styles/md-view.css": "./src/components/md-view/md-view.css",
-    "./styles/md-editor.css": "./src/components/md-editor/md-editor.css"
+    "./components/deferred-md-editor-toolbar": {
+      "types": "./dist/components/deferred-md-editor-toolbar.d.ts",
+      "import": "./dist/components/deferred-md-editor-toolbar.js"
+    },
+    "./components/md-editor": {
+      "types": "./dist/components/md-editor/index.d.ts",
+      "import": "./dist/components/md-editor/index.js"
+    },
+    "./components/md-editor-simple": {
+      "types": "./dist/components/md-editor-simple/md-editor-simple.d.ts",
+      "import": "./dist/components/md-editor-simple/md-editor-simple.js"
+    },
+    "./components/md-render": {
+      "types": "./dist/components/md-render/md-render.d.ts",
+      "import": "./dist/components/md-render/md-render.js"
+    },
+    "./components/md-render-simple": {
+      "types": "./dist/components/md-render-simple/md-render-simple.d.ts",
+      "import": "./dist/components/md-render-simple/md-render-simple.js"
+    },
+    "./components/md-view": {
+      "types": "./dist/components/md-view/md-view.d.ts",
+      "import": "./dist/components/md-view/md-view.js"
+    },
+    "./components/math-editor": {
+      "types": "./dist/components/md-editor/math-editor.d.ts",
+      "import": "./dist/components/md-editor/math-editor.js"
+    },
+    "./styles/tokens.css": {
+      "types": "./dist/styles/tokens.d.css.ts",
+      "default": "./dist/styles/tokens.css"
+    },
+    "./styles/markdown-content.css": {
+      "types": "./dist/styles/markdown-content.d.css.ts",
+      "default": "./dist/styles/markdown-content.css"
+    },
+    "./styles/md-view.css": {
+      "types": "./dist/components/md-view/md-view.d.css.ts",
+      "default": "./dist/components/md-view/md-view.css"
+    },
+    "./styles/md-editor.css": {
+      "types": "./dist/components/md-editor/md-editor.d.css.ts",
+      "default": "./dist/components/md-editor/md-editor.css"
+    }
   },
   "scripts": {
-    "test:typecheck": "tsc -p tsconfig.json --noEmit --pretty false"
+    "clean": "rimraf dist",
+    "build": "pnpm clean && tsc -p tsconfig.build.json && node scripts/copy-css.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
+    "test:typecheck": "pnpm typecheck",
+    "test": "vitest run",
+    "check:package": "pnpm build && publint && attw --pack . --profile esm-only --ignore-rules internal-resolution-error",
+    "verify": "pnpm typecheck && pnpm test && pnpm check:package",
+    "prepack": "pnpm build"
   },
   "dependencies": {
     "@tiptap/core": "3.31.4",
@@ -50,7 +95,7 @@
     "@tiptap/react": "3.31.4",
     "@tiptap/starter-kit": "3.31.4",
     "katex": "^0.16.47",
-    "lucide-react": "1.24.0",
+    "lucide-react": "^1.54.0",
     "marked": "^17.0.1",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
@@ -61,16 +106,24 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
-    "unified": "^11.0.5",
-    "weimo-ui-core": "git+ssh://git@github.com/jiaowenjun/weimo-ui-core.git"
+    "unified": "^11.0.5"
   },
   "peerDependencies": {
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "weimo-ui-core": "~0.1.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@base-ui/react": "1.9.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "typescript": "~6.0.3"
+    "publint": "^0.3.25",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "rimraf": "^6.1.3",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.3",
+    "weimo-ui-core": "git+https://github.com/jiaowenjun/weimo-ui-core.git#e4aa279e6c4055c1e308f876875209f4d8b51a8b"
   }
 }
