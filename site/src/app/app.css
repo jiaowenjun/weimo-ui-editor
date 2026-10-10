@@ -31,6 +31,17 @@
 .markdown-editor-viewport { min-width: 0; min-height: 250px; padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-bg-page); }
 .markdown-editor-viewport .md-editor__viewport { min-height: 208px; max-height: 54vh; }
 .markdown-editor-json { max-height: 220px; margin: 0; padding: 14px; overflow: auto; color: var(--color-text-secondary); font-size: var(--font-size-xs); line-height: 1.55; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-bg-raised) 62%, transparent); }
+.md-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; }
+.component-preview-card:has(.md-editor-docs-preview) .base-card__content { border-radius: var(--radius-xs); }
+.md-style-preview__group-effect { display: flex; min-width: 0; min-height: 112px; align-items: center; justify-content: center; overflow: hidden; padding: 16px; color: var(--color-text-primary); }
+.md-style-preview__content-wrapper { box-sizing: border-box; width: 80%; min-width: 0; margin-inline: auto; overflow: hidden; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.md-style-preview__content-wrapper > * { width: 100%; }
+.md-style-preview__image { display: block; width: 120px; height: 72px; background: linear-gradient(135deg, hsl(198 72% 72%), hsl(160 48% 76%)); }
+.md-style-preview__group-effect .weimo-card-markdown__image-placeholder { background: hsl(0 0% 50% / 0.08); }
+.md-style-preview__selection-sample { display: flex; height: 80px; align-items: center; padding-inline: 14px; color: var(--color-text-primary); font-size: var(--font-size-md); line-height: 1.8; user-select: text; }
+.md-style-preview__selection-copy { display: block; cursor: text; }
+.md-style-preview__selection-highlight { padding-block: 0.4em; box-decoration-break: clone; -webkit-box-decoration-break: clone; background: var(--md-selection-bg); }
+.md-style-preview__selection-sample ::selection { background: var(--md-selection-bg); }
 .docs-card-footer { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px; }
 .docs-card-footer__result { min-width: 0; flex: 1 1 220px; color: var(--color-text-secondary); font-size: var(--font-size-xs); overflow-wrap: anywhere; }
 .doc-page { min-width: 0; padding: clamp(20px, 3vw, 32px); color: var(--color-text-primary); }
