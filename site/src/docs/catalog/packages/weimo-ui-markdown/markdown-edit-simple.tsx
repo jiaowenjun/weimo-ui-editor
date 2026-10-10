@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Bold, Heading1, List, Quote } from 'lucide-react'
+import { Bold, Heading1, List, Quote, RotateCcw, Trash2 } from 'lucide-react'
 
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
@@ -86,6 +86,24 @@ function MdEditorSimpleDemo() {
   return (
     <>
       <ComponentPreviewCard
+        action={
+          <div className="md-editor-docs-toolbar">
+            <GhostIconButton
+              aria-label="清空内容"
+              onClick={() => editorRef.current?.clear()}
+              size="sm"
+            >
+              <Trash2 />
+            </GhostIconButton>
+            <GhostIconButton
+              aria-label="重置内容"
+              onClick={() => setContent(mdEditorSimpleSample)}
+              size="sm"
+            >
+              <RotateCcw />
+            </GhostIconButton>
+          </div>
+        }
         footer={
           <div className="md-editor-docs-toolbar">
             <GhostIconButton
