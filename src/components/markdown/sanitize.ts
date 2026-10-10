@@ -13,11 +13,5 @@ export const markdownSanitizeSchema: Options = {
       ...(defaultSchema.attributes?.div ?? []),
       ['className', 'weimo-card-markdown__list-image-pair'],
     ],
-    ol: [
-      ...(defaultSchema.attributes?.ol ?? []),
-      ['type', '1', 'a', 'A', 'i', 'I'],
-      ['dataMarkerStyle', 'paren-upper-roman', 'paren-decimal'],
-      ['dataOptionGrid', 'true'],
-    ],
   },
 }
