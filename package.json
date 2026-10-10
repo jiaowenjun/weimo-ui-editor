@@ -51,8 +51,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
     "test:typecheck": "pnpm typecheck",
     "test": "vitest run",
+    "test:site-template": "node scripts/site-template-contract.mjs",
     "check:package": "pnpm build && publint && attw --pack . --profile esm-only --ignore-rules internal-resolution-error",
-    "verify": "pnpm typecheck && pnpm test && pnpm check:package && pnpm --dir site build",
+    "verify": "pnpm typecheck && pnpm test && pnpm test:site-template && pnpm check:package && pnpm --dir site build",
     "prepack": "pnpm build"
   },
   "dependencies": {

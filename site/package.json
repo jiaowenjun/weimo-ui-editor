@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
-    "class-variance-authority": "^0.7.1",
     "lucide-react": "^1.54.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "8.4.0",
     "weimo-ui-core": "github:jiaowenjun/weimo-ui-core#214e96706195b972c0c5bd64db0d613c1d6fd612",
-    "weimo-ui-markdown": "workspace:*"
+    "weimo-ui-markdown": "workspace:*",
+    "weimo-ui-template": "git+https://github.com/jiaowenjun/weimo-ui-template.git#a3859fc4f1b681d636c0a78710ec594806522e35"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

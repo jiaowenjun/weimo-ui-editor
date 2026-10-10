@@ -1,6 +1,6 @@
 # weimo-ui-markdown site
 
-`site` 是 `weimo-ui-markdown` 的文档与交互预览应用。它通过组件包公开入口展示简单 Markdown 渲染器和编辑器，不拥有可复用组件。
+`site` 是 `weimo-ui-markdown` 的文档与交互预览应用。它通过组件包公开入口展示简单 Markdown 渲染器和编辑器，并复用 `weimo-ui-template` 提供的导航、主题切换、响应式壳层和预览卡片；站点本身不拥有可复用组件。
 
 ## 开发
 
