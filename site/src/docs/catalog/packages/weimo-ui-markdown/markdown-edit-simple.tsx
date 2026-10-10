@@ -168,11 +168,5 @@ export const markdownEditSimpleDefinition = {
   summary: '以 Tiptap JSON 进出的受限格式富文本编辑器',
   status: 'Ready',
   frame: 'plain',
-  searchAliases: [
-    'MdEditorSimple',
-    'Tiptap JSON',
-    'Markdown 编辑',
-    '简单 Markdown 编辑器',
-  ],
   preview: () => <MarkdownEditSimpleDemo />,
 } satisfies ComponentDefinition

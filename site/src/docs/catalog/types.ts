@@ -18,15 +18,10 @@ export type PackageCatalog = {
   pages: readonly PackagePage[]
 }
 
-export type ComponentPreviewContext = {
-  onOpenSidebar: () => void
-}
-
 export type ComponentDefinition = {
   id: string
-  searchAliases?: readonly string[]
   summary?: string
   status: 'Ready' | 'Preview'
   frame?: 'stage' | 'plain'
-  preview: (context: ComponentPreviewContext) => ReactNode
+  preview: () => ReactNode
 }

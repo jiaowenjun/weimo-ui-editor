@@ -6,12 +6,8 @@ import {
   type ComponentManifestItem,
   type ComponentPackageName,
 } from './manifest'
-import type {
-  ComponentDefinition as CatalogComponentDefinition,
-  ComponentPreviewContext as CatalogComponentPreviewContext,
-} from './types'
+import type { ComponentDefinition as CatalogComponentDefinition } from './types'
 
-export type ComponentPreviewContext = CatalogComponentPreviewContext
 export type ComponentDefinition = CatalogComponentDefinition
 
 export type ComponentDoc = {
@@ -21,7 +17,6 @@ export type ComponentDoc = {
   packageName: ComponentPackageName
   registryName: string
   packageExport: string
-  searchAliases: readonly string[]
   summary?: string
   status: 'Ready' | 'Preview'
   frame?: 'stage' | 'plain'
@@ -49,10 +44,6 @@ export const componentDocs: ComponentDoc[] = componentManifest
       throw new Error(`Missing component definition for ${item.id}`)
     }
 
-    const pageComponents = componentManifest.filter(
-      (component) => component.page === item.id,
-    )
-
     return {
       id: item.id,
       name: item.name,
@@ -60,17 +51,6 @@ export const componentDocs: ComponentDoc[] = componentManifest
       packageName: item.packageName,
       registryName: item.registryName,
       packageExport: item.packageExport,
-      searchAliases: [
-        item.packageName,
-        ...(definition.searchAliases ?? []),
-        ...pageComponents.flatMap((component) => [
-          component.id,
-          component.name,
-          component.registryName,
-          component.packageExport,
-          ...(component.exportName ? [component.exportName] : []),
-        ]),
-      ],
       summary: definition.summary,
       status: definition.status,
       frame: definition.frame,

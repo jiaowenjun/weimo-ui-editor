@@ -10,9 +10,8 @@ import { useDocsOutletContext } from '../shell/docs-outlet-context'
 export function ComponentDetailPage() {
   const { componentId } = useParams()
   const navigate = useNavigate()
-  const { docs, onOpenSidebar } = useDocsOutletContext()
+  const { docs } = useDocsOutletContext()
   const selected = docs.find((doc) => doc.id === componentId)
-  const previewContext = { onOpenSidebar }
 
   useEffect(() => {
     if (!selected) {
@@ -25,7 +24,7 @@ export function ComponentDetailPage() {
   }
 
   if (selected.frame === 'plain') {
-    return selected.preview(previewContext)
+    return selected.preview()
   }
 
   return (
@@ -34,7 +33,7 @@ export function ComponentDetailPage() {
 
       <div className="demo-block">
         <CossCardPanel className="demo-block__panel preview-stage" data-component-id={selected.id} variant="stage">
-          {selected.preview(previewContext)}
+          {selected.preview()}
         </CossCardPanel>
       </div>
     </CossCardFrame>

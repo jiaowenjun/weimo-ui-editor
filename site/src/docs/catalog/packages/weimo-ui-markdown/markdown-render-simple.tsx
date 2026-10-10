@@ -82,11 +82,5 @@ export const markdownRenderSimpleDefinition = {
   summary: '安全渲染基础 Markdown、扩展列表与居中引用',
   status: 'Ready',
   frame: 'plain',
-  searchAliases: [
-    'MdRenderSimple',
-    'Markdown renderer',
-    'Markdown 渲染',
-    '简单 Markdown 渲染',
-  ],
   preview: () => <MarkdownRenderSimpleDemo />,
 } satisfies ComponentDefinition
