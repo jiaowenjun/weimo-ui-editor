@@ -288,7 +288,7 @@ importers:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
       react-router:
-        specifier: ^8.4.0
+        specifier: 8.4.0
         version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       weimo-ui-core:
         specifier: github:jiaowenjun/weimo-ui-core#214e96706195b972c0c5bd64db0d613c1d6fd612
