@@ -1,0 +1,141 @@
+@import 'weimo-ui-core/styles/popup-surface.css';
+
+@layer components {
+  .coss-command__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: var(--color-bg-backdrop);
+    backdrop-filter: blur(var(--backdrop-blur));
+    opacity: 1;
+    transition:
+      opacity 160ms ease-out,
+      backdrop-filter 160ms ease-out;
+  }
+
+  .coss-command__backdrop[data-starting-style],
+  .coss-command__backdrop[data-ending-style] {
+    backdrop-filter: blur(0);
+    opacity: 0;
+  }
+
+  .coss-command__sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .coss-command__viewport {
+    position: fixed;
+    inset: 0;
+    z-index: 81;
+    display: grid;
+    place-items: start center;
+    padding: 12vh 16px 24px;
+  }
+
+  .coss-command__popup {
+    width: min(100%, 620px);
+    min-width: 0;
+    overflow: hidden;
+    outline: none;
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 160ms ease-out,
+      transform 160ms ease-out;
+  }
+
+  .coss-command__popup[data-starting-style],
+  .coss-command__popup[data-ending-style] {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .coss-command__input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 58px;
+    padding: 0 10px 0 16px;
+    border-bottom: 1px solid var(--color-border-divider, var(--color-border));
+  }
+
+  .coss-command__input svg,
+  .coss-command__item svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .coss-command__input input {
+    width: 100%;
+    min-width: 0;
+    color: var(--color-text-primary);
+    border: 0;
+    outline: 0;
+    background: transparent;
+  }
+
+  .coss-command__list {
+    display: grid;
+    gap: 4px;
+    max-height: 380px;
+    padding: 8px;
+    overflow: auto;
+  }
+
+  .coss-command__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+  }
+
+  .coss-command__item:hover,
+  .coss-command__item:focus-visible {
+    background: var(--color-bg-hover);
+    outline: none;
+  }
+
+  .coss-command__item > span {
+    display: grid;
+    flex: 1;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .coss-command__item strong {
+    color: var(--color-text-primary);
+  }
+
+  .coss-command__item small,
+  .coss-command__empty {
+    color: var(--color-text-secondary);
+  }
+
+  .coss-command__empty {
+    margin: 0;
+    padding: 18px 12px;
+  }
+
+  .coss-command__footer {
+    padding: 10px 16px 12px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    border-top: 1px solid var(--color-border-divider, var(--color-border));
+  }
+}

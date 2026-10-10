@@ -48,11 +48,14 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm clean && tsc -p tsconfig.build.json && node scripts/copy-css.mjs",
+    "site:dev": "pnpm build && pnpm --dir site dev",
+    "site:build": "pnpm build && pnpm --dir site build",
+    "site:preview": "pnpm --dir site preview",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
     "test:typecheck": "pnpm typecheck",
     "test": "vitest run",
     "check:package": "pnpm build && publint && attw --pack . --profile esm-only --ignore-rules internal-resolution-error",
-    "verify": "pnpm typecheck && pnpm test && pnpm check:package",
+    "verify": "pnpm typecheck && pnpm test && pnpm check:package && pnpm --dir site build",
     "prepack": "pnpm build"
   },
   "dependencies": {

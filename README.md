@@ -4,6 +4,8 @@
 
 包发布编译后的 ESM、类型声明和 CSS，并通过显式子路径导出组件和样式；包根不提供 `.` 导出。
 
+组件文档与交互预览：<https://jiaowenjun.github.io/weimo-ui-markdown/>
+
 ## 安装
 
 ```bash
@@ -76,3 +78,13 @@ npm pack --dry-run
 ```
 
 `verify` 会检查类型、测试、构建产物、公开入口和类型声明解析。
+
+## 文档站
+
+```bash
+pnpm site:dev
+pnpm site:build
+pnpm site:preview
+```
+
+文档站位于 `site/`，只通过 `weimo-ui-markdown` 和 `weimo-ui-core` 的公开子路径消费组件。推送到 `main` 后，GitHub Actions 会构建并部署到 GitHub Pages。

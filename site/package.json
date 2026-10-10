@@ -1,0 +1,31 @@
+{
+  "name": "weimo-ui-markdown-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit --pretty false && vite build",
+    "preview": "vite preview",
+    "test:typecheck": "tsc -p tsconfig.json --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.9.0",
+    "class-variance-authority": "^0.7.1",
+    "lucide-react": "^1.54.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "7.18.1",
+    "weimo-ui-core": "github:jiaowenjun/weimo-ui-core#214e96706195b972c0c5bd64db0d613c1d6fd612",
+    "weimo-ui-markdown": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.3"
+  }
+}
