@@ -1,8 +1,6 @@
 import {
   forwardRef,
-  useState,
   type ComponentPropsWithoutRef,
-  type CSSProperties,
   type MouseEvent,
 } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
@@ -16,20 +14,10 @@ import {
   normalizeCenteredQuoteSyntax,
   WEIMO_CENTERED_QUOTE_MARKER,
 } from '../markdown/centered-quote'
-import {
-  getCachedMarkdownImageWidth,
-  setMarkdownImageHalfIntrinsicWidth,
-} from '../markdown/image-size'
-import type {
-  MarkdownImageRenderer,
-  MarkdownImageRenderProps,
-  MarkdownImageSrcResolver,
-} from '../markdown/image-renderer'
 import { markdownSanitizeSchema } from '../markdown/sanitize'
 
 import 'weimo-ui-markdown/styles/markdown-content.css'
 
-const SAFE_MARKDOWN_HREF_RE = /^(https?:|mailto:)/i
 const markdownRemarkRehypeOptions = {
   handlers: {
     break(state, node) {
@@ -49,59 +37,10 @@ const markdownRemarkRehypeOptions = {
 type MarkdownAstNode = {
   children?: MarkdownAstNode[]
   data?: {
-    hName?: string
     hProperties?: Record<string, unknown>
   }
-  ordered?: boolean
   type?: string
   value?: string
-}
-
-type TableCellAlign = ComponentPropsWithoutRef<'td'>['align']
-
-function sanitizeMarkdownHref(href?: string): string | undefined {
-  if (!href) return undefined
-
-  const trimmed = href.trim()
-
-  return SAFE_MARKDOWN_HREF_RE.test(trimmed) ? trimmed : undefined
-}
-
-function tableCellStyle(align: TableCellAlign): CSSProperties | undefined {
-  return align ? { textAlign: align as CSSProperties['textAlign'] } : undefined
-}
-
-function trailingOrderedListImageRemarkPlugin() {
-  return (tree: MarkdownAstNode) => {
-    const children = tree.children
-
-    if (!children || children.length < 2) return
-
-    const orderedList = children.at(-2)
-    const imageParagraph = children.at(-1)
-    const image = imageParagraph?.children?.[0]
-
-    if (
-      orderedList?.type !== 'list' ||
-      orderedList.ordered !== true ||
-      imageParagraph?.type !== 'paragraph' ||
-      imageParagraph.children?.length !== 1 ||
-      image?.type !== 'image'
-    ) {
-      return
-    }
-
-    children.splice(-2, 2, {
-      type: 'listImagePair',
-      children: [orderedList, imageParagraph],
-      data: {
-        hName: 'div',
-        hProperties: {
-          className: ['weimo-card-markdown__list-image-pair'],
-        },
-      },
-    })
-  }
 }
 
 function MarkdownOrderedList({ children, start }: ComponentPropsWithoutRef<'ol'>) {
@@ -200,26 +139,12 @@ function unwrapInlineCodeRemarkPlugin() {
 
 const simpleRemarkPlugins: PluggableList = [
   unwrapInlineCodeRemarkPlugin,
-  trailingOrderedListImageRemarkPlugin,
   markCenteredBlockquotes,
   remarkBreaks,
 ]
 const simpleRehypePlugins: PluggableList = [rehypeRaw, [rehypeSanitize, markdownSanitizeSchema]]
 
 const baseMarkdownComponents: Components = {
-  a({ children, href, title }) {
-    const safeHref = sanitizeMarkdownHref(href)
-
-    if (!safeHref) {
-      return <span className="weimo-card-markdown__link-text">{children}</span>
-    }
-
-    return (
-      <a className="weimo-card-markdown__link" href={safeHref} title={title}>
-        {children}
-      </a>
-    )
-  },
   blockquote({ children, node }) {
     const centered =
       (node?.properties?.['data-weimo-centered'] ??
@@ -242,9 +167,6 @@ const baseMarkdownComponents: Components = {
         {children}
       </code>
     )
-  },
-  del({ children }) {
-    return <del className="weimo-card-markdown__del">{children}</del>
   },
   em({ children }) {
     return <em className="weimo-card-markdown__em">{children}</em>
@@ -294,11 +216,6 @@ const baseMarkdownComponents: Components = {
   hr() {
     return <hr className="weimo-card-markdown__hr" />
   },
-  img({ alt }) {
-    const label = alt ? `[图片: ${alt}]` : '[图片]'
-
-    return <span className="weimo-card-markdown__image-placeholder">{label}</span>
-  },
   li({ children }) {
     return <li className="weimo-card-markdown__list-item">{children}</li>
   },
@@ -311,42 +228,6 @@ const baseMarkdownComponents: Components = {
   },
   strong({ children }) {
     return <strong className="weimo-card-markdown__strong">{children}</strong>
-  },
-  table({ children }) {
-    return (
-      <div
-        className="weimo-card-markdown__scroll-block"
-        data-markdown-table-scroll="true"
-      >
-        <table className="weimo-card-markdown__table">{children}</table>
-      </div>
-    )
-  },
-  tbody({ children }) {
-    return <tbody className="weimo-card-markdown__table-body">{children}</tbody>
-  },
-  td({ children, align }) {
-    return (
-      <td className="weimo-card-markdown__table-cell" style={tableCellStyle(align)}>
-        {children}
-      </td>
-    )
-  },
-  th({ children, align }) {
-    return (
-      <th
-        className="weimo-card-markdown__table-cell weimo-card-markdown__table-cell--header"
-        style={tableCellStyle(align)}
-      >
-        {children}
-      </th>
-    )
-  },
-  thead({ children }) {
-    return <thead className="weimo-card-markdown__table-head">{children}</thead>
-  },
-  tr({ children }) {
-    return <tr className="weimo-card-markdown__table-row">{children}</tr>
   },
   ul({ children, className }) {
     return (
@@ -362,46 +243,8 @@ const baseMarkdownComponents: Components = {
   },
 }
 
-export type MdRenderSimpleImageRenderProps = MarkdownImageRenderProps
-export type MdRenderSimpleImageRenderer = MarkdownImageRenderer
-export type MdRenderSimpleImageSrcResolver = MarkdownImageSrcResolver
-
-type MarkdownImageProps = Pick<ComponentPropsWithoutRef<'img'>, 'alt' | 'title'> & {
-  renderImage?: MdRenderSimpleImageRenderer
-  resolvedSrc: string
-}
-
-function MarkdownImage({ alt, renderImage, resolvedSrc, title }: MarkdownImageProps) {
-  const [width, setWidth] = useState<string | null>(
-    () => getCachedMarkdownImageWidth(resolvedSrc) ?? null,
-  )
-
-  const imageProps: MdRenderSimpleImageRenderProps = {
-    alt: alt ?? '',
-    className: 'weimo-card-markdown__image',
-    onError: () => setWidth('auto'),
-    onLoad: (event) => {
-      const nextWidth = setMarkdownImageHalfIntrinsicWidth(
-        event.currentTarget,
-        resolvedSrc,
-      )
-      if (nextWidth) setWidth(nextWidth)
-    },
-    src: resolvedSrc,
-    style: {
-      visibility: width ? 'visible' : 'hidden',
-      width: width ?? undefined,
-    },
-    title,
-  }
-
-  return renderImage ? renderImage(imageProps) : <img {...imageProps} />
-}
-
 export type MdRenderSimpleProps = ComponentPropsWithoutRef<'div'> & {
   content: string
-  renderImage?: MdRenderSimpleImageRenderer
-  resolveImageSrc?: MdRenderSimpleImageSrcResolver
 }
 
 export const MdRenderSimple = forwardRef<HTMLDivElement, MdRenderSimpleProps>(function MdRenderSimple(
@@ -409,8 +252,6 @@ export const MdRenderSimple = forwardRef<HTMLDivElement, MdRenderSimpleProps>(fu
     className,
     content,
     onMouseDown,
-    renderImage,
-    resolveImageSrc,
     ...props
   },
   ref,
@@ -423,29 +264,6 @@ export const MdRenderSimple = forwardRef<HTMLDivElement, MdRenderSimpleProps>(fu
     onMouseDown?.(event)
   }
 
-  const markdownComponents: Components = {
-    ...baseMarkdownComponents,
-    img({ alt, src, title }) {
-      const resolvedSrc = src ? resolveImageSrc?.(src) : undefined
-
-      if (!resolvedSrc) {
-        const label = alt ? `[图片: ${alt}]` : '[图片]'
-
-        return <span className="weimo-card-markdown__image-placeholder">{label}</span>
-      }
-
-      return (
-        <MarkdownImage
-          alt={alt ?? ''}
-          key={resolvedSrc}
-          renderImage={renderImage}
-          resolvedSrc={resolvedSrc}
-          title={title}
-        />
-      )
-    },
-  }
-
   return (
     <div
       ref={ref}
@@ -454,7 +272,7 @@ export const MdRenderSimple = forwardRef<HTMLDivElement, MdRenderSimpleProps>(fu
       {...props}
     >
       <ReactMarkdown
-        components={markdownComponents}
+        components={baseMarkdownComponents}
         rehypePlugins={simpleRehypePlugins}
         remarkRehypeOptions={markdownRemarkRehypeOptions}
         remarkPlugins={simpleRemarkPlugins}

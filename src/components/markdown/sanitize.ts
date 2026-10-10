@@ -9,9 +9,5 @@ export const markdownSanitizeSchema: Options = {
       ['dataWeimoCentered', 'true'],
     ],
     code: [['className', /^language-./]],
-    div: [
-      ...(defaultSchema.attributes?.div ?? []),
-      ['className', 'weimo-card-markdown__list-image-pair'],
-    ],
   },
 }

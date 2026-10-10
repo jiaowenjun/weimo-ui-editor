@@ -15,7 +15,7 @@
     container-type: inline-size;
   }
 
-  .weimo-markdown-content :where(p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, pre, table, hr, figure, .tableWrapper) {
+  .weimo-markdown-content :where(p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, pre, table, hr, figure) {
     margin: 0;
   }
 
@@ -101,7 +101,7 @@
   }
 
   .weimo-card-markdown__list--ul,
-  .md-editor__content.weimo-markdown-content ul:not([data-type="taskList"]) {
+  .md-editor__content.weimo-markdown-content ul {
     list-style-type: disc;
   }
 
@@ -130,29 +130,6 @@
     margin-top: 0.25em;
   }
 
-  .weimo-card-markdown__list--ul.contains-task-list,
-  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] {
-    padding-left: 0;
-    list-style: none;
-  }
-
-  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.7rem;
-  }
-
-  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] li > label {
-    flex: none;
-    margin-top: 0.12rem;
-  }
-
-  .md-editor__content.weimo-markdown-content ul[data-type="taskList"] li > div {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-
   .weimo-markdown-content :not(pre) > :where(.weimo-card-markdown__code, code) {
     padding: 2px 6px;
     border: 1px solid var(--md-code-border-color);
@@ -176,140 +153,12 @@
     word-break: break-word;
   }
 
-  .weimo-card-markdown__link,
-  .md-editor__content.weimo-markdown-content a {
-    color: var(--md-link-color);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
-  .weimo-card-markdown__link-text {
-    color: var(--md-link-color);
-  }
-
-
-  .weimo-card-markdown__image-placeholder {
-    padding: 2px 6px;
-    border-radius: var(--md-img-placeholder-border-radius);
-    color: var(--md-img-placeholder-color);
-    font-size: var(--md-img-placeholder-font-size);
-  }
-
-  .weimo-card-markdown__image,
-  .md-editor__content.weimo-markdown-content img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    margin-inline: auto;
-    border-radius: var(--md-img-border-radius);
-  }
-
-  .weimo-card-markdown__list-image-pair {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) fit-content(50%);
-    align-items: start;
-    column-gap: var(--md-list-img-gap);
-  }
-
-  .weimo-card-markdown__list-image-pair > .weimo-card-markdown__list {
-    min-width: 0;
-  }
-
-  .weimo-card-markdown__list-image-pair > .weimo-card-markdown__p {
-    min-width: 0;
-    justify-self: end;
-  }
-
-  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"] {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) fit-content(50%);
-    align-items: start;
-    column-gap: var(--md-list-img-gap);
-  }
-
-  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"] > * {
-    grid-column: 1 / -1;
-  }
-
-  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
-    > [data-list-image-role="list"] {
-    min-width: 0;
-    grid-column: 1;
-  }
-
-  .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
-    > [data-list-image-role="image"] {
-    width: fit-content;
-    max-width: 100%;
-    min-width: 0;
-    grid-column: 2;
-    justify-self: end;
-    margin-top: 0;
-  }
-
-  .weimo-card-markdown__scroll-block {
-    width: fit-content;
-    max-width: 100%;
-    margin-inline: auto;
-    overflow-x: auto;
-    border: 1px solid var(--md-table-frame-border-color);
-    border-radius: var(--md-table-border-radius);
-  }
-
-  .md-editor__content.weimo-markdown-content .tableWrapper {
-    width: fit-content;
-    max-width: 100%;
-    margin-inline: auto;
-    overflow-x: auto;
-    border: 1px solid var(--md-table-frame-border-color);
-    border-radius: var(--md-table-border-radius);
-  }
-
-  .weimo-card-markdown__table,
-  .md-editor__content.weimo-markdown-content table {
-    width: max-content;
-    border-collapse: collapse;
-    font-size: var(--md-table-font-size);
-  }
-
-  .weimo-card-markdown__table-cell,
-  .md-editor__content.weimo-markdown-content :where(td, th) {
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--md-table-cell-border-color);
-    word-break: break-all;
-    text-align: left;
-    vertical-align: top;
-  }
-
-  .weimo-card-markdown__table-cell + .weimo-card-markdown__table-cell,
-  .md-editor__content.weimo-markdown-content :where(td, th) + :where(td, th) {
-    border-left: 1px solid var(--md-table-cell-border-color);
-  }
-
-  .weimo-card-markdown__table-cell--header,
-  .md-editor__content.weimo-markdown-content th {
-    color: var(--md-table-header-color);
-    font-weight: 600;
-  }
-
-  .md-editor__content.weimo-markdown-content th :where(p) {
-    color: inherit;
-  }
-
-  .weimo-card-markdown__table-body .weimo-card-markdown__table-row:last-child .weimo-card-markdown__table-cell,
-  .md-editor__content.weimo-markdown-content tbody tr:last-child :where(td, th) {
-    border-bottom: 0;
-  }
-
   .weimo-markdown-content > :is(.weimo-card-markdown__p,
   .weimo-card-markdown__heading,
   .weimo-card-markdown__blockquote,
   .weimo-card-markdown__list,
-  .weimo-card-markdown__list-image-pair,
   .weimo-card-markdown__pre,
-  .weimo-card-markdown__scroll-block,
   .weimo-card-markdown__hr,
-  .tableWrapper,
   p,
   h1,
   h2,
@@ -328,11 +177,8 @@
   .weimo-card-markdown__heading,
   .weimo-card-markdown__blockquote,
   .weimo-card-markdown__list,
-  .weimo-card-markdown__list-image-pair,
   .weimo-card-markdown__pre,
-  .weimo-card-markdown__scroll-block,
   .weimo-card-markdown__hr,
-  .tableWrapper,
   p,
   h1,
   h2,
@@ -349,31 +195,5 @@
   figure,
   img) {
     margin-top: 1em;
-  }
-
-  @container weimo-markdown-content (max-width: 40rem) {
-    .weimo-card-markdown__list-image-pair {
-      grid-template-columns: minmax(0, 1fr);
-      row-gap: 1em;
-    }
-
-    .weimo-card-markdown__list-image-pair > .weimo-card-markdown__p {
-      justify-self: center;
-    }
-
-    .md-editor__content.weimo-markdown-content[data-list-image-layout="true"] {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
-      > [data-list-image-role] {
-      grid-column: 1;
-    }
-
-    .md-editor__content.weimo-markdown-content[data-list-image-layout="true"]
-      > [data-list-image-role="image"] {
-      justify-self: center;
-      margin-top: 1em;
-    }
   }
 }

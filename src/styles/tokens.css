@@ -16,17 +16,6 @@
   --md-code-font-size: 14px;
   --md-code-border-color: hsl(0 0% 88%);
   --md-code-border-radius: 8px;
-  --md-link-color: hsl(0 0% 15%);
-  --md-img-placeholder-color: hsl(0 0% 74%);
-  --md-img-placeholder-font-size: 14px;
-  --md-img-placeholder-border-radius: 8px;
-  --md-img-border-radius: 8px;
-  --md-list-img-gap: 1em;
-  --md-table-frame-border-color: hsl(0 0% 88%);
-  --md-table-cell-border-color: hsl(0 0% 88%);
-  --md-table-border-radius: 8px;
-  --md-table-font-size: 13px;
-  --md-table-header-color: hsl(0 0% 28%);
   --md-selection-bg: hsl(0 0% 15% / 0.2);
 }
 
@@ -37,10 +26,5 @@
   --md-h1-color: hsl(0 0% 98%);
   --md-quote-color: hsl(0 0% 64%);
   --md-code-border-color: hsl(0 0% 28%);
-  --md-link-color: hsl(0 0% 96%);
-  --md-img-placeholder-color: hsl(0 0% 35%);
-  --md-table-frame-border-color: hsl(0 0% 28%);
-  --md-table-cell-border-color: hsl(0 0% 28%);
-  --md-table-header-color: hsl(0 0% 64%);
   --md-selection-bg: hsl(0 0% 96% / 0.2);
 }
