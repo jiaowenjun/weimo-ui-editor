@@ -61,8 +61,8 @@ function MdEditorSimpleDemo() {
   return (
     <>
       <ComponentPreviewCard
-        action={
-          <>
+        footer={
+          <div className="md-editor-docs-toolbar">
             <GhostIconButton
               active={selectionFormat?.bold === true}
               aria-label="切换粗体"
@@ -99,7 +99,7 @@ function MdEditorSimpleDemo() {
             >
               <Quote />
             </GhostIconButton>
-          </>
+          </div>
         }
         label="简化Markdown编辑器"
       >
