@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Heading1, List, Quote } from 'lucide-react'
+import { Bold, Heading1, List, Quote } from 'lucide-react'
 
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
@@ -63,6 +63,15 @@ function MdEditorSimpleDemo() {
       <ComponentPreviewCard
         action={
           <>
+            <GhostIconButton
+              active={selectionFormat?.bold === true}
+              aria-label="切换粗体"
+              disabled={!selectionFormat}
+              onClick={() => editorRef.current?.toggleBold()}
+              size="sm"
+            >
+              <Bold />
+            </GhostIconButton>
             <GhostIconButton
               active={selectionFormat?.block === 'heading'}
               aria-label="切换标题"
