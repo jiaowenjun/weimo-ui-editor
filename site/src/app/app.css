@@ -16,7 +16,8 @@
 .markdown-editor-viewport { min-width: 0; min-height: 250px; padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-bg-page); }
 .markdown-editor-viewport .md-editor__viewport { min-height: 208px; max-height: 54vh; }
 .markdown-editor-json { max-height: 220px; margin: 0; padding: 14px; overflow: auto; color: var(--color-text-secondary); font-size: var(--font-size-xs); line-height: 1.55; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-bg-raised) 62%, transparent); }
-.md-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; }
+.md-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; overflow: hidden; transition: height 200ms ease; }
+@media (prefers-reduced-motion: reduce) { .md-editor-docs-preview { transition-duration: 1ms; } }
 .md-editor-docs-toolbar { display: flex; justify-content: center; gap: 4px; }
 .component-preview-card:has(.md-editor-docs-preview) .base-card__content { border-radius: var(--radius-xs); }
 .md-style-preview__group-effect { display: flex; min-width: 0; min-height: 112px; align-items: center; justify-content: center; overflow: hidden; padding: 16px; color: var(--color-text-primary); }

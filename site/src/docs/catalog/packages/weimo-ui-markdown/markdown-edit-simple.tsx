@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Bold, Heading1, List, Quote } from 'lucide-react'
 
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
@@ -57,6 +57,31 @@ function MdEditorSimpleDemo() {
   const [selectionFormat, setSelectionFormat] =
     useState<MdEditorSimpleSelectionFormat | null>(null)
   const editorRef = useRef<MdEditorSimpleHandle | null>(null)
+  const previewRef = useRef<HTMLDivElement | null>(null)
+  // null 表示尚未测量,容器保持自适应高度,避免首帧从 0 闪跳
+  const [previewHeight, setPreviewHeight] = useState<number | null>(null)
+
+  useLayoutEffect(() => {
+    const preview = previewRef.current
+    const editorRoot = preview?.querySelector<HTMLElement>(':scope > .md-editor')
+
+    if (!preview || !editorRoot) return
+
+    const observedEditorRoot: HTMLElement = editorRoot
+
+    function syncPreviewHeight() {
+      setPreviewHeight(observedEditorRoot.getBoundingClientRect().height)
+    }
+
+    syncPreviewHeight()
+
+    if (typeof ResizeObserver === 'undefined') return
+
+    const editorResizeObserver = new ResizeObserver(syncPreviewHeight)
+    editorResizeObserver.observe(editorRoot)
+
+    return () => editorResizeObserver.disconnect()
+  }, [])
 
   return (
     <>
@@ -103,7 +128,11 @@ function MdEditorSimpleDemo() {
         }
         label="简化Markdown编辑器"
       >
-        <div className="md-editor-docs-preview">
+        <div
+          className="md-editor-docs-preview"
+          ref={previewRef}
+          style={previewHeight === null ? undefined : { height: previewHeight }}
+        >
           <MdEditorSimple
             onChange={setContent}
             onSelectionFormatChange={setSelectionFormat}
