@@ -58,7 +58,7 @@ function RichEditorDemo() {
     useState<RichEditorSelectionFormat | null>(null)
   const editorRef = useRef<RichEditorHandle | null>(null)
   const previewRef = useRef<HTMLDivElement | null>(null)
-  // null 表示尚未测量,容器保持自适应高度,避免首帧从 0 闪跳
+  // null 表示尚未测得真实编辑器高度(骨架屏阶段不测量),容器保持自适应高度
   const [previewHeight, setPreviewHeight] = useState<number | null>(null)
 
   useLayoutEffect(() => {
@@ -70,6 +70,10 @@ function RichEditorDemo() {
     const observedEditorRoot: HTMLElement = editorRoot
 
     function syncPreviewHeight() {
+      // 骨架高度是 min-height 占位,不是编辑器最终高度;锁定它会在编辑器就绪后
+      // 触发一次错误高度→真实高度的过渡动画,表现为卡片"慢慢长高"闪烁
+      if (observedEditorRoot.classList.contains('rich-editor--loading')) return
+
       setPreviewHeight(observedEditorRoot.getBoundingClientRect().height)
     }
 
