@@ -1,10 +1,29 @@
 # weimo-ui-markdown
 
-`weimo-ui-markdown` 是一个收敛到简单场景的 Markdown 组件包，只提供简单渲染器和简单编辑器。它唯一的 `weimo-ui` 依赖是 `weimo-ui-core`。
+> 小而稳的 React Markdown 组件:把一段 Markdown 渲染出来,或者让人舒服地编辑一段格式干净的内容。
 
-包发布编译后的 ESM、类型声明和 CSS，并通过显式子路径导出组件和样式；包根不提供 `.` 导出。
+[![演示页](https://img.shields.io/badge/%E6%BC%94%E7%A4%BA%E9%A1%B5-GitHub_Pages-2ea44f?style=flat-square)](https://jiaowenjun.github.io/weimo-ui-markdown/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3a9bd6?style=flat-square)](./LICENSE)
+[![React 19](https://img.shields.io/badge/React-19-61dafb?style=flat-square)](https://react.dev)
 
-组件文档与交互预览：<https://jiaowenjun.github.io/weimo-ui-markdown/>
+**[👉 在线演示与组件文档](https://jiaowenjun.github.io/weimo-ui-markdown/)** — 渲染效果、编辑器交互、样式 token 一览,点开即看。
+
+## 它解决什么问题
+
+很多场景并不需要一个全功能编辑器:个人简介、商品描述、一条评论、一段公告……你需要的只是「把 Markdown 显示出来」和「让用户写点格式受限的文字」,而不是图片上传、表格、数学公式和一整套工具栏。
+
+weimo-ui-markdown 只做这两件事,并把它们做好:
+
+- **MdRenderSimple** — Markdown 字符串进,排版舒适的 React 内容出;
+- **MdEditorSimple** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
+
+## 为什么选它
+
+- 🎯 **聚焦常用语法** — 渲染器覆盖标题、加粗、引用、列表、代码块等日常语法,单个换行也生效;编辑器同样只开放段落、一级标题、加粗、引用和无序列表,用户写出来的内容天然规整。
+- 🔒 **安全默认** — 原始 HTML 经白名单清理,链接协议受限,渲染用户输入的内容不用提心吊胆。
+- 🌗 **明暗双主题** — 一份 token CSS 同时覆盖亮色与 `.dark` 暗色;颜色、字号、间距全部是 CSS 变量,覆盖变量即可定制,不用重写组件样式。
+- 📦 **开箱即用** — 组件自动加载自身结构样式,提供 ESM 产物与完整的 TypeScript 类型,显式子路径导出,按需引入。
+- 🪶 **轻心智** — 没有工具栏、没有插件系统、没有 Markdown 字符串的双向转换,接入成本低,行为可预期。
 
 ## 安装
 
@@ -12,79 +31,69 @@
 pnpm add weimo-ui-markdown weimo-ui-core react react-dom
 ```
 
-`weimo-ui-markdown@0.1.x` 支持 `weimo-ui-core@0.1.x`；应用必须只安装一份兼容的 core。
+需要 React 19。`weimo-ui-markdown@0.1.x` 与 `weimo-ui-core@0.1.x` 搭配使用,应用里保留一份兼容的 core 即可。
 
-## 组件入口
-
-| 入口 | 导出 | 职责 |
-| --- | --- | --- |
-| `components/md-render-simple` | `MdRenderSimple` | 渲染简单 Markdown 内容 |
-| `components/md-editor-simple` | `MdEditorSimple` | 编辑受限的 Tiptap JSON 文档 |
-
-样式入口包括 `styles/tokens.css`、`styles/markdown-content.css` 和 `styles/md-editor-simple.css`。组件会自动导入自身结构样式；应用入口只需加载 Markdown token：
+然后在应用入口引入唯一必需的样式:
 
 ```ts
 import 'weimo-ui-markdown/styles/tokens.css'
 ```
 
-## 简单渲染
+它会顺带引入 `weimo-ui-core` 的基础 token,并定义 `--md-*` 系列 Markdown 变量;给根元素挂上 `.dark` 类即可切换暗色主题。
+
+## 三十秒上手
+
+### 渲染一段 Markdown
 
 ```tsx
 import { MdRenderSimple } from 'weimo-ui-markdown/components/md-render-simple'
 
-export function Preview() {
-  return <MdRenderSimple content={'# 标题\n\n正文 **加粗**'} />
+export function Profile() {
+  return <MdRenderSimple content={'# 标题\n\n一段 **加粗** 的简介'} />
 }
 ```
 
-`MdRenderSimple` 面向基础 Markdown 展示，不启用完整编辑器对应的 GFM 表格、任务列表和数学公式扩展。链接会经过协议限制，原始 HTML 会经过白名单清理。
-
-## 简单编辑
+### 编辑一段内容
 
 ```tsx
-import { useRef } from 'react'
-import {
-  MdEditorSimple,
-  type MdEditorSimpleHandle,
-} from 'weimo-ui-markdown/components/md-editor-simple'
+import { MdEditorSimple } from 'weimo-ui-markdown/components/md-editor-simple'
 
-export function Editor() {
-  const editorRef = useRef<MdEditorSimpleHandle>(null)
-
+export function DescriptionEditor() {
   return (
     <MdEditorSimple
-      ref={editorRef}
-      placeholder="输入内容"
-      onSave={(content) => console.log(content)}
+      placeholder="写点什么……"
+      onChange={(content) => console.log(content)}
+      onSave={(content) => console.log(content)} // ⌘S / Ctrl+S 触发
     />
   )
 }
 ```
 
-`MdEditorSimple` 以 Tiptap `JSONContent` 作为输入和输出，只开放段落、一级标题、加粗、引用和无序列表。它不解析或序列化 Markdown 字符串，也不包含图片、表格、数学公式或内置工具栏。
+编辑器以 Tiptap JSON 文档作为输入输出,支持受控 `value` 与非受控 `defaultValue` 两种用法,高度随内容自适应增长;通过 ref 还可以调用 `focus`、`clear`、`getContent`、`toggleBold` 等方法。更多交互见[演示页](https://jiaowenjun.github.io/weimo-ui-markdown/)。
 
-## 依赖边界
+## 组件一览
 
-- 只依赖 `weimo-ui-core` 的 token 和工具函数。
-- `MdRenderSimple` 与 `MdEditorSimple` 彼此独立，不依赖已删除的全量组件。
-- 共享 Markdown 语义处理放在 `components/markdown/`，仅供简单渲染器内部使用。
+| 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
+| --- | --- | --- | --- |
+| `MdRenderSimple` | `weimo-ui-markdown/components/md-render-simple` | Markdown 字符串 → React 节点 | 展示简介、公告、评论等内容 |
+| `MdEditorSimple` | `weimo-ui-markdown/components/md-editor-simple` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 
-## 验证
+## 刻意不做的
 
-```bash
-pnpm install
-pnpm verify
-npm pack --dry-run
-```
+边界清晰是这个包的一部分:
 
-`verify` 会检查类型、测试、构建产物、公开入口和类型声明解析。
+- 渲染器不启用 GFM 表格、任务列表和数学公式扩展;
+- 编辑器不支持图片、表格、数学公式,也没有内置工具栏;
+- 编辑器不解析或序列化 Markdown 字符串,避免格式来回转换造成的内容丢失。
 
-## 文档站
+如果你的场景确实需要这些能力,建议直接选用全功能方案——把简单场景留给我们。
 
-```bash
-pnpm site:dev
-pnpm site:build
-pnpm site:preview
-```
+## 链接
 
-文档站位于 `site/`，只通过 `weimo-ui-markdown` 和 `weimo-ui-core` 的公开子路径消费组件。推送到 `main` 后，GitHub Actions 会构建并部署到 GitHub Pages。
+- [在线演示与组件文档](https://jiaowenjun.github.io/weimo-ui-markdown/)
+- [问题反馈](https://github.com/jiaowenjun/weimo-ui-markdown/issues)
+- 设计 token 与基础组件来自 [weimo-ui-core](https://github.com/jiaowenjun/weimo-ui-core)
+
+## 许可证
+
+[MIT](./LICENSE)
