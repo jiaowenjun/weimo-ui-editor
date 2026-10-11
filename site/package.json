@@ -15,9 +15,9 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "8.4.0",
-    "weimo-ui-core": "github:jiaowenjun/weimo-ui-core#8fb6fc539e18880b18c8a59e090a74187f4e10c1",
+    "weimo-ui-core": "~0.1.0",
     "weimo-ui-markdown": "workspace:*",
-    "weimo-ui-template": "git+https://github.com/jiaowenjun/weimo-ui-template.git#a3859fc4f1b681d636c0a78710ec594806522e35"
+    "weimo-ui-template": "~0.1.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
