@@ -1,11 +1,11 @@
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
-import { MdRenderSimple } from 'weimo-ui-markdown/components/md-render-simple'
+import { MdRender } from 'weimo-ui-markdown/components/md-render'
 import type { ComponentDefinition } from '../../component-docs'
 
-import { mdRenderSimpleSample } from '../../fixtures/markdown-sample'
+import { mdRenderSample } from '../../fixtures/markdown-sample'
 import { MarkdownSimpleStylePreview } from './markdown-styles'
 
-function MdRenderSimplePreview() {
+function MdRenderPreview() {
   return (
     <ComponentPreviewCard
       label={
@@ -15,24 +15,24 @@ function MdRenderSimplePreview() {
         </>
       }
     >
-      <MdRenderSimple aria-label="MdRenderSimple 预览" content={mdRenderSimpleSample} />
+      <MdRender aria-label="MdRender 预览" content={mdRenderSample} />
     </ComponentPreviewCard>
   )
 }
 
-function MarkdownRenderSimpleDemo() {
+function MarkdownRenderDemo() {
   return (
     <>
-      <MdRenderSimplePreview />
+      <MdRenderPreview />
       <MarkdownSimpleStylePreview />
     </>
   )
 }
 
-export const markdownRenderSimpleDefinition = {
-  id: 'markdown-render-simple',
-  summary: 'MdRenderSimple 简化渲染效果与常用 Markdown 样式 token 总览',
+export const markdownRenderDefinition = {
+  id: 'markdown-render',
+  summary: 'MdRender 渲染效果与常用 Markdown 样式 token 总览',
   status: 'Ready',
   frame: 'plain',
-  preview: () => <MarkdownRenderSimpleDemo />,
+  preview: () => <MarkdownRenderDemo />,
 } satisfies ComponentDefinition

@@ -8,7 +8,7 @@ import StarterKit from '@tiptap/starter-kit'
 // 无序列表四种(标题仅 level 1),其余 StarterKit 格式(斜体/链接/行内代码/
 // 代码块/删除线/下划线/有序列表/分隔线)全部关闭,schema 层面即无法产生。
 
-export type MdEditorSimpleInteractionContext = {
+export type MdEditorInteractionContext = {
   disabled: boolean
   onSave?: (content: JSONContent) => void
   onCancel?: () => void
@@ -17,15 +17,15 @@ export type MdEditorSimpleInteractionContext = {
 // 共享 SaveKeymap 的 Mod-S 会调 editor.getMarkdown(),没有 Markdown 扩展
 // 时该方法不存在,简化编辑器必须自带 JSON 版保存键位。
 const SimpleSaveKeymap = Extension.create<{
-  getInteraction: () => MdEditorSimpleInteractionContext
+  getInteraction: () => MdEditorInteractionContext
 }>({
-  name: 'weimoMdEditorSimpleSaveKeymap',
+  name: 'weimoMdEditorSaveKeymap',
   addOptions() {
     return {
       getInteraction: () =>
         ({
           disabled: false,
-        }) satisfies MdEditorSimpleInteractionContext,
+        }) satisfies MdEditorInteractionContext,
     }
   },
   addKeyboardShortcuts() {
@@ -52,9 +52,9 @@ const SimpleSaveKeymap = Extension.create<{
   },
 })
 
-export function createMdEditorSimpleExtensions(options: {
+export function createMdEditorExtensions(options: {
   placeholder?: string
-  getInteraction: () => MdEditorSimpleInteractionContext
+  getInteraction: () => MdEditorInteractionContext
 }): Extension[] {
   return [
     StarterKit.configure({

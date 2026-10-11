@@ -3,53 +3,53 @@ import { EditorContent } from '@tiptap/react'
 
 import { cn } from 'weimo-ui-core/lib/utils'
 import {
-  useMdEditorSimple,
-  type MdEditorSimpleBlockFormat,
-  type MdEditorSimpleContent,
-  type MdEditorSimpleFocusPosition,
-  type MdEditorSimpleSelectionFormat,
-} from './use-md-editor-simple'
+  useMdEditor,
+  type MdEditorBlockFormat,
+  type MdEditorContent,
+  type MdEditorFocusPosition,
+  type MdEditorSelectionFormat,
+} from './use-md-editor'
 
-import 'weimo-ui-markdown/styles/md-editor-simple.css'
+import 'weimo-ui-markdown/styles/md-editor.css'
 
 export type {
-  MdEditorSimpleBlockFormat,
-  MdEditorSimpleContent,
-  MdEditorSimpleFocusPosition,
-  MdEditorSimpleSelectionFormat,
-} from './use-md-editor-simple'
+  MdEditorBlockFormat,
+  MdEditorContent,
+  MdEditorFocusPosition,
+  MdEditorSelectionFormat,
+} from './use-md-editor'
 
-export type MdEditorSimpleProps = {
+export type MdEditorProps = {
   autoFocus?: boolean
-  autoFocusPosition?: MdEditorSimpleFocusPosition
+  autoFocusPosition?: MdEditorFocusPosition
   className?: string
-  value?: MdEditorSimpleContent
-  defaultValue?: MdEditorSimpleContent
+  value?: MdEditorContent
+  defaultValue?: MdEditorContent
   disabled?: boolean
   editorClassName?: string
   onCancel?: () => void
-  onChange?: (content: MdEditorSimpleContent) => void
+  onChange?: (content: MdEditorContent) => void
   onContentHeightChange?: (height: number) => void
-  onSelectionFormatChange?: (format: MdEditorSimpleSelectionFormat | null) => void
-  onSave?: (content: MdEditorSimpleContent) => void
+  onSelectionFormatChange?: (format: MdEditorSelectionFormat | null) => void
+  onSave?: (content: MdEditorContent) => void
   placeholder?: string
 }
-export type MdEditorSimpleHandle = {
+export type MdEditorHandle = {
   clear: () => void
-  focus: (position?: MdEditorSimpleFocusPosition) => void
-  getContent: () => MdEditorSimpleContent
+  focus: (position?: MdEditorFocusPosition) => void
+  getContent: () => MdEditorContent
   getContentHeight: () => number
-  getSelectionFormat: () => MdEditorSimpleSelectionFormat | null
-  setBlockFormat: (format: MdEditorSimpleBlockFormat) => boolean
+  getSelectionFormat: () => MdEditorSelectionFormat | null
+  setBlockFormat: (format: MdEditorBlockFormat) => boolean
   setBold: (active: boolean) => boolean
   toggleBlockFormat: (
-    format: Exclude<MdEditorSimpleBlockFormat, 'paragraph'>,
+    format: Exclude<MdEditorBlockFormat, 'paragraph'>,
   ) => boolean
   toggleBold: () => boolean
 }
 
-export const MdEditorSimple = forwardRef<MdEditorSimpleHandle, MdEditorSimpleProps>(
-  function MdEditorSimple(
+export const MdEditor = forwardRef<MdEditorHandle, MdEditorProps>(
+  function MdEditor(
     {
       autoFocus = false,
       autoFocusPosition = 'end',
@@ -79,7 +79,7 @@ export const MdEditorSimple = forwardRef<MdEditorSimpleHandle, MdEditorSimplePro
       setBold,
       toggleBlockFormat,
       toggleBold,
-    } = useMdEditorSimple({
+    } = useMdEditor({
       autoFocus,
       autoFocusPosition,
       defaultValue,
@@ -192,4 +192,4 @@ export const MdEditorSimple = forwardRef<MdEditorSimpleHandle, MdEditorSimplePro
   },
 )
 
-MdEditorSimple.displayName = 'MdEditorSimple'
+MdEditor.displayName = 'MdEditor'

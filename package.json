@@ -21,13 +21,13 @@
     "LICENSE"
   ],
   "exports": {
-    "./components/md-editor-simple": {
-      "types": "./dist/components/md-editor-simple/md-editor-simple.d.ts",
-      "import": "./dist/components/md-editor-simple/md-editor-simple.js"
+    "./components/md-editor": {
+      "types": "./dist/components/md-editor/md-editor.d.ts",
+      "import": "./dist/components/md-editor/md-editor.js"
     },
-    "./components/md-render-simple": {
-      "types": "./dist/components/md-render-simple/md-render-simple.d.ts",
-      "import": "./dist/components/md-render-simple/md-render-simple.js"
+    "./components/md-render": {
+      "types": "./dist/components/md-render/md-render.d.ts",
+      "import": "./dist/components/md-render/md-render.js"
     },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
@@ -37,9 +37,9 @@
       "types": "./dist/styles/markdown-content.d.css.ts",
       "default": "./dist/styles/markdown-content.css"
     },
-    "./styles/md-editor-simple.css": {
-      "types": "./dist/components/md-editor-simple/md-editor-simple.d.css.ts",
-      "default": "./dist/components/md-editor-simple/md-editor-simple.css"
+    "./styles/md-editor.css": {
+      "types": "./dist/components/md-editor/md-editor.d.css.ts",
+      "default": "./dist/components/md-editor/md-editor.css"
     }
   },
   "scripts": {

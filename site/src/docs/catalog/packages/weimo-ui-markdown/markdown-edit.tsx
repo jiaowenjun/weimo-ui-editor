@@ -4,17 +4,17 @@ import { Bold, Heading1, List, Quote, RotateCcw, Trash2 } from 'lucide-react'
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
 import {
-  MdEditorSimple,
-  type MdEditorSimpleContent,
-  type MdEditorSimpleHandle,
-  type MdEditorSimpleSelectionFormat,
-} from 'weimo-ui-markdown/components/md-editor-simple'
+  MdEditor,
+  type MdEditorContent,
+  type MdEditorHandle,
+  type MdEditorSelectionFormat,
+} from 'weimo-ui-markdown/components/md-editor'
 import type { ComponentDefinition } from '../../component-docs'
 
 import { MarkdownEditSelectionStylePreview } from './markdown-styles'
 
 // 内容以 tiptap 原生 JSON 进出，编辑器不做任何 Markdown 解析与序列化。
-const mdEditorSimpleSample: MdEditorSimpleContent = {
+const mdEditorSample: MdEditorContent = {
   type: 'doc',
   content: [
     {
@@ -52,11 +52,11 @@ const mdEditorSimpleSample: MdEditorSimpleContent = {
   ],
 }
 
-function MdEditorSimpleDemo() {
-  const [content, setContent] = useState<MdEditorSimpleContent>(mdEditorSimpleSample)
+function MdEditorDemo() {
+  const [content, setContent] = useState<MdEditorContent>(mdEditorSample)
   const [selectionFormat, setSelectionFormat] =
-    useState<MdEditorSimpleSelectionFormat | null>(null)
-  const editorRef = useRef<MdEditorSimpleHandle | null>(null)
+    useState<MdEditorSelectionFormat | null>(null)
+  const editorRef = useRef<MdEditorHandle | null>(null)
   const previewRef = useRef<HTMLDivElement | null>(null)
   // null 表示尚未测量,容器保持自适应高度,避免首帧从 0 闪跳
   const [previewHeight, setPreviewHeight] = useState<number | null>(null)
@@ -97,7 +97,7 @@ function MdEditorSimpleDemo() {
             </GhostIconButton>
             <GhostIconButton
               aria-label="重置内容"
-              onClick={() => setContent(mdEditorSimpleSample)}
+              onClick={() => setContent(mdEditorSample)}
               size="sm"
             >
               <RotateCcw />
@@ -156,7 +156,7 @@ function MdEditorSimpleDemo() {
           ref={previewRef}
           style={previewHeight === null ? undefined : { height: previewHeight }}
         >
-          <MdEditorSimple
+          <MdEditor
             onChange={setContent}
             onSelectionFormatChange={setSelectionFormat}
             placeholder="写点什么..."
@@ -170,10 +170,10 @@ function MdEditorSimpleDemo() {
   )
 }
 
-export const markdownEditSimpleDefinition = {
-  id: 'markdown-edit-simple',
-  summary: 'MdEditorSimple 简化编辑器，tiptap JSON 内容进出，仅四种格式',
+export const markdownEditDefinition = {
+  id: 'markdown-edit',
+  summary: 'MdEditor 编辑器，tiptap JSON 内容进出，仅四种格式',
   status: 'Ready',
   frame: 'plain',
-  preview: () => <MdEditorSimpleDemo />,
+  preview: () => <MdEditorDemo />,
 } satisfies ComponentDefinition

@@ -1,4 +1,4 @@
-export const mdRenderSimpleSample = `# 一级标题
+export const mdRenderSample = `# 一级标题
 
 正文 **粗体** 保持卡片阅读节奏。
 

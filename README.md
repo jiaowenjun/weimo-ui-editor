@@ -14,8 +14,8 @@
 
 weimo-ui-markdown 只做这两件事,并把它们做好:
 
-- **MdRenderSimple** — Markdown 字符串进,排版舒适的 React 内容出;
-- **MdEditorSimple** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
+- **MdRender** — Markdown 字符串进,排版舒适的 React 内容出;
+- **MdEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
 
 ## 为什么选它
 
@@ -46,21 +46,21 @@ import 'weimo-ui-markdown/styles/tokens.css'
 ### 渲染一段 Markdown
 
 ```tsx
-import { MdRenderSimple } from 'weimo-ui-markdown/components/md-render-simple'
+import { MdRender } from 'weimo-ui-markdown/components/md-render'
 
 export function Profile() {
-  return <MdRenderSimple content={'# 标题\n\n一段 **加粗** 的简介'} />
+  return <MdRender content={'# 标题\n\n一段 **加粗** 的简介'} />
 }
 ```
 
 ### 编辑一段内容
 
 ```tsx
-import { MdEditorSimple } from 'weimo-ui-markdown/components/md-editor-simple'
+import { MdEditor } from 'weimo-ui-markdown/components/md-editor'
 
 export function DescriptionEditor() {
   return (
-    <MdEditorSimple
+    <MdEditor
       placeholder="写点什么……"
       onChange={(content) => console.log(content)}
       onSave={(content) => console.log(content)} // ⌘S / Ctrl+S 触发
@@ -75,8 +75,8 @@ export function DescriptionEditor() {
 
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
-| `MdRenderSimple` | `weimo-ui-markdown/components/md-render-simple` | Markdown 字符串 → React 节点 | 展示简介、公告、评论等内容 |
-| `MdEditorSimple` | `weimo-ui-markdown/components/md-editor-simple` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
+| `MdRender` | `weimo-ui-markdown/components/md-render` | Markdown 字符串 → React 节点 | 展示简介、公告、评论等内容 |
+| `MdEditor` | `weimo-ui-markdown/components/md-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 
 ## 刻意不做的
 

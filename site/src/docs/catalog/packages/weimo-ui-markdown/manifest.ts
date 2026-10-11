@@ -5,18 +5,18 @@ export const markdownCatalog = {
   title: 'weimo-ui-markdown',
   pages: [
     {
-      id: 'markdown-render-simple',
+      id: 'markdown-render',
       name: 'Markdown渲染',
-      exportName: 'MdRenderSimple',
-      registryName: 'md-render-simple',
-      packageExport: './components/md-render-simple',
+      exportName: 'MdRender',
+      registryName: 'md-render',
+      packageExport: './components/md-render',
     },
     {
-      id: 'markdown-edit-simple',
+      id: 'markdown-edit',
       name: 'Markdown编辑',
-      exportName: 'MdEditorSimple',
-      registryName: 'md-editor-simple',
-      packageExport: './components/md-editor-simple',
+      exportName: 'MdEditor',
+      registryName: 'md-editor',
+      packageExport: './components/md-editor',
     },
   ],
 } as const satisfies PackageCatalog

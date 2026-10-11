@@ -1,5 +1,5 @@
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
-import { MdRenderSimple } from 'weimo-ui-markdown/components/md-render-simple'
+import { MdRender } from 'weimo-ui-markdown/components/md-render'
 
 type MarkdownStyleToken = {
   token: string
@@ -72,18 +72,18 @@ function renderMarkdownTokenGroupPreview(group: MarkdownStyleTokenGroup) {
   switch (group.label) {
     case '内容容器':
       return (
-        <MdRenderSimple
+        <MdRender
           content={'<span>Markdown 内容容器<br />承载默认字色、字号和行高。</span>'}
         />
       )
     case '段落':
-      return <MdRenderSimple content="这是一段用于预览正文颜色的 Markdown 文本。" />
+      return <MdRender content="这是一段用于预览正文颜色的 Markdown 文本。" />
     case '标题':
-      return <MdRenderSimple content="# 一级标题" />
+      return <MdRender content="# 一级标题" />
     case '引用块':
-      return <MdRenderSimple content="> 引用块使用独立字色与横向内边距。" />
+      return <MdRender content="> 引用块使用独立字色与横向内边距。" />
     case '列表':
-      return <MdRenderSimple content="- 普通列表" />
+      return <MdRender content="- 普通列表" />
     case '编辑选区':
       return (
         <p className="md-style-preview__selection-sample">

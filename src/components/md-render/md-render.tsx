@@ -162,11 +162,11 @@ const baseMarkdownComponents: Components = {
   },
 }
 
-export type MdRenderSimpleProps = ComponentPropsWithoutRef<'div'> & {
+export type MdRenderProps = ComponentPropsWithoutRef<'div'> & {
   content: string
 }
 
-export const MdRenderSimple = forwardRef<HTMLDivElement, MdRenderSimpleProps>(function MdRenderSimple(
+export const MdRender = forwardRef<HTMLDivElement, MdRenderProps>(function MdRender(
   {
     className,
     content,
@@ -202,4 +202,4 @@ export const MdRenderSimple = forwardRef<HTMLDivElement, MdRenderSimpleProps>(fu
   )
 })
 
-MdRenderSimple.displayName = 'MdRenderSimple'
+MdRender.displayName = 'MdRender'
