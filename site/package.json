@@ -15,7 +15,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "8.4.0",
-    "weimo-ui-core": "github:jiaowenjun/weimo-ui-core#57b6e390c3afcbbbd32720e792e7852fed8e9d83",
+    "weimo-ui-core": "github:jiaowenjun/weimo-ui-core#8fb6fc539e18880b18c8a59e090a74187f4e10c1",
     "weimo-ui-markdown": "workspace:*",
     "weimo-ui-template": "git+https://github.com/jiaowenjun/weimo-ui-template.git#a3859fc4f1b681d636c0a78710ec594806522e35"
   },
