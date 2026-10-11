@@ -29,6 +29,10 @@
       "types": "./dist/components/md-render/md-render.d.ts",
       "import": "./dist/components/md-render/md-render.js"
     },
+    "./components/wdf-render": {
+      "types": "./dist/components/wdf-render/wdf-render.d.ts",
+      "import": "./dist/components/wdf-render/wdf-render.js"
+    },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
       "default": "./dist/styles/tokens.css"

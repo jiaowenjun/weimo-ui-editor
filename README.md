@@ -15,6 +15,7 @@
 weimo-ui-markdown 只做这两件事,并把它们做好:
 
 - **MdRender** — Markdown 字符串进,排版舒适的 React 内容出;
+- **WdfRender** — WDF 文档对象进,直接生成与 Markdown 一致的 React 内容;
 - **RichEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
 
 ## 为什么选它
@@ -53,6 +54,35 @@ export function Profile() {
 }
 ```
 
+### 渲染一份 WDF 文档
+
+```tsx
+import { WdfRender } from 'weimo-ui-markdown/components/wdf-render'
+
+export function Profile() {
+  return (
+    <WdfRender
+      content={{
+        schema: 'weimo.document',
+        version: 1,
+        root: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: '一段 WDF 正文' }],
+            },
+          ],
+        },
+      }}
+    />
+  )
+}
+```
+
+`WdfRender` 按 WDF v0.1 结构直接生成 React 节点,不经过 Markdown 或 HTML 中转;
+它与 `MdRender` 共用 `--md-*` token 和内容样式。
+
 ### 编辑一段内容
 
 ```tsx
@@ -76,6 +106,7 @@ export function DescriptionEditor() {
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
 | `MdRender` | `weimo-ui-markdown/components/md-render` | Markdown 字符串 → React 节点 | 展示简介、公告、评论等内容 |
+| `WdfRender` | `weimo-ui-markdown/components/wdf-render` | WDF 文档 → React 节点 | 直接展示规范化的 WDF 内容 |
 | `RichEditor` | `weimo-ui-markdown/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 
 ## 刻意不做的

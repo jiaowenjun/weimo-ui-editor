@@ -12,6 +12,13 @@ export const markdownCatalog = {
       packageExport: './components/md-render',
     },
     {
+      id: 'wdf-render',
+      name: 'WDF渲染',
+      exportName: 'WdfRender',
+      registryName: 'wdf-render',
+      packageExport: './components/wdf-render',
+    },
+    {
       id: 'rich-editor',
       name: '富文本编辑',
       exportName: 'RichEditor',

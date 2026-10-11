@@ -1,5 +1,11 @@
+import type { ReactNode } from 'react'
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { MdRender } from 'weimo-ui-markdown/components/md-render'
+import {
+  WdfRender,
+  type WdfBlock,
+  type WdfDocument,
+} from 'weimo-ui-markdown/components/wdf-render'
 
 type MarkdownStyleToken = {
   token: string
@@ -99,7 +105,91 @@ function renderMarkdownTokenGroupPreview(group: MarkdownStyleTokenGroup) {
   }
 }
 
-function renderMarkdownStyleGroupCard(group: MarkdownStyleTokenGroup) {
+function wdfDocument(...content: WdfBlock[]): WdfDocument {
+  return {
+    schema: 'weimo.document',
+    version: 1,
+    root: { type: 'doc', content },
+  }
+}
+
+function renderWdfTokenGroupPreview(group: MarkdownStyleTokenGroup) {
+  switch (group.label) {
+    case '内容容器':
+      return (
+        <WdfRender
+          content={wdfDocument({
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: 'WDF 内容容器\n承载默认字色、字号和行高。',
+              },
+            ],
+          })}
+        />
+      )
+    case '段落':
+      return (
+        <WdfRender
+          content={wdfDocument({
+            type: 'paragraph',
+            content: [{ type: 'text', text: '这是一段用于预览正文颜色的 WDF 文本。' }],
+          })}
+        />
+      )
+    case '标题':
+      return (
+        <WdfRender
+          content={wdfDocument({
+            type: 'heading',
+            attrs: { level: 1 },
+            content: [{ type: 'text', text: '一级标题' }],
+          })}
+        />
+      )
+    case '引用块':
+      return (
+        <WdfRender
+          content={wdfDocument({
+            type: 'blockquote',
+            content: [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: '引用块使用独立字色与横向内边距。' }],
+              },
+            ],
+          })}
+        />
+      )
+    case '列表':
+      return (
+        <WdfRender
+          content={wdfDocument({
+            type: 'bullet_list',
+            content: [
+              {
+                type: 'list_item',
+                content: [
+                  {
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: '普通列表' }],
+                  },
+                ],
+              },
+            ],
+          })}
+        />
+      )
+    default:
+      return null
+  }
+}
+
+function renderMarkdownStyleGroupCard(
+  group: MarkdownStyleTokenGroup,
+  renderPreview: (group: MarkdownStyleTokenGroup) => ReactNode,
+) {
   return (
     <ComponentPreviewCard
       items={group.tokens.map((token) => {
@@ -116,7 +206,7 @@ function renderMarkdownStyleGroupCard(group: MarkdownStyleTokenGroup) {
     >
       <div className="md-style-preview__group-effect">
         <div className="md-style-preview__content-wrapper">
-          {renderMarkdownTokenGroupPreview(group)}
+          {renderPreview(group)}
         </div>
       </div>
     </ComponentPreviewCard>
@@ -124,7 +214,15 @@ function renderMarkdownStyleGroupCard(group: MarkdownStyleTokenGroup) {
 }
 
 export function MarkdownSimpleStylePreview() {
-  return markdownStyleTokenGroups.map((group) => renderMarkdownStyleGroupCard(group))
+  return markdownStyleTokenGroups.map((group) =>
+    renderMarkdownStyleGroupCard(group, renderMarkdownTokenGroupPreview),
+  )
+}
+
+export function WdfSimpleStylePreview() {
+  return markdownStyleTokenGroups.map((group) =>
+    renderMarkdownStyleGroupCard(group, renderWdfTokenGroupPreview),
+  )
 }
 
 const richEditorSelectionStyleTokenGroup = {
@@ -133,5 +231,8 @@ const richEditorSelectionStyleTokenGroup = {
 } satisfies MarkdownStyleTokenGroup
 
 export function RichEditorSelectionStylePreview() {
-  return renderMarkdownStyleGroupCard(richEditorSelectionStyleTokenGroup)
+  return renderMarkdownStyleGroupCard(
+    richEditorSelectionStyleTokenGroup,
+    renderMarkdownTokenGroupPreview,
+  )
 }
