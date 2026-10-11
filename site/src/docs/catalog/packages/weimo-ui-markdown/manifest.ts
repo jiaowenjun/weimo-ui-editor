@@ -6,14 +6,14 @@ export const markdownCatalog = {
   pages: [
     {
       id: 'markdown-render-simple',
-      name: '简化Markdown渲染',
+      name: 'Markdown渲染',
       exportName: 'MdRenderSimple',
       registryName: 'md-render-simple',
       packageExport: './components/md-render-simple',
     },
     {
       id: 'markdown-edit-simple',
-      name: '简化Markdown编辑',
+      name: 'Markdown编辑',
       exportName: 'MdEditorSimple',
       registryName: 'md-editor-simple',
       packageExport: './components/md-editor-simple',
