@@ -35,7 +35,7 @@ export function ComponentDetailPage() {
       }
     >
       {selected.summary ? (
-        <p className="component-detail-page__summary">{selected.summary}</p>
+        <p>{selected.summary}</p>
       ) : null}
       {selected.preview()}
     </ComponentPreviewCard>

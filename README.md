@@ -31,7 +31,7 @@ weimo-ui-markdown 只做这两件事,并把它们做好:
 pnpm add weimo-ui-markdown weimo-ui-core react react-dom
 ```
 
-需要 React 19。`weimo-ui-markdown@0.1.x` 与 `weimo-ui-core@0.1.x` 搭配使用,应用里保留一份兼容的 core 即可。
+需要 React 19。`weimo-ui-markdown@0.2.x` 与 `weimo-ui-core@0.1.x` 搭配使用,应用里保留一份兼容的 core 即可。
 
 然后在应用入口引入唯一必需的样式:
 

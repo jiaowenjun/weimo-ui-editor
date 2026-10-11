@@ -40,8 +40,7 @@
   }
 
   .weimo-card-markdown__heading,
-  .rich-editor__content.weimo-markdown-content :where(h1, h2, h3),
-  .rich-editor__content.weimo-markdown-content :where(h4, h5, h6) {
+  .rich-editor__content.weimo-markdown-content h1 {
     margin: 0;
     font-weight: 650;
     text-align: center;
@@ -74,14 +73,13 @@
     font-weight: 650;
   }
 
-  .weimo-card-markdown__em,
-  .rich-editor__content.weimo-markdown-content em {
+  .weimo-card-markdown__em {
     font-style: italic;
   }
 
 
   .weimo-card-markdown__list,
-  .rich-editor__content.weimo-markdown-content :where(ul, ol) {
+  .rich-editor__content.weimo-markdown-content ul {
     margin: 0;
     padding-left: var(--md-list-indent);
   }
@@ -91,8 +89,7 @@
     list-style-type: disc;
   }
 
-  .weimo-card-markdown__list--ol:not([type]),
-  .rich-editor__content.weimo-markdown-content ol:not([type]) {
+  .weimo-card-markdown__list--ol:not([type]) {
     list-style-type: decimal;
   }
 
@@ -112,11 +109,11 @@
   }
 
   .weimo-card-markdown__list-item .weimo-card-markdown__list,
-  .rich-editor__content.weimo-markdown-content li :where(ul, ol) {
+  .rich-editor__content.weimo-markdown-content li ul {
     margin-top: 0.25em;
   }
 
-  .weimo-markdown-content :not(pre) > :where(.weimo-card-markdown__code, code) {
+  .weimo-markdown-content :not(pre) > .weimo-card-markdown__code {
     padding: 2px 6px;
     border: 1px solid var(--md-code-border-color);
     border-radius: var(--md-code-border-radius);
@@ -125,14 +122,12 @@
     word-break: break-all;
   }
 
-  .weimo-card-markdown__pre,
-  .rich-editor__content.weimo-markdown-content pre {
+  .weimo-card-markdown__pre {
     margin: 0;
     overflow: auto;
   }
 
-  .weimo-card-markdown__pre .weimo-card-markdown__code,
-  .rich-editor__content.weimo-markdown-content pre code {
+  .weimo-card-markdown__pre .weimo-card-markdown__code {
     display: block;
     line-height: 1.72;
     white-space: pre-wrap;
@@ -147,19 +142,8 @@
   .weimo-card-markdown__hr,
   p,
   h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
   blockquote,
-  ul,
-  ol,
-  pre,
-  table,
-  hr,
-  figure,
-  img) + :is(.weimo-card-markdown__p,
+  ul) + :is(.weimo-card-markdown__p,
   .weimo-card-markdown__heading,
   .weimo-card-markdown__blockquote,
   .weimo-card-markdown__list,
@@ -167,19 +151,8 @@
   .weimo-card-markdown__hr,
   p,
   h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
   blockquote,
-  ul,
-  ol,
-  pre,
-  table,
-  hr,
-  figure,
-  img) {
+  ul) {
     margin-top: 1em;
   }
 }

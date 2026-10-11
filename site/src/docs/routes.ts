@@ -1,4 +1,4 @@
-export const componentPathPrefix = '/components/'
+const componentPathPrefix = '/components/'
 
 export const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '')
 

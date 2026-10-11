@@ -129,7 +129,6 @@ export function useRichEditor({
 }: UseRichEditorProps) {
   const isControlled = value !== undefined
   const [initialValue] = useState(() => value ?? defaultValue)
-  const [isEmpty, setIsEmpty] = useState(initialValue === undefined)
   const [internalValue, setInternalValue] = useState(initialValue)
   const onChangeRef = useRef(onChange)
   const onSelectionFormatChangeRef = useRef(onSelectionFormatChange)
@@ -166,9 +165,8 @@ export function useRichEditor({
   }, [])
 
   const emitContent = useCallback(
-    (nextContent: RichEditorContent, nextIsEmpty: boolean) => {
+    (nextContent: RichEditorContent) => {
       lastContentRef.current = serializeContent(nextContent)
-      setIsEmpty(nextIsEmpty)
 
       if (!isControlled) {
         setInternalValue(nextContent)
@@ -194,12 +192,11 @@ export function useRichEditor({
     },
     onCreate: ({ editor: currentEditor }) => {
       lastContentRef.current = serializeContent(currentEditor.getJSON())
-      setIsEmpty(currentEditor.isEmpty)
       emitSelectionFormat(currentEditor)
     },
     onTransaction: ({ editor: currentEditor }) => emitSelectionFormat(currentEditor),
     onUpdate: ({ editor: currentEditor }) => {
-      emitContent(currentEditor.getJSON(), currentEditor.isEmpty)
+      emitContent(currentEditor.getJSON())
     },
   })
 
@@ -236,7 +233,6 @@ export function useRichEditor({
     })
 
     lastContentRef.current = serialized
-    setIsEmpty(editor.isEmpty)
   }, [editor, isControlled, value])
 
   const getContent = useCallback(() => {
@@ -249,7 +245,7 @@ export function useRichEditor({
     if (!editor || disabled) return
 
     editor.commands.clearContent()
-    emitContent(editor.getJSON(), editor.isEmpty)
+    emitContent(editor.getJSON())
   }, [disabled, editor, emitContent])
 
   const focus = useCallback((position?: RichEditorFocusPosition) => {
@@ -298,7 +294,6 @@ export function useRichEditor({
     focus,
     getContent,
     getSelectionFormat,
-    isEmpty,
     setBlockFormat,
     setBold,
     toggleBlockFormat,

@@ -8,9 +8,7 @@ export type PackageComponent = {
   packageExport: string
 }
 
-export type PackagePage = PackageComponent & {
-  components?: readonly PackageComponent[]
-}
+export type PackagePage = PackageComponent
 
 export type PackageCatalog = {
   id: string
