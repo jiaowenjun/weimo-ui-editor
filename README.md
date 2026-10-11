@@ -15,7 +15,7 @@
 weimo-ui-markdown 只做这两件事,并把它们做好:
 
 - **MdRender** — Markdown 字符串进,排版舒适的 React 内容出;
-- **MdEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
+- **RichEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
 
 ## 为什么选它
 
@@ -56,11 +56,11 @@ export function Profile() {
 ### 编辑一段内容
 
 ```tsx
-import { MdEditor } from 'weimo-ui-markdown/components/md-editor'
+import { RichEditor } from 'weimo-ui-markdown/components/rich-editor'
 
 export function DescriptionEditor() {
   return (
-    <MdEditor
+    <RichEditor
       placeholder="写点什么……"
       onChange={(content) => console.log(content)}
       onSave={(content) => console.log(content)} // ⌘S / Ctrl+S 触发
@@ -76,7 +76,7 @@ export function DescriptionEditor() {
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
 | `MdRender` | `weimo-ui-markdown/components/md-render` | Markdown 字符串 → React 节点 | 展示简介、公告、评论等内容 |
-| `MdEditor` | `weimo-ui-markdown/components/md-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
+| `RichEditor` | `weimo-ui-markdown/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 
 ## 刻意不做的
 

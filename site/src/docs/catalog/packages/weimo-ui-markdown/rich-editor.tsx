@@ -4,17 +4,17 @@ import { Bold, Heading1, List, Quote, RotateCcw, Trash2 } from 'lucide-react'
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
 import {
-  MdEditor,
-  type MdEditorContent,
-  type MdEditorHandle,
-  type MdEditorSelectionFormat,
-} from 'weimo-ui-markdown/components/md-editor'
+  RichEditor,
+  type RichEditorContent,
+  type RichEditorHandle,
+  type RichEditorSelectionFormat,
+} from 'weimo-ui-markdown/components/rich-editor'
 import type { ComponentDefinition } from '../../component-docs'
 
-import { MarkdownEditSelectionStylePreview } from './markdown-styles'
+import { RichEditorSelectionStylePreview } from './markdown-styles'
 
 // 内容以 tiptap 原生 JSON 进出，编辑器不做任何 Markdown 解析与序列化。
-const mdEditorSample: MdEditorContent = {
+const richEditorSample: RichEditorContent = {
   type: 'doc',
   content: [
     {
@@ -52,18 +52,18 @@ const mdEditorSample: MdEditorContent = {
   ],
 }
 
-function MdEditorDemo() {
-  const [content, setContent] = useState<MdEditorContent>(mdEditorSample)
+function RichEditorDemo() {
+  const [content, setContent] = useState<RichEditorContent>(richEditorSample)
   const [selectionFormat, setSelectionFormat] =
-    useState<MdEditorSelectionFormat | null>(null)
-  const editorRef = useRef<MdEditorHandle | null>(null)
+    useState<RichEditorSelectionFormat | null>(null)
+  const editorRef = useRef<RichEditorHandle | null>(null)
   const previewRef = useRef<HTMLDivElement | null>(null)
   // null 表示尚未测量,容器保持自适应高度,避免首帧从 0 闪跳
   const [previewHeight, setPreviewHeight] = useState<number | null>(null)
 
   useLayoutEffect(() => {
     const preview = previewRef.current
-    const editorRoot = preview?.querySelector<HTMLElement>(':scope > .md-editor')
+    const editorRoot = preview?.querySelector<HTMLElement>(':scope > .rich-editor')
 
     if (!preview || !editorRoot) return
 
@@ -87,7 +87,7 @@ function MdEditorDemo() {
     <>
       <ComponentPreviewCard
         action={
-          <div className="md-editor-docs-toolbar">
+          <div className="rich-editor-docs-toolbar">
             <GhostIconButton
               aria-label="清空内容"
               onClick={() => editorRef.current?.clear()}
@@ -97,7 +97,7 @@ function MdEditorDemo() {
             </GhostIconButton>
             <GhostIconButton
               aria-label="重置内容"
-              onClick={() => setContent(mdEditorSample)}
+              onClick={() => setContent(richEditorSample)}
               size="sm"
             >
               <RotateCcw />
@@ -105,7 +105,7 @@ function MdEditorDemo() {
           </div>
         }
         footer={
-          <div className="md-editor-docs-toolbar">
+          <div className="rich-editor-docs-toolbar">
             <GhostIconButton
               active={selectionFormat?.bold === true}
               aria-label="切换粗体"
@@ -146,17 +146,17 @@ function MdEditorDemo() {
         }
         label={
           <>
-            Markdown编辑器{' '}
-            <code className="docs-component-class">md-editor</code>
+            富文本编辑器{' '}
+            <code className="docs-component-class">rich-editor</code>
           </>
         }
       >
         <div
-          className="md-editor-docs-preview"
+          className="rich-editor-docs-preview"
           ref={previewRef}
           style={previewHeight === null ? undefined : { height: previewHeight }}
         >
-          <MdEditor
+          <RichEditor
             onChange={setContent}
             onSelectionFormatChange={setSelectionFormat}
             placeholder="写点什么..."
@@ -165,15 +165,15 @@ function MdEditorDemo() {
           />
         </div>
       </ComponentPreviewCard>
-      <MarkdownEditSelectionStylePreview />
+      <RichEditorSelectionStylePreview />
     </>
   )
 }
 
-export const markdownEditDefinition = {
-  id: 'markdown-edit',
-  summary: 'MdEditor 编辑器，tiptap JSON 内容进出，仅四种格式',
+export const richEditorDefinition = {
+  id: 'rich-editor',
+  summary: 'RichEditor 编辑器，tiptap JSON 内容进出，仅四种格式',
   status: 'Ready',
   frame: 'plain',
-  preview: () => <MdEditorDemo />,
+  preview: () => <RichEditorDemo />,
 } satisfies ComponentDefinition

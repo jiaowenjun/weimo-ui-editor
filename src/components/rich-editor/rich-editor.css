@@ -1,7 +1,7 @@
 @import "weimo-ui-markdown/styles/markdown-content.css";
 
 @layer components {
-  .md-editor {
+  .rich-editor {
     position: relative;
     display: flex;
     /* container-type:inline-size 会把内在宽度归零,flex 行容器里 flex-basis:auto 随之塌缩成 0 宽;
@@ -14,11 +14,11 @@
     color: var(--color-text-primary);
   }
 
-  .md-editor[data-disabled="true"] {
+  .rich-editor[data-disabled="true"] {
     color: var(--color-text-secondary);
   }
 
-  .md-editor__viewport {
+  .rich-editor__viewport {
     min-width: 0;
     overflow-x: hidden;
     overflow-y: auto;
@@ -28,21 +28,21 @@
     padding-block-start: 0;
   }
 
-  .md-editor__content {
+  .rich-editor__content {
     caret-color: var(--color-primary);
     letter-spacing: 0;
     outline: none;
   }
 
-  .md-editor__content:focus {
+  .rich-editor__content:focus {
     outline: none;
   }
 
-  .md-editor__content ::selection {
+  .rich-editor__content ::selection {
     background: var(--md-selection-bg);
   }
 
-  .md-editor__content p.is-editor-empty:first-child::before {
+  .rich-editor__content p.is-editor-empty:first-child::before {
     float: left;
     height: 0;
     color: var(--color-text-placeholder);
@@ -50,12 +50,12 @@
     pointer-events: none;
   }
 
-  .md-editor__content .ProseMirror-selectednode {
+  .rich-editor__content .ProseMirror-selectednode {
     border-radius: var(--radius-sm);
     outline: 2px solid var(--color-border-accent);
   }
 
-  .md-editor__skeleton {
+  .rich-editor__skeleton {
     min-height: 120px;
     border-radius: var(--radius-sm);
     background: var(--color-bg-raised);

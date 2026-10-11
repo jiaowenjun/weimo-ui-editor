@@ -10,10 +10,10 @@
 .markdown-source:focus { border-color: var(--color-border-emphasis); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-border-emphasis) 16%, transparent); }
 .markdown-render-stage { width: 100%; min-width: 0; min-height: 260px; padding: clamp(20px, 5vw, 36px); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-bg-page); }
 .markdown-render-stage .weimo-card-markdown { max-width: 560px; margin-inline: auto; }
-.md-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; overflow: hidden; transition: height 200ms ease; }
-@media (prefers-reduced-motion: reduce) { .md-editor-docs-preview { transition-duration: 1ms; } }
-.md-editor-docs-toolbar { display: flex; justify-content: center; gap: 4px; }
-.component-preview-card:has(.md-editor-docs-preview) .base-card__content { border-radius: var(--radius-xs); }
+.rich-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; overflow: hidden; transition: height 200ms ease; }
+@media (prefers-reduced-motion: reduce) { .rich-editor-docs-preview { transition-duration: 1ms; } }
+.rich-editor-docs-toolbar { display: flex; justify-content: center; gap: 4px; }
+.component-preview-card:has(.rich-editor-docs-preview) .base-card__content { border-radius: var(--radius-xs); }
 .md-style-preview__group-effect { display: flex; min-width: 0; min-height: 112px; align-items: center; justify-content: center; overflow: hidden; padding: 16px; color: var(--color-text-primary); }
 .md-style-preview__content-wrapper { box-sizing: border-box; width: 80%; min-width: 0; margin-inline: auto; overflow: hidden; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
 .md-style-preview__content-wrapper > * { width: 100%; }

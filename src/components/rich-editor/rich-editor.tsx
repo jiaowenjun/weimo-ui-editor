@@ -3,53 +3,53 @@ import { EditorContent } from '@tiptap/react'
 
 import { cn } from 'weimo-ui-core/lib/utils'
 import {
-  useMdEditor,
-  type MdEditorBlockFormat,
-  type MdEditorContent,
-  type MdEditorFocusPosition,
-  type MdEditorSelectionFormat,
-} from './use-md-editor'
+  useRichEditor,
+  type RichEditorBlockFormat,
+  type RichEditorContent,
+  type RichEditorFocusPosition,
+  type RichEditorSelectionFormat,
+} from './use-rich-editor'
 
-import 'weimo-ui-markdown/styles/md-editor.css'
+import 'weimo-ui-markdown/styles/rich-editor.css'
 
 export type {
-  MdEditorBlockFormat,
-  MdEditorContent,
-  MdEditorFocusPosition,
-  MdEditorSelectionFormat,
-} from './use-md-editor'
+  RichEditorBlockFormat,
+  RichEditorContent,
+  RichEditorFocusPosition,
+  RichEditorSelectionFormat,
+} from './use-rich-editor'
 
-export type MdEditorProps = {
+export type RichEditorProps = {
   autoFocus?: boolean
-  autoFocusPosition?: MdEditorFocusPosition
+  autoFocusPosition?: RichEditorFocusPosition
   className?: string
-  value?: MdEditorContent
-  defaultValue?: MdEditorContent
+  value?: RichEditorContent
+  defaultValue?: RichEditorContent
   disabled?: boolean
   editorClassName?: string
   onCancel?: () => void
-  onChange?: (content: MdEditorContent) => void
+  onChange?: (content: RichEditorContent) => void
   onContentHeightChange?: (height: number) => void
-  onSelectionFormatChange?: (format: MdEditorSelectionFormat | null) => void
-  onSave?: (content: MdEditorContent) => void
+  onSelectionFormatChange?: (format: RichEditorSelectionFormat | null) => void
+  onSave?: (content: RichEditorContent) => void
   placeholder?: string
 }
-export type MdEditorHandle = {
+export type RichEditorHandle = {
   clear: () => void
-  focus: (position?: MdEditorFocusPosition) => void
-  getContent: () => MdEditorContent
+  focus: (position?: RichEditorFocusPosition) => void
+  getContent: () => RichEditorContent
   getContentHeight: () => number
-  getSelectionFormat: () => MdEditorSelectionFormat | null
-  setBlockFormat: (format: MdEditorBlockFormat) => boolean
+  getSelectionFormat: () => RichEditorSelectionFormat | null
+  setBlockFormat: (format: RichEditorBlockFormat) => boolean
   setBold: (active: boolean) => boolean
   toggleBlockFormat: (
-    format: Exclude<MdEditorBlockFormat, 'paragraph'>,
+    format: Exclude<RichEditorBlockFormat, 'paragraph'>,
   ) => boolean
   toggleBold: () => boolean
 }
 
-export const MdEditor = forwardRef<MdEditorHandle, MdEditorProps>(
-  function MdEditor(
+export const RichEditor = forwardRef<RichEditorHandle, RichEditorProps>(
+  function RichEditor(
     {
       autoFocus = false,
       autoFocusPosition = 'end',
@@ -79,7 +79,7 @@ export const MdEditor = forwardRef<MdEditorHandle, MdEditorProps>(
       setBold,
       toggleBlockFormat,
       toggleBold,
-    } = useMdEditor({
+    } = useRichEditor({
       autoFocus,
       autoFocusPosition,
       defaultValue,
@@ -97,7 +97,7 @@ export const MdEditor = forwardRef<MdEditorHandle, MdEditorProps>(
 
       if (!root) return 0
 
-      const editorContent = root.querySelector<HTMLElement>('.md-editor__content')
+      const editorContent = root.querySelector<HTMLElement>('.rich-editor__content')
 
       if (!editorContent) return 0
 
@@ -112,7 +112,7 @@ export const MdEditor = forwardRef<MdEditorHandle, MdEditorProps>(
     }, [onContentHeightChange])
 
     useLayoutEffect(() => {
-      const editorContent = rootRef.current?.querySelector<HTMLElement>('.md-editor__content')
+      const editorContent = rootRef.current?.querySelector<HTMLElement>('.rich-editor__content')
 
       if (!editorContent) return
       const observedEditorContent = editorContent
@@ -168,11 +168,11 @@ export const MdEditor = forwardRef<MdEditorHandle, MdEditorProps>(
       return (
         <div
           ref={rootRef}
-          className={cn('md-editor md-editor--loading', className)}
+          className={cn('rich-editor rich-editor--loading', className)}
           data-disabled={disabled ? 'true' : undefined}
         >
-          <div className="md-editor__viewport">
-            <div className="md-editor__skeleton" />
+          <div className="rich-editor__viewport">
+            <div className="rich-editor__skeleton" />
           </div>
         </div>
       )
@@ -181,15 +181,15 @@ export const MdEditor = forwardRef<MdEditorHandle, MdEditorProps>(
     return (
       <div
         ref={rootRef}
-        className={cn('md-editor', className)}
+        className={cn('rich-editor', className)}
         data-disabled={disabled ? 'true' : undefined}
       >
-        <div className="md-editor__viewport">
-          <EditorContent editor={editor} className={cn('md-editor__root', editorClassName)} />
+        <div className="rich-editor__viewport">
+          <EditorContent editor={editor} className={cn('rich-editor__root', editorClassName)} />
         </div>
       </div>
     )
   },
 )
 
-MdEditor.displayName = 'MdEditor'
+RichEditor.displayName = 'RichEditor'

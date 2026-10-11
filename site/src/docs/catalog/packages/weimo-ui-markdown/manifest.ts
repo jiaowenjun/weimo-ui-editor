@@ -12,11 +12,11 @@ export const markdownCatalog = {
       packageExport: './components/md-render',
     },
     {
-      id: 'markdown-edit',
-      name: 'Markdown编辑',
-      exportName: 'MdEditor',
-      registryName: 'md-editor',
-      packageExport: './components/md-editor',
+      id: 'rich-editor',
+      name: '富文本编辑',
+      exportName: 'RichEditor',
+      registryName: 'rich-editor',
+      packageExport: './components/rich-editor',
     },
   ],
 } as const satisfies PackageCatalog

@@ -11,7 +11,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('/node_modules/.pnpm/@tiptap+') || id.includes('/node_modules/.pnpm/prosemirror-')) {
-            return 'markdown-editor'
+            return 'rich-editor'
           }
 
           if (

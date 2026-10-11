@@ -1,7 +1,7 @@
 {
   "name": "weimo-ui-markdown",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -21,9 +21,9 @@
     "LICENSE"
   ],
   "exports": {
-    "./components/md-editor": {
-      "types": "./dist/components/md-editor/md-editor.d.ts",
-      "import": "./dist/components/md-editor/md-editor.js"
+    "./components/rich-editor": {
+      "types": "./dist/components/rich-editor/rich-editor.d.ts",
+      "import": "./dist/components/rich-editor/rich-editor.js"
     },
     "./components/md-render": {
       "types": "./dist/components/md-render/md-render.d.ts",
@@ -37,9 +37,9 @@
       "types": "./dist/styles/markdown-content.d.css.ts",
       "default": "./dist/styles/markdown-content.css"
     },
-    "./styles/md-editor.css": {
-      "types": "./dist/components/md-editor/md-editor.d.css.ts",
-      "default": "./dist/components/md-editor/md-editor.css"
+    "./styles/rich-editor.css": {
+      "types": "./dist/components/rich-editor/rich-editor.d.css.ts",
+      "default": "./dist/components/rich-editor/rich-editor.css"
     }
   },
   "scripts": {

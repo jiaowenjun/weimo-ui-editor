@@ -8,35 +8,35 @@ import {
   type JSONContent,
 } from '@tiptap/core'
 
-import { createMdEditorExtensions } from './md-editor-extensions'
+import { createRichEditorExtensions } from './rich-editor-extensions'
 
-export type MdEditorContent = JSONContent
-export type MdEditorFocusPosition = 'start' | 'end'
-export type MdEditorBlockFormat = 'paragraph' | 'heading' | 'list' | 'quote'
-export type MdEditorSelectionFormat = Readonly<{
-  block: MdEditorBlockFormat
+export type RichEditorContent = JSONContent
+export type RichEditorFocusPosition = 'start' | 'end'
+export type RichEditorBlockFormat = 'paragraph' | 'heading' | 'list' | 'quote'
+export type RichEditorSelectionFormat = Readonly<{
+  block: RichEditorBlockFormat
   bold: boolean
 }>
 
-export type UseMdEditorProps = {
+export type UseRichEditorProps = {
   autoFocus?: boolean
-  autoFocusPosition?: MdEditorFocusPosition
-  defaultValue?: MdEditorContent
+  autoFocusPosition?: RichEditorFocusPosition
+  defaultValue?: RichEditorContent
   disabled?: boolean
   onCancel?: () => void
-  onChange?: (content: MdEditorContent) => void
-  onSelectionFormatChange?: (format: MdEditorSelectionFormat | null) => void
-  onSave?: (content: MdEditorContent) => void
+  onChange?: (content: RichEditorContent) => void
+  onSelectionFormatChange?: (format: RichEditorSelectionFormat | null) => void
+  onSave?: (content: RichEditorContent) => void
   placeholder?: string
-  value?: MdEditorContent
+  value?: RichEditorContent
 }
 
-const EMPTY_SIMPLE_DOCUMENT: MdEditorContent = {
+const EMPTY_SIMPLE_DOCUMENT: RichEditorContent = {
   type: 'doc',
   content: [{ type: 'paragraph' }],
 }
 
-function focusEditor(editor: Editor, position?: MdEditorFocusPosition) {
+function focusEditor(editor: Editor, position?: RichEditorFocusPosition) {
   const needsNativeFocusBeforeFrame = isSafari() || isiOS() || isAndroid()
 
   if (!needsNativeFocusBeforeFrame) {
@@ -71,21 +71,21 @@ function focusEditor(editor: Editor, position?: MdEditorFocusPosition) {
   })
 }
 
-function serializeContent(content: MdEditorContent) {
+function serializeContent(content: RichEditorContent) {
   return JSON.stringify(content)
 }
 
 function selectionFormatsEqual(
-  left: MdEditorSelectionFormat | null,
-  right: MdEditorSelectionFormat | null,
+  left: RichEditorSelectionFormat | null,
+  right: RichEditorSelectionFormat | null,
 ) {
   return left?.block === right?.block && left?.bold === right?.bold
 }
 
-function resolveMdEditorSelectionFormat(
+function resolveRichEditorSelectionFormat(
   editor: Editor,
-): MdEditorSelectionFormat {
-  let block: MdEditorBlockFormat = 'paragraph'
+): RichEditorSelectionFormat {
+  let block: RichEditorBlockFormat = 'paragraph'
 
   if (editor.isActive('heading', { level: 1 })) {
     block = 'heading'
@@ -98,7 +98,7 @@ function resolveMdEditorSelectionFormat(
   return { block, bold: editor.isActive('bold') }
 }
 
-function setEditorBlockFormat(editor: Editor, format: MdEditorBlockFormat) {
+function setEditorBlockFormat(editor: Editor, format: RichEditorBlockFormat) {
   const headingActive = editor.isActive('heading', { level: 1 })
   const listActive = editor.isActive('bulletList')
   const quoteActive = editor.isActive('blockquote')
@@ -115,7 +115,7 @@ function setEditorBlockFormat(editor: Editor, format: MdEditorBlockFormat) {
   return command.run()
 }
 
-export function useMdEditor({
+export function useRichEditor({
   autoFocus = false,
   autoFocusPosition = 'end',
   defaultValue,
@@ -126,7 +126,7 @@ export function useMdEditor({
   onSave,
   placeholder,
   value,
-}: UseMdEditorProps) {
+}: UseRichEditorProps) {
   const isControlled = value !== undefined
   const [initialValue] = useState(() => value ?? defaultValue)
   const [isEmpty, setIsEmpty] = useState(initialValue === undefined)
@@ -137,7 +137,7 @@ export function useMdEditor({
   const onCancelRef = useRef(onCancel)
   const disabledRef = useRef(disabled)
   const lastContentRef = useRef(initialValue === undefined ? '' : serializeContent(initialValue))
-  const lastSelectionFormatRef = useRef<MdEditorSelectionFormat | null>(null)
+  const lastSelectionFormatRef = useRef<RichEditorSelectionFormat | null>(null)
   const [interactionStore] = useState(() => ({
     get: () => ({
       disabled: disabledRef.current,
@@ -156,7 +156,7 @@ export function useMdEditor({
 
   const emitSelectionFormat = useCallback((currentEditor: Editor | null) => {
     const nextFormat = currentEditor
-      ? resolveMdEditorSelectionFormat(currentEditor)
+      ? resolveRichEditorSelectionFormat(currentEditor)
       : null
 
     if (selectionFormatsEqual(lastSelectionFormatRef.current, nextFormat)) return
@@ -166,7 +166,7 @@ export function useMdEditor({
   }, [])
 
   const emitContent = useCallback(
-    (nextContent: MdEditorContent, nextIsEmpty: boolean) => {
+    (nextContent: RichEditorContent, nextIsEmpty: boolean) => {
       lastContentRef.current = serializeContent(nextContent)
       setIsEmpty(nextIsEmpty)
 
@@ -180,7 +180,7 @@ export function useMdEditor({
   )
 
   const editor = useEditor({
-    extensions: createMdEditorExtensions({
+    extensions: createRichEditorExtensions({
       placeholder,
       getInteraction: interactionStore.get,
     }),
@@ -189,7 +189,7 @@ export function useMdEditor({
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'md-editor__content weimo-markdown-content tiptap',
+        class: 'rich-editor__content weimo-markdown-content tiptap',
       },
     },
     onCreate: ({ editor: currentEditor }) => {
@@ -252,7 +252,7 @@ export function useMdEditor({
     emitContent(editor.getJSON(), editor.isEmpty)
   }, [disabled, editor, emitContent])
 
-  const focus = useCallback((position?: MdEditorFocusPosition) => {
+  const focus = useCallback((position?: RichEditorFocusPosition) => {
     if (disabled) return
 
     if (editor) focusEditor(editor, position)
@@ -261,19 +261,19 @@ export function useMdEditor({
   const getSelectionFormat = useCallback(() => {
     if (!editor) return null
 
-    return resolveMdEditorSelectionFormat(editor)
+    return resolveRichEditorSelectionFormat(editor)
   }, [editor])
 
-  const setBlockFormat = useCallback((format: MdEditorBlockFormat) => {
+  const setBlockFormat = useCallback((format: RichEditorBlockFormat) => {
     if (!editor || disabled) return false
 
     return setEditorBlockFormat(editor, format)
   }, [disabled, editor])
 
-  const toggleBlockFormat = useCallback((format: Exclude<MdEditorBlockFormat, 'paragraph'>) => {
+  const toggleBlockFormat = useCallback((format: Exclude<RichEditorBlockFormat, 'paragraph'>) => {
     if (!editor || disabled) return false
 
-    const currentFormat = resolveMdEditorSelectionFormat(editor).block
+    const currentFormat = resolveRichEditorSelectionFormat(editor).block
 
     return setEditorBlockFormat(editor, currentFormat === format ? 'paragraph' : format)
   }, [disabled, editor])

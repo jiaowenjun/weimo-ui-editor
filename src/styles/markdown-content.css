@@ -32,7 +32,7 @@
   }
 
   .weimo-card-markdown__p,
-  .md-editor__content.weimo-markdown-content p {
+  .rich-editor__content.weimo-markdown-content p {
     margin: 0;
     color: var(--md-paragraph-color);
     text-align: justify;
@@ -40,15 +40,15 @@
   }
 
   .weimo-card-markdown__heading,
-  .md-editor__content.weimo-markdown-content :where(h1, h2, h3),
-  .md-editor__content.weimo-markdown-content :where(h4, h5, h6) {
+  .rich-editor__content.weimo-markdown-content :where(h1, h2, h3),
+  .rich-editor__content.weimo-markdown-content :where(h4, h5, h6) {
     margin: 0;
     font-weight: 650;
     text-align: center;
   }
 
   .weimo-card-markdown__heading--h1,
-  .md-editor__content.weimo-markdown-content h1 {
+  .rich-editor__content.weimo-markdown-content h1 {
     color: var(--md-h1-color);
     font-size: var(--md-h1-font-size);
     line-height: var(--md-h1-line-height);
@@ -56,7 +56,7 @@
 
 
   .weimo-card-markdown__blockquote,
-  .md-editor__content.weimo-markdown-content blockquote {
+  .rich-editor__content.weimo-markdown-content blockquote {
     margin: 0;
     padding: 0 var(--md-quote-pad-inline);
     color: var(--md-quote-color);
@@ -64,55 +64,55 @@
   }
 
   .weimo-card-markdown__blockquote .weimo-card-markdown__p,
-  .md-editor__content.weimo-markdown-content blockquote p {
+  .rich-editor__content.weimo-markdown-content blockquote p {
     color: var(--md-quote-color);
     text-align: left;
   }
 
   .weimo-card-markdown__strong,
-  .md-editor__content.weimo-markdown-content strong {
+  .rich-editor__content.weimo-markdown-content strong {
     font-weight: 650;
   }
 
   .weimo-card-markdown__em,
-  .md-editor__content.weimo-markdown-content em {
+  .rich-editor__content.weimo-markdown-content em {
     font-style: italic;
   }
 
 
   .weimo-card-markdown__list,
-  .md-editor__content.weimo-markdown-content :where(ul, ol) {
+  .rich-editor__content.weimo-markdown-content :where(ul, ol) {
     margin: 0;
     padding-left: var(--md-list-indent);
   }
 
   .weimo-card-markdown__list--ul,
-  .md-editor__content.weimo-markdown-content ul {
+  .rich-editor__content.weimo-markdown-content ul {
     list-style-type: disc;
   }
 
   .weimo-card-markdown__list--ol:not([type]),
-  .md-editor__content.weimo-markdown-content ol:not([type]) {
+  .rich-editor__content.weimo-markdown-content ol:not([type]) {
     list-style-type: decimal;
   }
 
   .weimo-card-markdown__list-item,
-  .md-editor__content.weimo-markdown-content li {
+  .rich-editor__content.weimo-markdown-content li {
     padding-left: 0;
   }
 
   .weimo-card-markdown__list-item + .weimo-card-markdown__list-item,
-  .md-editor__content.weimo-markdown-content li + li {
+  .rich-editor__content.weimo-markdown-content li + li {
     margin-top: 0.25em;
   }
 
   .weimo-card-markdown__list-item .weimo-card-markdown__p,
-  .md-editor__content.weimo-markdown-content li p {
+  .rich-editor__content.weimo-markdown-content li p {
     margin: 0;
   }
 
   .weimo-card-markdown__list-item .weimo-card-markdown__list,
-  .md-editor__content.weimo-markdown-content li :where(ul, ol) {
+  .rich-editor__content.weimo-markdown-content li :where(ul, ol) {
     margin-top: 0.25em;
   }
 
@@ -126,13 +126,13 @@
   }
 
   .weimo-card-markdown__pre,
-  .md-editor__content.weimo-markdown-content pre {
+  .rich-editor__content.weimo-markdown-content pre {
     margin: 0;
     overflow: auto;
   }
 
   .weimo-card-markdown__pre .weimo-card-markdown__code,
-  .md-editor__content.weimo-markdown-content pre code {
+  .rich-editor__content.weimo-markdown-content pre code {
     display: block;
     line-height: 1.72;
     white-space: pre-wrap;

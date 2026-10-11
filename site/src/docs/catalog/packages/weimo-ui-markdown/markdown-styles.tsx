@@ -127,11 +127,11 @@ export function MarkdownSimpleStylePreview() {
   return markdownStyleTokenGroups.map((group) => renderMarkdownStyleGroupCard(group))
 }
 
-const markdownEditSelectionStyleTokenGroup = {
+const richEditorSelectionStyleTokenGroup = {
   label: '编辑选区',
   tokens: ['--md-selection-bg'],
 } satisfies MarkdownStyleTokenGroup
 
-export function MarkdownEditSelectionStylePreview() {
-  return renderMarkdownStyleGroupCard(markdownEditSelectionStyleTokenGroup)
+export function RichEditorSelectionStylePreview() {
+  return renderMarkdownStyleGroupCard(richEditorSelectionStyleTokenGroup)
 }
