@@ -14,7 +14,7 @@ import type {
 
 import { cn } from 'weimo-ui-core/lib/utils'
 
-import 'weimo-ui-markdown/styles/markdown-content.css'
+import 'weimo-ui-editor/styles/markdown-content.css'
 
 export type {
   WdfBlock,

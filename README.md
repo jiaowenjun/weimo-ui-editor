@@ -1,18 +1,18 @@
-# weimo-ui-markdown
+# weimo-ui-editor
 
 > 小而稳的 React 内容组件:用一份 WDF 数据完成阅读、编辑和状态切换。
 
-[![演示页](https://img.shields.io/badge/%E6%BC%94%E7%A4%BA%E9%A1%B5-GitHub_Pages-2ea44f?style=flat-square)](https://jiaowenjun.github.io/weimo-ui-markdown/)
+[![演示页](https://img.shields.io/badge/%E6%BC%94%E7%A4%BA%E9%A1%B5-GitHub_Pages-2ea44f?style=flat-square)](https://jiaowenjun.github.io/weimo-ui-editor/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3a9bd6?style=flat-square)](./LICENSE)
 [![React 19](https://img.shields.io/badge/React-19-61dafb?style=flat-square)](https://react.dev)
 
-**[👉 在线演示与组件文档](https://jiaowenjun.github.io/weimo-ui-markdown/)** — 渲染效果、编辑器交互、样式 token 一览,点开即看。
+**[👉 在线演示与组件文档](https://jiaowenjun.github.io/weimo-ui-editor/)** — 渲染效果、编辑器交互、样式 token 一览,点开即看。
 
 ## 它解决什么问题
 
 很多场景并不需要一个全功能编辑器:个人简介、商品描述、一条评论、一段公告……你需要的只是「把结构化内容显示出来」和「让用户写点格式受限的文字」,而不是图片上传、表格、数学公式和一整套工具栏。
 
-weimo-ui-markdown 把这三个必要部分组合起来:
+weimo-ui-editor 把这三个必要部分组合起来:
 
 - **WdfView** — 对外只读写 WDF,内部在阅读态使用 WdfRender,在编辑态使用 RichEditor;
 - **WdfRender** — WDF 文档对象进,直接生成排版舒适的 React 内容;
@@ -29,16 +29,16 @@ weimo-ui-markdown 把这三个必要部分组合起来:
 ## 安装
 
 ```bash
-pnpm add weimo-ui-markdown weimo-wdf weimo-ui-core react react-dom
+pnpm add weimo-ui-editor weimo-wdf weimo-ui-core react react-dom
 ```
 
-需要 React 19。`weimo-ui-markdown@0.2.x` 与 `weimo-wdf@0.1.x`、`weimo-ui-core@0.1.x`
+需要 React 19。`weimo-ui-editor@0.2.x` 与 `weimo-wdf@0.1.x`、`weimo-ui-core@0.1.x`
 搭配使用,应用里分别保留一份兼容的 WDF 模型和 core 即可。
 
 然后在应用入口引入唯一必需的样式:
 
 ```ts
-import 'weimo-ui-markdown/styles/tokens.css'
+import 'weimo-ui-editor/styles/tokens.css'
 ```
 
 它会顺带引入 `weimo-ui-core` 的基础 token,并定义 `--md-*` 系列 Markdown 变量;给根元素挂上 `.dark` 类即可切换暗色主题。
@@ -53,7 +53,7 @@ import {
   WdfView,
   type WdfDocument,
   type WdfViewMode,
-} from 'weimo-ui-markdown/components/wdf-view'
+} from 'weimo-ui-editor/components/wdf-view'
 
 export function Description() {
   const [mode, setMode] = useState<WdfViewMode>('view')
@@ -86,7 +86,7 @@ WDF 并调用一次 `onChange`。`mode` 由业务层控制;你也可以用 `defa
 ### 渲染一份 WDF 文档
 
 ```tsx
-import { WdfRender } from 'weimo-ui-markdown/components/wdf-render'
+import { WdfRender } from 'weimo-ui-editor/components/wdf-render'
 
 export function Profile() {
   return (
@@ -115,7 +115,7 @@ export function Profile() {
 ### 编辑一段内容
 
 ```tsx
-import { RichEditor } from 'weimo-ui-markdown/components/rich-editor'
+import { RichEditor } from 'weimo-ui-editor/components/rich-editor'
 
 export function DescriptionEditor() {
   return (
@@ -128,15 +128,15 @@ export function DescriptionEditor() {
 }
 ```
 
-编辑器以 Tiptap JSON 文档作为输入输出,支持受控 `value` 与非受控 `defaultValue` 两种用法,高度随内容自适应增长;通过 ref 还可以调用 `focus`、`clear`、`getContent`、`toggleBold` 等方法。更多交互见[演示页](https://jiaowenjun.github.io/weimo-ui-markdown/)。
+编辑器以 Tiptap JSON 文档作为输入输出,支持受控 `value` 与非受控 `defaultValue` 两种用法,高度随内容自适应增长;通过 ref 还可以调用 `focus`、`clear`、`getContent`、`toggleBold` 等方法。更多交互见[演示页](https://jiaowenjun.github.io/weimo-ui-editor/)。
 
 ## 组件一览
 
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
-| `WdfView` | `weimo-ui-markdown/components/wdf-view` | WDF 文档 ↔ WDF 文档 | 同一份内容的阅读/编辑切换 |
-| `WdfRender` | `weimo-ui-markdown/components/wdf-render` | WDF 文档 → React 节点 | 直接展示规范化的 WDF 内容 |
-| `RichEditor` | `weimo-ui-markdown/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
+| `WdfView` | `weimo-ui-editor/components/wdf-view` | WDF 文档 ↔ WDF 文档 | 同一份内容的阅读/编辑切换 |
+| `WdfRender` | `weimo-ui-editor/components/wdf-render` | WDF 文档 → React 节点 | 直接展示规范化的 WDF 内容 |
+| `RichEditor` | `weimo-ui-editor/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 
 ## 刻意不做的
 
@@ -150,8 +150,8 @@ export function DescriptionEditor() {
 
 ## 链接
 
-- [在线演示与组件文档](https://jiaowenjun.github.io/weimo-ui-markdown/)
-- [问题反馈](https://github.com/jiaowenjun/weimo-ui-markdown/issues)
+- [在线演示与组件文档](https://jiaowenjun.github.io/weimo-ui-editor/)
+- [问题反馈](https://github.com/jiaowenjun/weimo-ui-editor/issues)
 - 设计 token 与基础组件来自 [weimo-ui-core](https://github.com/jiaowenjun/weimo-ui-core)
 
 ## 许可证

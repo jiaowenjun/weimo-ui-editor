@@ -1,4 +1,4 @@
-@import "weimo-ui-markdown/styles/markdown-content.css";
+@import "weimo-ui-editor/styles/markdown-content.css";
 
 @layer components {
   .rich-editor {

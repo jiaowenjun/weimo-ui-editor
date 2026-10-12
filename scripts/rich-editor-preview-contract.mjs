@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 
 const richEditorPreview = await readFile(
   new URL(
-    '../site/src/docs/catalog/packages/weimo-ui-markdown/rich-editor.tsx',
+    '../site/src/docs/catalog/packages/weimo-ui-editor/rich-editor.tsx',
     import.meta.url,
   ),
   'utf8',

@@ -8,8 +8,8 @@ import {
   type WdfViewHandle,
   type WdfViewMode,
   type WdfDocument,
-} from 'weimo-ui-markdown/components/wdf-view'
-import type { RichEditorSelectionFormat } from 'weimo-ui-markdown/components/rich-editor'
+} from 'weimo-ui-editor/components/wdf-view'
+import type { RichEditorSelectionFormat } from 'weimo-ui-editor/components/rich-editor'
 import type { ComponentDefinition } from '../../component-docs'
 
 import { wdfRenderSample } from '../../fixtures/wdf-sample'

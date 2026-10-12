@@ -42,7 +42,7 @@ export function DocsShell() {
       navigationGroups={navigationGroups}
       onNavigate={openComponent}
       pageTitle={selected?.name}
-      siteName="weimo-ui-markdown"
+      siteName="weimo-ui-editor"
     >
       <Outlet context={outletContext} />
     </SiteTemplate>

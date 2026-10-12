@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  base: '/weimo-ui-markdown/',
+  base: '/weimo-ui-editor/',
   plugins: [react(), tailwindcss()],
   build: {
     chunkSizeWarningLimit: 700,

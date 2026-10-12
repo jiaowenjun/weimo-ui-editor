@@ -245,7 +245,7 @@ importers:
       weimo-ui-core:
         specifier: ~0.1.0
         version: 0.1.0(@base-ui/react@1.9.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      weimo-ui-markdown:
+      weimo-ui-editor:
         specifier: workspace:*
         version: link:..
       weimo-ui-template:

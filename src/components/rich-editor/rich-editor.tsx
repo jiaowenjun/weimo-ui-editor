@@ -10,7 +10,7 @@ import {
   type RichEditorSelectionFormat,
 } from './use-rich-editor'
 
-import 'weimo-ui-markdown/styles/rich-editor.css'
+import 'weimo-ui-editor/styles/rich-editor.css'
 
 export type {
   RichEditorBlockFormat,

@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: weimo-ui-markdown
+          path: weimo-ui-editor
       - uses: pnpm/action-setup@v4
         with:
           version: 12.10.1
@@ -22,8 +22,8 @@ jobs:
         with:
           node-version: latest
           cache: pnpm
-          cache-dependency-path: weimo-ui-markdown/pnpm-lock.yaml
+          cache-dependency-path: weimo-ui-editor/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-        working-directory: weimo-ui-markdown
+        working-directory: weimo-ui-editor
       - run: pnpm verify
-        working-directory: weimo-ui-markdown
+        working-directory: weimo-ui-editor

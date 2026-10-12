@@ -1,8 +1,8 @@
 import type { PackageCatalog } from '../../types'
 
-export const markdownCatalog = {
-  id: 'weimo-ui-markdown',
-  title: 'weimo-ui-markdown',
+export const editorCatalog = {
+  id: 'weimo-ui-editor',
+  title: 'weimo-ui-editor',
   pages: [
     {
       id: 'wdf-view',

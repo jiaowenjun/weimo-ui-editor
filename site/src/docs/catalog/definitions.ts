@@ -1,6 +1,6 @@
-import { richEditorDefinition } from './packages/weimo-ui-markdown/rich-editor'
-import { wdfRenderDefinition } from './packages/weimo-ui-markdown/wdf-render'
-import { wdfViewDefinition } from './packages/weimo-ui-markdown/wdf-view'
+import { richEditorDefinition } from './packages/weimo-ui-editor/rich-editor'
+import { wdfRenderDefinition } from './packages/weimo-ui-editor/wdf-render'
+import { wdfViewDefinition } from './packages/weimo-ui-editor/wdf-view'
 import type { ComponentId } from './manifest'
 import type { ComponentDefinition } from './types'
 

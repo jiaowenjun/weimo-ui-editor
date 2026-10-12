@@ -1,12 +1,12 @@
 {
-  "name": "weimo-ui-markdown",
+  "name": "weimo-ui-editor",
   "private": false,
   "version": "0.2.0",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jiaowenjun/weimo-ui-markdown.git"
+    "url": "git+https://github.com/jiaowenjun/weimo-ui-editor.git"
   },
   "packageManager": "pnpm@12.10.1",
   "publishConfig": {

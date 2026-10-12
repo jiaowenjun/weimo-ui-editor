@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: weimo-ui-markdown
+          path: weimo-ui-editor
       - uses: pnpm/action-setup@v4
         with:
           version: 12.10.1
@@ -28,17 +28,17 @@ jobs:
         with:
           node-version: latest
           cache: pnpm
-          cache-dependency-path: weimo-ui-markdown/pnpm-lock.yaml
+          cache-dependency-path: weimo-ui-editor/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-        working-directory: weimo-ui-markdown
+        working-directory: weimo-ui-editor
       - run: pnpm site:build
-        working-directory: weimo-ui-markdown
+        working-directory: weimo-ui-editor
       - name: Add SPA fallback page
         run: cp site/dist/index.html site/dist/404.html
-        working-directory: weimo-ui-markdown
+        working-directory: weimo-ui-editor
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: weimo-ui-markdown/site/dist
+          path: weimo-ui-editor/site/dist
 
   deploy:
     needs: build

@@ -12,7 +12,7 @@ const wdfViewSource = await readFile(
 )
 const wdfViewDemoSource = await readFile(
   new URL(
-    '../site/src/docs/catalog/packages/weimo-ui-markdown/wdf-view.tsx',
+    '../site/src/docs/catalog/packages/weimo-ui-editor/wdf-view.tsx',
     import.meta.url,
   ),
   'utf8',

@@ -1,5 +1,5 @@
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
-import { WdfRender } from 'weimo-ui-markdown/components/wdf-render'
+import { WdfRender } from 'weimo-ui-editor/components/wdf-render'
 import type { ComponentDefinition } from '../../component-docs'
 
 import { wdfRenderSample } from '../../fixtures/wdf-sample'

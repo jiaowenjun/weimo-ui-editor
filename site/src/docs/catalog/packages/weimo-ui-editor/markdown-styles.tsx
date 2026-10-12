@@ -4,7 +4,7 @@ import {
   WdfRender,
   type WdfBlock,
   type WdfDocument,
-} from 'weimo-ui-markdown/components/wdf-render'
+} from 'weimo-ui-editor/components/wdf-render'
 
 type MarkdownStyleToken = {
   token: string

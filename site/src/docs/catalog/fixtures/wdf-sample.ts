@@ -1,4 +1,4 @@
-import type { WdfDocument } from 'weimo-ui-markdown/components/wdf-render'
+import type { WdfDocument } from 'weimo-ui-editor/components/wdf-render'
 
 export const wdfRenderSample = {
   schema: 'weimo.document',

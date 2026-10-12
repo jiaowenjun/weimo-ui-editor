@@ -1,6 +1,6 @@
-import { markdownCatalog } from './packages/weimo-ui-markdown/manifest'
+import { editorCatalog } from './packages/weimo-ui-editor/manifest'
 
-const packageCatalogs = [markdownCatalog] as const
+const packageCatalogs = [editorCatalog] as const
 
 export type ComponentPackageName = (typeof packageCatalogs)[number]['id']
 export type ComponentId = (typeof packageCatalogs)[number]['pages'][number]['id']
