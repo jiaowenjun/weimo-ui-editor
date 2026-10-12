@@ -9,6 +9,22 @@
       content="weimo-ui-editor 的 WDF 渲染器与编辑器组件文档。"
     />
     <title>weimo-ui-editor</title>
+    <style>
+      html {
+        background-color: hsl(40 16% 96%);
+      }
+
+      html.dark {
+        background-color: hsl(0 0% 7%);
+        color-scheme: dark;
+      }
+    </style>
+    <script>
+      document.documentElement.classList.toggle(
+        'dark',
+        window.matchMedia('(prefers-color-scheme: dark)').matches,
+      )
+    </script>
   </head>
   <body>
     <div id="root"></div>
