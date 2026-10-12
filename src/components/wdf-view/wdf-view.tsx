@@ -107,6 +107,10 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       () => toWdfEditorContent(document),
       [document],
     )
+    // Entering an editing session implies focus unless the caller opts out
+    // through editorProps; RichEditor's own default is a plain `false`.
+    const editorAutoFocus = editorProps?.autoFocus ?? mode === 'edit'
+    const editorAutoFocusPosition = editorProps?.autoFocusPosition ?? 'end'
 
     const convertEditorContent = useCallback(
       (
@@ -206,6 +210,8 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         {renderedMode === 'edit' ? (
           <RichEditor
             {...editorProps}
+            autoFocus={editorAutoFocus}
+            autoFocusPosition={editorAutoFocusPosition}
             defaultValue={editorContent}
             onSave={handleEditorSave}
             ref={editorRef}

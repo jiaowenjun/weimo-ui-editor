@@ -136,6 +136,10 @@ export function useRichEditor({
   const onCancelRef = useRef(onCancel)
   const disabledRef = useRef(disabled)
   const lastSelectionFormatRef = useRef<RichEditorSelectionFormat | null>(null)
+  // The editor instance is created asynchronously (immediatelyRender: false),
+  // so imperative focus() calls that arrive before it exists are parked here
+  // and replayed once the instance is ready.
+  const pendingFocusRef = useRef<{ position?: RichEditorFocusPosition } | null>(null)
   const [interactionStore] = useState(() => ({
     get: () => ({
       disabled: disabledRef.current,
@@ -217,6 +221,17 @@ export function useRichEditor({
   }, [autoFocus, autoFocusPosition, editor])
 
   useEffect(() => {
+    if (!editor) return
+
+    const pendingFocus = pendingFocusRef.current
+    if (!pendingFocus) return
+
+    pendingFocusRef.current = null
+
+    if (!disabledRef.current) focusEditor(editor, pendingFocus.position)
+  }, [editor])
+
+  useEffect(() => {
     if (!editor || !isControlled) return
 
     const nextContent = value ?? EMPTY_SIMPLE_DOCUMENT
@@ -244,7 +259,11 @@ export function useRichEditor({
   const focus = useCallback((position?: RichEditorFocusPosition) => {
     if (disabled) return
 
-    if (editor) focusEditor(editor, position)
+    if (editor) {
+      focusEditor(editor, position)
+    } else {
+      pendingFocusRef.current = { position }
+    }
   }, [disabled, editor])
 
   const getSelectionFormat = useCallback(() => {
