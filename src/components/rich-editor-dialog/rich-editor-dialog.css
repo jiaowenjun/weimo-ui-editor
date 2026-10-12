@@ -41,14 +41,14 @@
     justify-content: center;
     gap: 4px;
     padding: 6px 12px;
-    border-bottom: 1px solid var(--color-border-divider, var(--color-border));
+    padding-block-end: max(6px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-border-divider, var(--color-border));
   }
 
   .rich-editor-dialog__panel {
     display: flex;
     flex-direction: column;
     padding: 10px 18px;
-    padding-block-end: max(10px, env(safe-area-inset-bottom));
   }
 
   .rich-editor-dialog__panel .rich-editor,

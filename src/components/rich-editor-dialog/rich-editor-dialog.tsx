@@ -241,6 +241,16 @@ export const RichEditorDialog = forwardRef<
             {saveLabel}
           </TextButton>
         </DialogHeader>
+        <DialogPanel className="rich-editor-dialog__panel">
+          <RichEditor
+            {...editorProps}
+            autoFocus={editorAutoFocus}
+            defaultValue={editorContent}
+            onSelectionFormatChange={handleSelectionFormatChange}
+            onSave={handleEditorSave}
+            ref={editorRef}
+          />
+        </DialogPanel>
         <div
           aria-label="编辑工具栏"
           className="rich-editor-dialog__toolbar"
@@ -261,16 +271,6 @@ export const RichEditorDialog = forwardRef<
             </GhostIconButton>
           ))}
         </div>
-        <DialogPanel className="rich-editor-dialog__panel">
-          <RichEditor
-            {...editorProps}
-            autoFocus={editorAutoFocus}
-            defaultValue={editorContent}
-            onSelectionFormatChange={handleSelectionFormatChange}
-            onSave={handleEditorSave}
-            ref={editorRef}
-          />
-        </DialogPanel>
       </DialogPopup>
     </Dialog>
   )

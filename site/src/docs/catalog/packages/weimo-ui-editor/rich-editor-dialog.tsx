@@ -23,8 +23,8 @@ const dialogSample: RichEditorContent = {
     {
       type: 'paragraph',
       content: [
-        { type: 'text', text: '点击右上角铅笔打开弹窗;工具栏固定在顶部,' },
-        { type: 'text', marks: [{ type: 'bold' }], text: '不会被软键盘遮挡' },
+        { type: 'text', text: '点击右上角铅笔打开弹窗;工具栏位于对话框底部,' },
+        { type: 'text', marks: [{ type: 'bold' }], text: '紧贴软键盘上方' },
         { type: 'text', text: '。' },
       ],
     },
