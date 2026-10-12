@@ -1,8 +1,9 @@
 import { Extension, wrappingInputRule } from '@tiptap/core'
-import type { JSONContent } from '@tiptap/core'
+import type { Editor, JSONContent } from '@tiptap/core'
 import Blockquote from '@tiptap/extension-blockquote'
 import { ListItem, OrderedList } from '@tiptap/extension-list'
 import Placeholder from '@tiptap/extension-placeholder'
+import { TextSelection } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
 
 // 预设不加载 tiptap 的 markdown 扩展:内容以 tiptap 原生 JSON 进出,编辑器
@@ -19,6 +20,76 @@ const WdfBlockquote = Blockquote.extend({
 
 const WdfListItem = ListItem.extend({
   content: 'paragraph',
+})
+
+// TODO(tiptap): 这是针对 @tiptap/extension-list 3.31.4 的临时兼容。
+//
+// 列表末尾的空列表项第一次 Backspace 后会被 lift 为列表后的顶层空段落。
+// 紧接着再按 Backspace 时,Tiptap ListKeymap 的 handleBackspace 会命中
+// “当前节点不在 listItem 内且前一个节点是列表”的分支,通过 cut +
+// joinForward 把这个空段落重新放进列表,于是已经取消的项目符号再次出现。
+// 仅关闭 ListKeymap 不能解决问题:ProseMirror 的通用 joinBackward 也会借助
+// schema 的 wrapping 关系把空段落重新包装为 listItem。
+//
+// 在上游修复该列表边界行为前,这里只拦截这个精确状态:删除顶层空段落并把
+// 光标放到前一个列表项末尾。其他 Backspace 状态返回 false,继续交给上游
+// 键位处理。升级 Tiptap 后应先运行 editor-schema-contract,复核上游行为,再
+// 删除本函数和 WdfListBoundaryKeymap。
+export function handleWdfListBoundaryBackspace(editor: Editor): boolean {
+  const { state } = editor
+  const { selection } = state
+
+  if (!selection.empty) return false
+
+  const { $from } = selection
+
+  if (
+    $from.depth !== 1 ||
+    $from.parent.type !== state.schema.nodes.paragraph ||
+    $from.parent.content.size !== 0 ||
+    $from.parentOffset !== 0
+  ) {
+    return false
+  }
+
+  const blockIndex = $from.index(0)
+
+  if (blockIndex === 0) return false
+
+  const previousBlock = state.doc.child(blockIndex - 1)
+
+  if (
+    previousBlock.type !== state.schema.nodes.bulletList &&
+    previousBlock.type !== state.schema.nodes.orderedList
+  ) {
+    return false
+  }
+
+  const blockStart = $from.before()
+  const blockEnd = $from.after()
+
+  return editor.commands.command(({ tr, dispatch }) => {
+    if (!dispatch) return true
+
+    tr.delete(blockStart, blockEnd)
+    tr.setSelection(TextSelection.near(tr.doc.resolve(blockStart), -1))
+    tr.scrollIntoView()
+    dispatch(tr)
+
+    return true
+  })
+}
+
+const WdfListBoundaryKeymap = Extension.create({
+  name: 'wdfListBoundaryKeymap',
+  // 必须先于默认优先级为 100 的 ListKeymap 和通用 Keymap 执行。
+  priority: 1_000,
+  addKeyboardShortcuts() {
+    return {
+      Backspace: () => handleWdfListBoundaryBackspace(this.editor),
+      'Mod-Backspace': () => handleWdfListBoundaryBackspace(this.editor),
+    }
+  },
 })
 
 const WDF_MAX_LIST_START = 0xffff_ffff
@@ -142,6 +213,7 @@ export function createRichEditorExtensions(options: {
     WdfBlockquote,
     WdfListItem,
     WdfOrderedList,
+    WdfListBoundaryKeymap,
     Placeholder.configure({
       placeholder: options.placeholder ?? '',
     }),

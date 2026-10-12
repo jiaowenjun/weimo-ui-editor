@@ -6,6 +6,7 @@ import { fromTiptap } from 'weimo-wdf'
 import {
   createRichEditorExtensions,
   findWdfOrderedListInput,
+  handleWdfListBoundaryBackspace,
 } from '../dist/components/rich-editor/rich-editor-extensions.js'
 import { editorHasContent } from '../dist/components/rich-editor/rich-editor-content.js'
 import { toWdfEditorContent } from '../dist/components/wdf-view/wdf-editor-content.js'
@@ -65,6 +66,86 @@ const editor = new Editor({
   content: tiptapDocument,
 })
 
+function assertListBoundaryBackspace(listType, attrs) {
+  const list = {
+    type: listType,
+    ...(attrs ? { attrs } : {}),
+    content: [
+      {
+        type: 'listItem',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'first' }],
+          },
+        ],
+      },
+      {
+        type: 'listItem',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'second' }],
+          },
+        ],
+      },
+    ],
+  }
+  const initialContent = { type: 'doc', content: [list] }
+  const listEditor = new Editor({
+    element: null,
+    extensions: createRichEditorExtensions({
+      getInteraction: () => ({ disabled: false }),
+    }),
+    content: initialContent,
+  })
+
+  try {
+    let secondItemEnd = 0
+
+    listEditor.state.doc.descendants((node, pos) => {
+      if (node.isText && node.text === 'second') secondItemEnd = pos + node.nodeSize
+    })
+
+    listEditor.commands.setTextSelection(secondItemEnd)
+    assert.equal(listEditor.commands.splitListItem('listItem'), true)
+    assert.equal(listEditor.commands.liftListItem('listItem'), true)
+    assert.deepEqual(JSON.parse(JSON.stringify(listEditor.getJSON())), {
+      type: 'doc',
+      content: [list, { type: 'paragraph' }],
+    })
+
+    assert.equal(handleWdfListBoundaryBackspace(listEditor), true)
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(listEditor.getJSON())),
+      initialContent,
+      'Backspace after leaving a list must not recreate an empty list item',
+    )
+    assert.equal(listEditor.state.selection.$from.parent.textContent, 'second')
+    assert.equal(listEditor.state.selection.$from.parentOffset, 'second'.length)
+
+    listEditor.commands.insertContentAt(listEditor.state.doc.content.size, {
+      type: 'paragraph',
+      content: [{ type: 'text', text: 'outside' }],
+    })
+    let outsideStart = 0
+
+    listEditor.state.doc.descendants((node, pos) => {
+      if (node.isText && node.text === 'outside') outsideStart = pos
+    })
+
+    listEditor.commands.setTextSelection(outsideStart)
+    assert.equal(listEditor.state.selection.$from.parentOffset, 0)
+    assert.equal(
+      handleWdfListBoundaryBackspace(listEditor),
+      false,
+      'non-empty paragraphs must retain the upstream Backspace behavior',
+    )
+  } finally {
+    listEditor.destroy()
+  }
+}
+
 try {
   const editorDocument = JSON.parse(JSON.stringify(editor.getJSON()))
 
@@ -111,6 +192,9 @@ try {
   assert.equal(findWdfOrderedListInput('0. '), null)
   assert.notEqual(findWdfOrderedListInput('4294967295. '), null)
   assert.equal(findWdfOrderedListInput('4294967296. '), null)
+
+  assertListBoundaryBackspace('bulletList')
+  assertListBoundaryBackspace('orderedList', { start: 3 })
 } finally {
   editor.destroy()
 }
