@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Bold, Heading1, List, Quote, RotateCcw, Trash2 } from 'lucide-react'
+import { Bold, Heading1, List, Quote, RotateCcw } from 'lucide-react'
 
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
@@ -63,13 +63,6 @@ function RichEditorDemo() {
       <ComponentPreviewCard
         action={
           <div className="rich-editor-docs-toolbar">
-            <GhostIconButton
-              aria-label="清空内容"
-              onClick={() => editorRef.current?.clear()}
-              size="sm"
-            >
-              <Trash2 />
-            </GhostIconButton>
             <GhostIconButton
               aria-label="重置内容"
               onClick={() => setContent(richEditorSample)}
