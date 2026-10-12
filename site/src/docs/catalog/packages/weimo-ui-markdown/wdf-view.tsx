@@ -95,7 +95,7 @@ function WdfViewDemo() {
 
 export const wdfViewDefinition = {
   id: 'wdf-view',
-  summary: 'WdfView 以一份 WDF 内容在渲染与编辑状态之间切换',
+  summary: 'WdfView 以会话草稿编辑 WDF，并在退出编辑态时一次提交',
   status: 'Ready',
   frame: 'plain',
   preview: () => <WdfViewDemo />,

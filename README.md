@@ -77,9 +77,11 @@ export function Description() {
 }
 ```
 
-`WdfView` 只维护 WDF:阅读态直接交给 `WdfRender`,编辑态通过 `weimo-wdf`
-的 `toTiptap` 转为 Tiptap JSON,每次编辑再用 `fromTiptap` 转回规范化 WDF。
-`mode` 由业务层控制;你也可以用 `defaultValue` 让组件自己保存内容。
+`WdfView` 只维护 WDF:阅读态直接交给 `WdfRender`,进入编辑态时通过
+`weimo-wdf` 的 `toTiptap` 创建一份会话草稿。输入期间草稿留在 `RichEditor`
+内部;当 `mode` 从 `edit` 切回 `view` 时,组件才用 `fromTiptap` 转回规范化
+WDF 并调用一次 `onChange`。`mode` 由业务层控制;你也可以用 `defaultValue`
+让组件自己保存提交后的内容。
 
 ### 渲染一份 WDF 文档
 

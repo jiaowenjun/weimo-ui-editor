@@ -8,6 +8,7 @@ import {
   type JSONContent,
 } from '@tiptap/core'
 
+import { editorHasContent } from './rich-editor-content'
 import { createRichEditorExtensions } from './rich-editor-extensions'
 
 export type RichEditorContent = JSONContent
@@ -69,10 +70,6 @@ function focusEditor(editor: Editor, position?: RichEditorFocusPosition) {
     view.focus()
     editor.commands.scrollIntoView()
   })
-}
-
-function serializeContent(content: RichEditorContent) {
-  return JSON.stringify(content)
 }
 
 function selectionFormatsEqual(
@@ -138,7 +135,6 @@ export function useRichEditor({
   const onSaveRef = useRef(onSave)
   const onCancelRef = useRef(onCancel)
   const disabledRef = useRef(disabled)
-  const lastContentRef = useRef(initialValue === undefined ? '' : serializeContent(initialValue))
   const lastSelectionFormatRef = useRef<RichEditorSelectionFormat | null>(null)
   const [interactionStore] = useState(() => ({
     get: () => ({
@@ -169,8 +165,6 @@ export function useRichEditor({
 
   const emitContent = useCallback(
     (nextContent: RichEditorContent) => {
-      lastContentRef.current = serializeContent(nextContent)
-
       if (!isControlled) {
         setInternalValue(nextContent)
       }
@@ -194,7 +188,6 @@ export function useRichEditor({
       },
     },
     onCreate: ({ editor: currentEditor }) => {
-      lastContentRef.current = serializeContent(currentEditor.getJSON())
       emitSelectionFormat(currentEditor)
     },
     onTransaction: ({ editor: currentEditor }) => emitSelectionFormat(currentEditor),
@@ -227,15 +220,12 @@ export function useRichEditor({
     if (!editor || !isControlled) return
 
     const nextContent = value ?? EMPTY_SIMPLE_DOCUMENT
-    const serialized = serializeContent(nextContent)
 
-    if (serialized === lastContentRef.current) return
+    if (editorHasContent(editor, nextContent)) return
 
     editor.commands.setContent(nextContent, {
       emitUpdate: false,
     })
-
-    lastContentRef.current = serialized
   }, [editor, isControlled, value])
 
   const getContent = useCallback(() => {
