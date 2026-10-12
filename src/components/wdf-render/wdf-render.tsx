@@ -5,50 +5,25 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
+import type {
+  WdfBlock,
+  WdfDocument,
+  WdfListItem,
+  WdfText,
+} from 'weimo-doc'
 
 import { cn } from 'weimo-ui-core/lib/utils'
 
 import 'weimo-ui-markdown/styles/markdown-content.css'
 
-export type WdfMark = {
-  type: 'bold'
-}
-
-export type WdfText = {
-  type: 'text'
-  text: string
-  marks?: WdfMark[]
-}
-
-export type WdfParagraph = {
-  type: 'paragraph'
-  content: WdfText[]
-}
-
-export type WdfListItem = {
-  type: 'list_item'
-  content: [WdfParagraph]
-}
-
-export type WdfBlock =
-  | WdfParagraph
-  | { type: 'heading'; attrs: { level: number }; content: WdfText[] }
-  | { type: 'blockquote'; content: WdfParagraph[] }
-  | { type: 'bullet_list'; content: WdfListItem[] }
-  | {
-      type: 'ordered_list'
-      attrs: { start: number }
-      content: WdfListItem[]
-    }
-
-export type WdfDocument = {
-  schema: string
-  version: number
-  root: {
-    type: 'doc'
-    content: WdfBlock[]
-  }
-}
+export type {
+  WdfBlock,
+  WdfDocument,
+  WdfListItem,
+  WdfMark,
+  WdfParagraph,
+  WdfText,
+} from 'weimo-doc'
 
 function renderTextValue(value: string, keyPrefix: string): ReactNode {
   return value.split('\n').map((line, index) => (

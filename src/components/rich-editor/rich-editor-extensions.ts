@@ -1,12 +1,79 @@
-import { Extension } from '@tiptap/core'
+import { Extension, wrappingInputRule } from '@tiptap/core'
 import type { JSONContent } from '@tiptap/core'
+import Blockquote from '@tiptap/extension-blockquote'
+import { ListItem, OrderedList } from '@tiptap/extension-list'
 import Placeholder from '@tiptap/extension-placeholder'
 import StarterKit from '@tiptap/starter-kit'
 
 // 预设不加载 tiptap 的 markdown 扩展:内容以 tiptap 原生 JSON 进出,编辑器
-// 既不解析 Markdown 源码也不序列化回 Markdown。格式面收敛为标题/加粗/引用/
-// 无序列表四种(标题仅 level 1),其余 StarterKit 格式(斜体/链接/行内代码/
-// 代码块/删除线/下划线/有序列表/分隔线)全部关闭,schema 层面即无法产生。
+// 既不解析 Markdown 源码也不序列化回 Markdown。schema 与 WDF v0.1 对齐:
+// 段落、1-6 级标题、加粗、引用和有序/无序列表。其余 StarterKit 格式
+// (斜体/链接/换行/行内代码/代码块/删除线/下划线/分隔线)全部关闭。
+
+// WDF 引用只能包含段落,列表项只能包含一个段落。用更严格的 schema
+// 替代 StarterKit 默认的 `block+` / `paragraph block*`,从编辑器边界
+// 阻止嵌套引用、嵌套列表和多段落列表项。
+const WdfBlockquote = Blockquote.extend({
+  content: 'paragraph+',
+})
+
+const WdfListItem = ListItem.extend({
+  content: 'paragraph',
+})
+
+const WDF_MAX_LIST_START = 0xffff_ffff
+
+export function findWdfOrderedListInput(text: string) {
+  const match = /^([1-9]\d*)\.\s$/.exec(text)
+
+  if (!match) return null
+
+  const start = Number(match[1])
+
+  if (!Number.isSafeInteger(start) || start > WDF_MAX_LIST_START) return null
+
+  return {
+    index: match.index,
+    text: match[0],
+    replaceWith: match[1],
+  }
+}
+
+// Tiptap 3 的 OrderedList 还会生成 `attrs.type: null`,而 WDF 有序列表只有
+// `start`。在 schema 层去掉该扩展属性,使 `toTiptap` 的结果与 editor.getJSON()
+// 字节结构一致,避免受控更新反复 setContent 影响选区。
+const WdfOrderedList = OrderedList.extend({
+  addAttributes() {
+    return {
+      start: {
+        default: 1,
+        parseHTML: (element) => {
+          const start = Number.parseInt(element.getAttribute('start') ?? '', 10)
+
+          return Number.isInteger(start) && start >= 1 && start <= WDF_MAX_LIST_START
+            ? start
+            : 1
+        },
+      },
+    }
+  },
+  addInputRules() {
+    return [
+      wrappingInputRule({
+        find: findWdfOrderedListInput,
+        type: this.type,
+        getAttributes: (match) => ({ start: Number(match[1]) }),
+        joinPredicate: (match, node) =>
+          node.childCount + node.attrs.start === Number(match[1]),
+      }),
+    ]
+  },
+  // OrderedList 默认插件会把纯文本列表直接变成节点,绕过上面的
+  // start 范围检查。关闭该特殊粘贴路径,交给标准粘贴流程处理。
+  addProseMirrorPlugins() {
+    return []
+  },
+})
 
 export type RichEditorInteractionContext = {
   disabled: boolean
@@ -58,16 +125,23 @@ export function createRichEditorExtensions(options: {
 }): Extension[] {
   return [
     StarterKit.configure({
+      blockquote: false,
       code: false,
       codeBlock: false,
-      heading: { levels: [1] },
+      hardBreak: false,
+      heading: { levels: [1, 2, 3, 4, 5, 6] },
       horizontalRule: false,
       italic: false,
       link: false,
+      listItem: false,
       orderedList: false,
       strike: false,
+      trailingNode: false,
       underline: false,
     }),
+    WdfBlockquote,
+    WdfListItem,
+    WdfOrderedList,
     Placeholder.configure({
       placeholder: options.placeholder ?? '',
     }),

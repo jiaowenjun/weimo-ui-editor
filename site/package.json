@@ -15,6 +15,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "8.4.0",
+    "weimo-doc": "file:../../weimo-doc-ts",
     "weimo-ui-core": "~0.1.0",
     "weimo-ui-markdown": "workspace:*",
     "weimo-ui-template": "~0.1.0"

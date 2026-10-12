@@ -5,6 +5,13 @@ export const markdownCatalog = {
   title: 'weimo-ui-markdown',
   pages: [
     {
+      id: 'wdf-view',
+      name: 'WDF读写视图',
+      exportName: 'WdfView',
+      registryName: 'wdf-view',
+      packageExport: './components/wdf-view',
+    },
+    {
       id: 'wdf-render',
       name: 'WDF渲染',
       exportName: 'WdfRender',

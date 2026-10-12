@@ -40,7 +40,7 @@
   }
 
   .weimo-card-markdown__heading,
-  .rich-editor__content.weimo-markdown-content h1 {
+  .rich-editor__content.weimo-markdown-content :is(h1, h2, h3, h4, h5, h6) {
     margin: 0;
     font-weight: 650;
     text-align: center;
@@ -79,7 +79,7 @@
 
 
   .weimo-card-markdown__list,
-  .rich-editor__content.weimo-markdown-content ul {
+  .rich-editor__content.weimo-markdown-content :is(ul, ol) {
     margin: 0;
     padding-left: var(--md-list-indent);
   }
@@ -109,7 +109,7 @@
   }
 
   .weimo-card-markdown__list-item .weimo-card-markdown__list,
-  .rich-editor__content.weimo-markdown-content li ul {
+  .rich-editor__content.weimo-markdown-content li :is(ul, ol) {
     margin-top: 0.25em;
   }
 
@@ -142,8 +142,14 @@
   .weimo-card-markdown__hr,
   p,
   h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
   blockquote,
-  ul) + :is(.weimo-card-markdown__p,
+  ul,
+  ol) + :is(.weimo-card-markdown__p,
   .weimo-card-markdown__heading,
   .weimo-card-markdown__blockquote,
   .weimo-card-markdown__list,
@@ -151,8 +157,14 @@
   .weimo-card-markdown__hr,
   p,
   h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
   blockquote,
-  ul) {
+  ul,
+  ol) {
     margin-top: 1em;
   }
 }

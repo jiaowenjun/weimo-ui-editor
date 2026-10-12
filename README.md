@@ -1,6 +1,6 @@
 # weimo-ui-markdown
 
-> 小而稳的 React 内容组件:把一份 WDF 文档渲染出来,或者让人舒服地编辑一段格式干净的内容。
+> 小而稳的 React 内容组件:用一份 WDF 数据完成阅读、编辑和状态切换。
 
 [![演示页](https://img.shields.io/badge/%E6%BC%94%E7%A4%BA%E9%A1%B5-GitHub_Pages-2ea44f?style=flat-square)](https://jiaowenjun.github.io/weimo-ui-markdown/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3a9bd6?style=flat-square)](./LICENSE)
@@ -12,14 +12,15 @@
 
 很多场景并不需要一个全功能编辑器:个人简介、商品描述、一条评论、一段公告……你需要的只是「把结构化内容显示出来」和「让用户写点格式受限的文字」,而不是图片上传、表格、数学公式和一整套工具栏。
 
-weimo-ui-markdown 只做这两件事,并把它们做好:
+weimo-ui-markdown 把这三个必要部分组合起来:
 
+- **WdfView** — 对外只读写 WDF,内部在阅读态使用 WdfRender,在编辑态使用 RichEditor;
 - **WdfRender** — WDF 文档对象进,直接生成排版舒适的 React 内容;
 - **RichEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
 
 ## 为什么选它
 
-- 🎯 **聚焦常用结构** — 渲染器覆盖段落、标题、加粗、引用、列表等日常结构;编辑器同样只开放段落、一级标题、加粗、引用和无序列表,用户写出来的内容天然规整。
+- 🎯 **聚焦 WDF v0.1** — 段落、1–6 级标题、加粗、引用和有序/无序列表在阅读与编辑两侧保持一致。
 - 🔒 **安全默认** — 内容以结构化 JSON 进出,不解析原始 HTML,渲染用户输入的内容不用提心吊胆。
 - 🌗 **明暗双主题** — 一份 token CSS 同时覆盖亮色与 `.dark` 暗色;颜色、字号、间距全部是 CSS 变量,覆盖变量即可定制,不用重写组件样式。
 - 📦 **开箱即用** — 组件自动加载自身结构样式,提供 ESM 产物与完整的 TypeScript 类型,显式子路径导出,按需引入。
@@ -28,10 +29,11 @@ weimo-ui-markdown 只做这两件事,并把它们做好:
 ## 安装
 
 ```bash
-pnpm add weimo-ui-markdown weimo-ui-core react react-dom
+pnpm add weimo-ui-markdown weimo-doc weimo-ui-core react react-dom
 ```
 
-需要 React 19。`weimo-ui-markdown@0.2.x` 与 `weimo-ui-core@0.1.x` 搭配使用,应用里保留一份兼容的 core 即可。
+需要 React 19。`weimo-ui-markdown@0.2.x` 与 `weimo-doc@0.1.x`、`weimo-ui-core@0.1.x`
+搭配使用,应用里分别保留一份兼容的 WDF 模型和 core 即可。
 
 然后在应用入口引入唯一必需的样式:
 
@@ -42,6 +44,42 @@ import 'weimo-ui-markdown/styles/tokens.css'
 它会顺带引入 `weimo-ui-core` 的基础 token,并定义 `--md-*` 系列 Markdown 变量;给根元素挂上 `.dark` 类即可切换暗色主题。
 
 ## 三十秒上手
+
+### 用一份 WDF 在阅读与编辑间切换
+
+```tsx
+import { useState } from 'react'
+import {
+  WdfView,
+  type WdfDocument,
+  type WdfViewMode,
+} from 'weimo-ui-markdown/components/wdf-view'
+
+export function Description() {
+  const [mode, setMode] = useState<WdfViewMode>('view')
+  const [content, setContent] = useState<WdfDocument>({
+    schema: 'weimo.document',
+    version: 1,
+    root: {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [] }],
+    },
+  })
+
+  return (
+    <>
+      <button onClick={() => setMode(mode === 'view' ? 'edit' : 'view')}>
+        {mode === 'view' ? '编辑' : '完成'}
+      </button>
+      <WdfView mode={mode} value={content} onChange={setContent} />
+    </>
+  )
+}
+```
+
+`WdfView` 只维护 WDF:阅读态直接交给 `WdfRender`,编辑态通过 `weimo-doc`
+的 `toTiptap` 转为 Tiptap JSON,每次编辑再用 `fromTiptap` 转回规范化 WDF。
+`mode` 由业务层控制;你也可以用 `defaultValue` 让组件自己保存内容。
 
 ### 渲染一份 WDF 文档
 
@@ -94,6 +132,7 @@ export function DescriptionEditor() {
 
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
+| `WdfView` | `weimo-ui-markdown/components/wdf-view` | WDF 文档 ↔ WDF 文档 | 同一份内容的阅读/编辑切换 |
 | `WdfRender` | `weimo-ui-markdown/components/wdf-render` | WDF 文档 → React 节点 | 直接展示规范化的 WDF 内容 |
 | `RichEditor` | `weimo-ui-markdown/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 

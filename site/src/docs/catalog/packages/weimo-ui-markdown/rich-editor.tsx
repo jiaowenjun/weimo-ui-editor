@@ -176,7 +176,7 @@ function RichEditorDemo() {
 
 export const richEditorDefinition = {
   id: 'rich-editor',
-  summary: 'RichEditor 编辑器，tiptap JSON 内容进出，仅四种格式',
+  summary: 'RichEditor 编辑器，Tiptap JSON 内容进出，schema 与 WDF v0.1 对齐',
   status: 'Ready',
   frame: 'plain',
   preview: () => <RichEditorDemo />,

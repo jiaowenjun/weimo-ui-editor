@@ -29,6 +29,10 @@
       "types": "./dist/components/wdf-render/wdf-render.d.ts",
       "import": "./dist/components/wdf-render/wdf-render.js"
     },
+    "./components/wdf-view": {
+      "types": "./dist/components/wdf-view/wdf-view.d.ts",
+      "import": "./dist/components/wdf-view/wdf-view.js"
+    },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
       "default": "./dist/styles/tokens.css"
@@ -51,12 +55,15 @@
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
     "test:typecheck": "pnpm typecheck",
     "test:site-template": "node scripts/site-template-contract.mjs",
-    "check:package": "pnpm build && publint && attw --pack . --profile esm-only --ignore-rules internal-resolution-error",
-    "verify": "pnpm typecheck && pnpm test:site-template && pnpm check:package && pnpm --dir site build",
+    "test:wdf-view": "node scripts/wdf-view-contract.mjs",
+    "check:package": "pnpm build && node scripts/editor-schema-contract.mjs && publint && attw --pack . --profile esm-only --ignore-rules internal-resolution-error",
+    "verify": "pnpm typecheck && pnpm test:site-template && pnpm test:wdf-view && pnpm check:package && pnpm --dir site build",
     "prepack": "pnpm build"
   },
   "dependencies": {
     "@tiptap/core": "3.31.4",
+    "@tiptap/extension-blockquote": "3.31.4",
+    "@tiptap/extension-list": "3.31.4",
     "@tiptap/extension-placeholder": "3.31.4",
     "@tiptap/extensions": "3.31.4",
     "@tiptap/pm": "3.31.4",
@@ -66,6 +73,7 @@
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "weimo-doc": "^0.1.0",
     "weimo-ui-core": "~0.1.0"
   },
   "devDependencies": {
@@ -78,6 +86,7 @@
     "react-dom": "19.3.0",
     "rimraf": "^6.1.3",
     "typescript": "~7.0.2",
+    "weimo-doc": "file:../weimo-doc-ts",
     "weimo-ui-core": "~0.1.0"
   }
 }

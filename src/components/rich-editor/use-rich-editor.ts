@@ -87,9 +87,9 @@ function resolveRichEditorSelectionFormat(
 ): RichEditorSelectionFormat {
   let block: RichEditorBlockFormat = 'paragraph'
 
-  if (editor.isActive('heading', { level: 1 })) {
+  if (editor.isActive('heading')) {
     block = 'heading'
-  } else if (editor.isActive('bulletList')) {
+  } else if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
     block = 'list'
   } else if (editor.isActive('blockquote')) {
     block = 'quote'
@@ -99,13 +99,16 @@ function resolveRichEditorSelectionFormat(
 }
 
 function setEditorBlockFormat(editor: Editor, format: RichEditorBlockFormat) {
-  const headingActive = editor.isActive('heading', { level: 1 })
-  const listActive = editor.isActive('bulletList')
+  const headingActive = editor.isActive('heading')
+  const bulletListActive = editor.isActive('bulletList')
+  const orderedListActive = editor.isActive('orderedList')
+  const listActive = bulletListActive || orderedListActive
   const quoteActive = editor.isActive('blockquote')
   const command = editor.chain().focus()
 
   if (format !== 'heading' && headingActive) command.setParagraph()
-  if (format !== 'list' && listActive) command.toggleBulletList()
+  if (format !== 'list' && bulletListActive) command.toggleBulletList()
+  if (format !== 'list' && orderedListActive) command.toggleOrderedList()
   if (format !== 'quote' && quoteActive) command.unsetBlockquote()
 
   if (format === 'heading' && !headingActive) command.setHeading({ level: 1 })
