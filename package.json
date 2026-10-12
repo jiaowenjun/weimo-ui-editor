@@ -53,11 +53,12 @@
     "site:build": "pnpm build && pnpm --dir site build",
     "site:preview": "pnpm --dir site preview",
     "typecheck": "tsc -p tsconfig.json --noEmit --pretty false",
+    "test:rich-editor-preview": "node scripts/rich-editor-preview-contract.mjs",
     "test:typecheck": "pnpm typecheck",
     "test:site-template": "node scripts/site-template-contract.mjs",
     "test:wdf-view": "node scripts/wdf-view-contract.mjs",
     "check:package": "pnpm build && node scripts/editor-schema-contract.mjs && publint && attw --pack . --profile esm-only --ignore-rules internal-resolution-error",
-    "verify": "pnpm typecheck && pnpm test:site-template && pnpm test:wdf-view && pnpm check:package && pnpm --dir site build",
+    "verify": "pnpm typecheck && pnpm test:rich-editor-preview && pnpm test:site-template && pnpm test:wdf-view && pnpm check:package && pnpm --dir site build",
     "prepack": "pnpm build"
   },
   "dependencies": {

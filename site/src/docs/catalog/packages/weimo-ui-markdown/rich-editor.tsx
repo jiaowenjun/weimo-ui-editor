@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Bold, Heading1, List, Quote, RotateCcw, Trash2 } from 'lucide-react'
 
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
@@ -57,35 +57,6 @@ function RichEditorDemo() {
   const [selectionFormat, setSelectionFormat] =
     useState<RichEditorSelectionFormat | null>(null)
   const editorRef = useRef<RichEditorHandle | null>(null)
-  const previewRef = useRef<HTMLDivElement | null>(null)
-  // null 表示尚未测得真实编辑器高度(骨架屏阶段不测量),容器保持自适应高度
-  const [previewHeight, setPreviewHeight] = useState<number | null>(null)
-
-  useLayoutEffect(() => {
-    const preview = previewRef.current
-    const editorRoot = preview?.querySelector<HTMLElement>(':scope > .rich-editor')
-
-    if (!preview || !editorRoot) return
-
-    const observedEditorRoot: HTMLElement = editorRoot
-
-    function syncPreviewHeight() {
-      // 骨架高度是 min-height 占位,不是编辑器最终高度;锁定它会在编辑器就绪后
-      // 触发一次错误高度→真实高度的过渡动画,表现为卡片"慢慢长高"闪烁
-      if (observedEditorRoot.classList.contains('rich-editor--loading')) return
-
-      setPreviewHeight(observedEditorRoot.getBoundingClientRect().height)
-    }
-
-    syncPreviewHeight()
-
-    if (typeof ResizeObserver === 'undefined') return
-
-    const editorResizeObserver = new ResizeObserver(syncPreviewHeight)
-    editorResizeObserver.observe(editorRoot)
-
-    return () => editorResizeObserver.disconnect()
-  }, [])
 
   return (
     <>
@@ -155,11 +126,7 @@ function RichEditorDemo() {
           </>
         }
       >
-        <div
-          className="rich-editor-docs-preview"
-          ref={previewRef}
-          style={previewHeight === null ? undefined : { height: previewHeight }}
-        >
+        <div className="rich-editor-docs-preview">
           <RichEditor
             onChange={setContent}
             onSelectionFormatChange={setSelectionFormat}

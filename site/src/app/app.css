@@ -1,5 +1,4 @@
-.rich-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; overflow: hidden; transition: height 200ms ease; }
-@media (prefers-reduced-motion: reduce) { .rich-editor-docs-preview { transition-duration: 1ms; } }
+.rich-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; }
 .rich-editor-docs-toolbar { display: flex; justify-content: center; gap: 4px; }
 .component-preview-card:has(.rich-editor-docs-preview) .base-card__content { border-radius: var(--radius-xs); }
 .md-style-preview__group-effect { display: flex; min-width: 0; min-height: 112px; align-items: center; justify-content: center; overflow: hidden; padding: 16px; color: var(--color-text-primary); }
