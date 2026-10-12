@@ -25,10 +25,6 @@
       "types": "./dist/components/rich-editor/rich-editor.d.ts",
       "import": "./dist/components/rich-editor/rich-editor.js"
     },
-    "./components/md-render": {
-      "types": "./dist/components/md-render/md-render.d.ts",
-      "import": "./dist/components/md-render/md-render.js"
-    },
     "./components/wdf-render": {
       "types": "./dist/components/wdf-render/wdf-render.d.ts",
       "import": "./dist/components/wdf-render/wdf-render.js"
@@ -65,12 +61,7 @@
     "@tiptap/extensions": "3.31.4",
     "@tiptap/pm": "3.31.4",
     "@tiptap/react": "3.31.4",
-    "@tiptap/starter-kit": "3.31.4",
-    "react-markdown": "^10.1.0",
-    "rehype-raw": "^7.0.0",
-    "rehype-sanitize": "^6.0.0",
-    "remark-breaks": "^4.0.0",
-    "unified": "^11.0.5"
+    "@tiptap/starter-kit": "3.31.4"
   },
   "peerDependencies": {
     "react": "^19.0.0",

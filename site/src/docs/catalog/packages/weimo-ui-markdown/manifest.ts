@@ -5,13 +5,6 @@ export const markdownCatalog = {
   title: 'weimo-ui-markdown',
   pages: [
     {
-      id: 'markdown-render',
-      name: 'Markdown渲染',
-      exportName: 'MdRender',
-      registryName: 'md-render',
-      packageExport: './components/md-render',
-    },
-    {
       id: 'wdf-render',
       name: 'WDF渲染',
       exportName: 'WdfRender',

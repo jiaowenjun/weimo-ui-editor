@@ -30,7 +30,7 @@ function WdfRenderDemo() {
 
 export const wdfRenderDefinition = {
   id: 'wdf-render',
-  summary: 'WdfRender 直接渲染 WDF，并与 MdRender 共享排版样式 token',
+  summary: 'WdfRender 直接渲染 WDF 文档，排版样式 token 总览',
   status: 'Ready',
   frame: 'plain',
   preview: () => <WdfRenderDemo />,
