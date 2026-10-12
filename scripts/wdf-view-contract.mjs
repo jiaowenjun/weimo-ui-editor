@@ -10,6 +10,13 @@ const wdfViewSource = await readFile(
   new URL('../src/components/wdf-view/wdf-view.tsx', import.meta.url),
   'utf8',
 )
+const wdfViewDemoSource = await readFile(
+  new URL(
+    '../site/src/docs/catalog/packages/weimo-ui-markdown/wdf-view.tsx',
+    import.meta.url,
+  ),
+  'utf8',
+)
 const richEditorElement = /<RichEditor[\s\S]*?\/>/.exec(wdfViewSource)?.[0]
 
 assert.ok(richEditorElement, 'WdfView must render RichEditor in edit mode')
@@ -47,6 +54,32 @@ assert.doesNotMatch(
   richEditorElement,
   /\bonChange=/,
   'WdfView must not publish its RichEditor draft while the session is still active',
+)
+
+assert.match(
+  wdfViewDemoSource,
+  /editing \? \([\s\S]*aria-label="取消编辑"[\s\S]*<X \/>[\s\S]*aria-label="保存编辑"[\s\S]*<Check \/>/,
+  'the editing preview card must expose separate cancel and save actions',
+)
+assert.match(
+  wdfViewDemoSource,
+  /const cancelEditing = \(\) => \{[\s\S]*setEditingSession\(\(current\) => current \+ 1\)[\s\S]*setMode\('view'\)/,
+  'cancel must discard the local draft by replacing the editing session',
+)
+assert.match(
+  wdfViewDemoSource,
+  /const saveEditing = \(\) => setMode\('view'\)/,
+  'save must leave edit mode through the WdfView commit transition',
+)
+assert.match(
+  wdfViewDemoSource,
+  /key=\{editingSession\}/,
+  'the preview WdfView must use the cancelable editing-session identity',
+)
+assert.doesNotMatch(
+  wdfViewDemoSource,
+  /\bEye\b|切换到阅读模式/,
+  'edit mode must no longer expose the ambiguous preview action',
 )
 
 const document = {

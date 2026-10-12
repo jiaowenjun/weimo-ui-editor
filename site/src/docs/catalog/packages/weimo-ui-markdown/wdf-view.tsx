@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Bold, Eye, Heading1, List, Pencil, Quote } from 'lucide-react'
+import { Bold, Check, Heading1, List, Pencil, Quote, X } from 'lucide-react'
 
 import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
@@ -19,19 +19,48 @@ function WdfViewDemo() {
   const [mode, setMode] = useState<WdfViewMode>('view')
   const [selectionFormat, setSelectionFormat] =
     useState<RichEditorSelectionFormat | null>(null)
+  const [editingSession, setEditingSession] = useState(0)
   const viewRef = useRef<WdfViewHandle | null>(null)
   const editing = mode === 'edit'
+
+  const cancelEditing = () => {
+    // WdfView normally commits its local draft on edit -> view. Replacing this
+    // docs-demo instance skips that transition and restores the committed value.
+    setEditingSession((current) => current + 1)
+    setMode('view')
+  }
+
+  const saveEditing = () => setMode('view')
 
   return (
     <ComponentPreviewCard
       action={
-        <GhostIconButton
-          aria-label={editing ? '切换到阅读模式' : '切换到编辑模式'}
-          onClick={() => setMode(editing ? 'view' : 'edit')}
-          size="sm"
-        >
-          {editing ? <Eye /> : <Pencil />}
-        </GhostIconButton>
+        editing ? (
+          <div aria-label="编辑操作" className="wdf-view-docs-actions" role="group">
+            <GhostIconButton
+              aria-label="取消编辑"
+              onClick={cancelEditing}
+              size="sm"
+            >
+              <X />
+            </GhostIconButton>
+            <GhostIconButton
+              aria-label="保存编辑"
+              onClick={saveEditing}
+              size="sm"
+            >
+              <Check />
+            </GhostIconButton>
+          </div>
+        ) : (
+          <GhostIconButton
+            aria-label="切换到编辑模式"
+            onClick={() => setMode('edit')}
+            size="sm"
+          >
+            <Pencil />
+          </GhostIconButton>
+        )
       }
       footer={editing ? (
         <div className="rich-editor-docs-toolbar">
@@ -84,6 +113,7 @@ function WdfViewDemo() {
           onSelectionFormatChange: setSelectionFormat,
           placeholder: '写点什么...',
         }}
+        key={editingSession}
         mode={mode}
         onChange={setContent}
         ref={viewRef}

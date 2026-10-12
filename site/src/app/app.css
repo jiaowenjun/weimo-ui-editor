@@ -1,5 +1,6 @@
 .rich-editor-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; }
 .rich-editor-docs-toolbar { display: flex; justify-content: center; gap: 4px; }
+.wdf-view-docs-actions { display: flex; align-items: center; gap: 4px; }
 .component-preview-card:has(.rich-editor-docs-preview) .base-card__content { border-radius: var(--radius-xs); }
 .md-style-preview__group-effect { display: flex; min-width: 0; min-height: 112px; align-items: center; justify-content: center; overflow: hidden; padding: 16px; color: var(--color-text-primary); }
 .md-style-preview__content-wrapper { box-sizing: border-box; width: 80%; min-width: 0; margin-inline: auto; overflow: hidden; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
