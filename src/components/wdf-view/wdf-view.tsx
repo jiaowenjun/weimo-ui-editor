@@ -11,7 +11,7 @@ import {
   fromTiptap,
   WdfDocument,
   type Diagnostic,
-} from 'weimo-doc'
+} from 'weimo-wdf'
 
 import { cn } from 'weimo-ui-core/lib/utils'
 import {
@@ -28,7 +28,7 @@ import {
 } from '../wdf-render/wdf-render'
 import { toWdfEditorContent } from './wdf-editor-content'
 
-export type { Diagnostic, WdfDocument } from 'weimo-doc'
+export type { Diagnostic, WdfDocument } from 'weimo-wdf'
 
 export type WdfViewMode = 'view' | 'edit'
 export type WdfViewConversionSource = 'change' | 'save'

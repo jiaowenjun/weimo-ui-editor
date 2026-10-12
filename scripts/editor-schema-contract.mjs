@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 
 import { Editor } from '@tiptap/core'
-import { fromTiptap } from 'weimo-doc'
+import { fromTiptap } from 'weimo-wdf'
 
 import {
   createRichEditorExtensions,
@@ -67,7 +67,7 @@ try {
   assert.deepEqual(
     editorDocument,
     tiptapDocument,
-    'the RichEditor schema must preserve weimo-doc Tiptap JSON exactly',
+    'the RichEditor schema must preserve weimo-wdf Tiptap JSON exactly',
   )
   assert.equal(editor.schema.nodes.hardBreak, undefined)
   assert.equal(editor.schema.nodes.blockquote?.spec.content?.toString(), 'paragraph+')

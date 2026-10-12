@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
-import { fromTiptap, toTiptap } from 'weimo-doc'
+import { fromTiptap, toTiptap } from 'weimo-wdf'
 
 const packageManifest = JSON.parse(
   await readFile(new URL('../package.json', import.meta.url), 'utf8'),

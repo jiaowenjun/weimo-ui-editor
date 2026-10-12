@@ -7,3 +7,4 @@ minimumReleaseAgeExclude:
   - lucide-react@1.54.0
   - weimo-ui-core@0.1.0
   - weimo-ui-template@0.1.0
+  - weimo-wdf@0.1.0

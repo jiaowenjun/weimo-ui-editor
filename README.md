@@ -29,10 +29,10 @@ weimo-ui-markdown 把这三个必要部分组合起来:
 ## 安装
 
 ```bash
-pnpm add weimo-ui-markdown weimo-doc weimo-ui-core react react-dom
+pnpm add weimo-ui-markdown weimo-wdf weimo-ui-core react react-dom
 ```
 
-需要 React 19。`weimo-ui-markdown@0.2.x` 与 `weimo-doc@0.1.x`、`weimo-ui-core@0.1.x`
+需要 React 19。`weimo-ui-markdown@0.2.x` 与 `weimo-wdf@0.1.x`、`weimo-ui-core@0.1.x`
 搭配使用,应用里分别保留一份兼容的 WDF 模型和 core 即可。
 
 然后在应用入口引入唯一必需的样式:
@@ -77,7 +77,7 @@ export function Description() {
 }
 ```
 
-`WdfView` 只维护 WDF:阅读态直接交给 `WdfRender`,编辑态通过 `weimo-doc`
+`WdfView` 只维护 WDF:阅读态直接交给 `WdfRender`,编辑态通过 `weimo-wdf`
 的 `toTiptap` 转为 Tiptap JSON,每次编辑再用 `fromTiptap` 转回规范化 WDF。
 `mode` 由业务层控制;你也可以用 `defaultValue` 让组件自己保存内容。
 

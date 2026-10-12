@@ -1,4 +1,4 @@
-import { toTiptap, type WdfDocument } from 'weimo-doc'
+import { toTiptap, type WdfDocument } from 'weimo-wdf'
 
 import type { RichEditorContent } from '../rich-editor/rich-editor'
 

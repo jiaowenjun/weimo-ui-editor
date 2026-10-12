@@ -10,7 +10,7 @@ import type {
   WdfDocument,
   WdfListItem,
   WdfText,
-} from 'weimo-doc'
+} from 'weimo-wdf'
 
 import { cn } from 'weimo-ui-core/lib/utils'
 
@@ -23,7 +23,7 @@ export type {
   WdfMark,
   WdfParagraph,
   WdfText,
-} from 'weimo-doc'
+} from 'weimo-wdf'
 
 function renderTextValue(value: string, keyPrefix: string): ReactNode {
   return value.split('\n').map((line, index) => (
