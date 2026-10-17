@@ -18,7 +18,7 @@
     "weimo-wdf": "^0.1.0",
     "weimo-ui-core": "~0.1.0",
     "weimo-ui-editor": "workspace:*",
-    "weimo-ui-template": "~0.1.0"
+    "weimo-ui-template": "~0.1.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
