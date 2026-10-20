@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react'
 import { flushSync } from 'react-dom'
-import { Bold, Heading1, List, Pencil, Quote } from 'lucide-react'
+import { Bold, Check, Heading1, List, Pencil, Quote } from 'lucide-react'
 
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
 import { TextButton } from 'weimo-ui-core/components/text-button'
@@ -729,13 +729,6 @@ export function RichEditorCard({
             <span className="rec-card__title" id={titleId}>
               {title}
             </span>
-            <TextButton
-              className="rec-card__done"
-              disabled={phase !== 'open'}
-              onClick={() => closeEditor('done')}
-            >
-              完成
-            </TextButton>
           </header>
         )}
 
@@ -758,24 +751,35 @@ export function RichEditorCard({
             <span className="rec-card__stats">{textLength} 字</span>
           </footer>
         ) : (
-          <footer
-            aria-label="编辑工具栏"
-            className="rec-card__toolbar"
-            role="group"
-          >
-            {toolbarButtons.map((button) => (
-              <GhostIconButton
-                active={button.active}
-                aria-label={button.label}
-                disabled={phase !== 'open' || !selectionFormat}
-                key={button.key}
-                onClick={() => button.action()}
-                onPointerDown={(event) => event.preventDefault()}
-                size="sm"
-              >
-                {button.icon}
-              </GhostIconButton>
-            ))}
+          <footer className="rec-card__toolbar">
+            <div
+              aria-label="编辑工具栏"
+              className="rec-card__toolbar-group"
+              role="group"
+            >
+              {toolbarButtons.map((button) => (
+                <GhostIconButton
+                  active={button.active}
+                  aria-label={button.label}
+                  disabled={phase !== 'open' || !selectionFormat}
+                  key={button.key}
+                  onClick={() => button.action()}
+                  onPointerDown={(event) => event.preventDefault()}
+                  size="sm"
+                >
+                  {button.icon}
+                </GhostIconButton>
+              ))}
+            </div>
+            <GhostIconButton
+              aria-label="完成"
+              className="rec-card__done"
+              disabled={phase !== 'open'}
+              onClick={() => closeEditor('done')}
+              size="sm"
+            >
+              <Check />
+            </GhostIconButton>
           </footer>
         )}
       </div>
