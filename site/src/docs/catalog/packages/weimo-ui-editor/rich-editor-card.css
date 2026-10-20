@@ -14,7 +14,15 @@
   min-width: 0;
 }
 
-/* DEBUG 开关:展开/收起、阴影与遮罩统一改为 3s。 */
+/* 移动端软键盘弹出约 300-400ms;morph 略长于键盘,避免展开过程中被视口裁切。
+   断点与 rich-editor-card.tsx 的 MOBILE_VIEWPORT_QUERY 保持一致。 */
+@media (max-width: 640px) {
+  .rec-card-slot {
+    --rec-card-morph-duration: 500ms;
+  }
+}
+
+/* DEBUG 开关:展开/收起、阴影与遮罩统一改为 3s;移动端也保持 3s。 */
 .rec-card-slot[data-debug='true'] {
   --rec-card-morph-duration: 3000ms;
   --rec-card-backdrop-duration: 3000ms;
@@ -101,7 +109,7 @@
   pointer-events: none;
 }
 
-/* 与 rich-editor-card.tsx 的 MORPH_DURATION / DEBUG_MORPH_DURATION 同步。 */
+/* 与 rich-editor-card.tsx 的 MORPH_DURATION / MOBILE_MORPH_DURATION / DEBUG_MORPH_DURATION 同步。 */
 .rec-card--animating {
   transition:
     top var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),

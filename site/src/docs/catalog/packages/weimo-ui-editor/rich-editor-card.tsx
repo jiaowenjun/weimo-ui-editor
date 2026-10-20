@@ -85,12 +85,15 @@ const cardSample: RichEditorContent = {
  * 通用组件化仍需处理不支持 popover 的浏览器、多个实例和移动端键盘。
  */
 
-// 正常动画时长;DEBUG 开关开启时改为 3s。JS 定时器与 CSS transition 必须同步。
+// 正常动画时长;移动端略长于软键盘弹出时长,DEBUG 开关开启时改为 3s。
+// JS 定时器与 CSS transition 必须同步。
 const MORPH_DURATION = 320
+const MOBILE_MORPH_DURATION = 500
 const DEBUG_MORPH_DURATION = 3000
 const KEYBOARD_CLOSE_WAIT = 180
 
 // 移动端展开态顶部对齐,桌面端保持垂直居中。
+// 此断点同时控制移动端动画时长,需与 rich-editor-card.css 的 media query 保持一致。
 const MOBILE_VIEWPORT_QUERY = '(max-width: 640px)'
 const DIALOG_MARGIN = 12
 
@@ -136,7 +139,11 @@ function prefersReducedMotion() {
 
 function getMorphDuration(debug: boolean) {
   if (prefersReducedMotion()) return 0
-  return debug ? DEBUG_MORPH_DURATION : MORPH_DURATION
+  if (debug) return DEBUG_MORPH_DURATION
+
+  return window.matchMedia(MOBILE_VIEWPORT_QUERY).matches
+    ? MOBILE_MORPH_DURATION
+    : MORPH_DURATION
 }
 
 function getDialogRect(): Rect {
