@@ -35,7 +35,7 @@ const cardSample: RichEditorContent = {
         {
           type: 'text',
           marks: [{ type: 'bold' }],
-          text: '光标自动落到文档末尾，撤销历史和滚动位置都不会丢',
+          text: '光标自动落到文档末尾，撤销历史不会丢',
         },
         { type: 'text', text: '。' },
       ],
@@ -269,7 +269,6 @@ export function RichEditorCard({
   const editorRef = useRef<RichEditorHandle | null>(null)
   const editButtonRef = useRef<HTMLButtonElement | null>(null)
   const phaseRef = useRef<EditorPhase>('closed')
-  const editorScrollTopRef = useRef(0)
   const timerRef = useRef<number | null>(null)
   const openStartedAtRef = useRef(0)
   const bodyOverflowRef = useRef('')
@@ -451,11 +450,6 @@ export function RichEditorCard({
           focusEditorForOpen()
         }
 
-        const viewport =
-          shell.querySelector<HTMLElement>('.rich-editor__viewport')
-        if (viewport) {
-          viewport.scrollTop = editorScrollTopRef.current
-        }
         setSelectionFormat(editorRef.current?.getSelectionFormat() ?? null)
       })
     }, duration + 24)
@@ -526,10 +520,6 @@ export function RichEditorCard({
       phaseRef.current = 'closing'
       setPhase('closing')
       logPrototypeEvent(`close requested (${reason})`)
-
-      editorScrollTopRef.current =
-        shellRef.current?.querySelector<HTMLElement>('.rich-editor__viewport')
-          ?.scrollTop ?? 0
 
       // 先失焦让软键盘收起;正在收起的键盘会改变 visualViewport,等一拍再测卡片位置。
       if (document.activeElement instanceof HTMLElement) {
