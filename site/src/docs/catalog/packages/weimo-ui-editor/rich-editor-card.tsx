@@ -9,6 +9,7 @@ import { flushSync } from 'react-dom'
 import { Bold, Check, Heading1, List, Pencil, Quote, X } from 'lucide-react'
 
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
+import { LabeledSwitch } from 'weimo-ui-core/components/labeled-switch'
 import {
   RichEditor,
   type RichEditorContent,
@@ -84,8 +85,9 @@ const cardSample: RichEditorContent = {
  * 通用组件化仍需处理不支持 popover 的浏览器、多个实例和移动端键盘。
  */
 
-// 调试期:3s(原值 320ms)。JS 定时器与 CSS transition 必须同步改。
-const MORPH_DURATION = 3000
+// 正常动画时长;DEBUG 开关开启时改为 3s。JS 定时器与 CSS transition 必须同步。
+const MORPH_DURATION = 320
+const DEBUG_MORPH_DURATION = 3000
 const KEYBOARD_CLOSE_WAIT = 180
 
 // 移动端展开态顶部对齐,桌面端保持垂直居中。
@@ -135,6 +137,11 @@ function logPrototypeEvent(message: string) {
 
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function getMorphDuration(debug: boolean) {
+  if (prefersReducedMotion()) return 0
+  return debug ? DEBUG_MORPH_DURATION : MORPH_DURATION
 }
 
 function getDialogRect(): Rect {
@@ -233,12 +240,14 @@ function countTextLength(node: RichTextNode | undefined): number {
 }
 
 type RichEditorCardProps = {
+  debug?: boolean
   defaultValue: RichEditorContent
   onSave?: (content: RichEditorContent) => void
   title?: string
 }
 
 export function RichEditorCard({
+  debug = false,
   defaultValue,
   onSave,
   title = '周一产品例会',
@@ -409,7 +418,7 @@ export function RichEditorCard({
     // 强制一次布局,确保"卡片几何"是过渡起点。
     void shell.getBoundingClientRect()
 
-    const duration = prefersReducedMotion() ? 0 : MORPH_DURATION
+    const duration = getMorphDuration(debug)
 
     window.requestAnimationFrame(() => {
       if (phaseRef.current !== 'opening' || !shell.isConnected) return
@@ -450,7 +459,7 @@ export function RichEditorCard({
         setSelectionFormat(editorRef.current?.getSelectionFormat() ?? null)
       })
     }, duration + 24)
-  }, [focusEditorForOpen, lockPage])
+  }, [debug, focusEditorForOpen, lockPage])
 
   const runCloseAnimation = useCallback(
     (reason: CloseReason) => {
@@ -459,7 +468,7 @@ export function RichEditorCard({
       if (!shell || !slot) return
 
       const target = slot.getBoundingClientRect()
-      const duration = prefersReducedMotion() ? 0 : MORPH_DURATION
+      const duration = getMorphDuration(debug)
 
       if (duration > 0) {
         shell.classList.add('rec-card--animating')
@@ -507,7 +516,7 @@ export function RichEditorCard({
         logPrototypeEvent('close finished')
       }, duration + 24)
     },
-    [content, unlockPage],
+    [content, debug, unlockPage],
   )
 
   const closeEditor = useCallback(
@@ -566,7 +575,7 @@ export function RichEditorCard({
       applyRect(shell, getDialogRect())
       window.setTimeout(() => {
         shell.classList.remove('rec-card--animating')
-      }, MORPH_DURATION + 24)
+      }, getMorphDuration(debug) + 24)
     }
 
     const viewport = window.visualViewport
@@ -577,7 +586,7 @@ export function RichEditorCard({
       viewport?.removeEventListener('resize', updateGeometry)
       window.removeEventListener('resize', updateGeometry)
     }
-  }, [phase])
+  }, [debug, phase])
 
   // 基础 modal:Esc 关闭 + Tab 焦点陷阱 + 焦点外逃时拉回壳。
   useEffect(() => {
@@ -677,7 +686,11 @@ export function RichEditorCard({
   ] as const
 
   return (
-    <div className="rec-card-slot" ref={slotRef}>
+    <div
+      className="rec-card-slot"
+      data-debug={debug ? 'true' : undefined}
+      ref={slotRef}
+    >
       <div
         aria-hidden="true"
         className="rec-card-backdrop"
@@ -785,12 +798,24 @@ export function RichEditorCard({
 }
 
 function RichEditorCardDemo() {
+  const [debug, setDebug] = useState(false)
+
   return (
     <div className="rec-card-demo">
       <RichEditorCard
+        debug={debug}
         defaultValue={cardSample}
         title="卡片式编辑 rich-editor-card"
       />
+      <div className="docs-debug-toggle">
+        <LabeledSwitch
+          ariaLabel="切换 DEBUG 动画时长"
+          checked={debug}
+          labelOff="已关闭 DEBUG 动画"
+          labelOn="已开启 DEBUG 动画 · 3 秒"
+          onCheckedChange={setDebug}
+        />
+      </div>
     </div>
   )
 }
