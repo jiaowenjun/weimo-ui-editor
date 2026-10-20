@@ -763,29 +763,28 @@ export function RichEditorCard({
           />
         </div>
 
-        {mode !== 'card' ? (
-          <footer className="rec-card__toolbar">
-            <div
-              aria-label="编辑工具栏"
-              className="rec-card__toolbar-group"
-              role="group"
-            >
-              {toolbarButtons.map((button) => (
-                <GhostIconButton
-                  active={button.active}
-                  aria-label={button.label}
-                  disabled={phase !== 'open' || !selectionFormat}
-                  key={button.key}
-                  onClick={() => button.action()}
-                  onPointerDown={(event) => event.preventDefault()}
-                  size="sm"
-                >
-                  {button.icon}
-                </GhostIconButton>
-              ))}
-            </div>
-          </footer>
-        ) : null}
+        {/* 常驻底栏:显隐交给 data-phase 过渡,非 open 状态禁止聚焦。 */}
+        <footer className="rec-card__toolbar" inert={phase !== 'open'}>
+          <div
+            aria-label="编辑工具栏"
+            className="rec-card__toolbar-group"
+            role="group"
+          >
+            {toolbarButtons.map((button) => (
+              <GhostIconButton
+                active={button.active}
+                aria-label={button.label}
+                disabled={phase !== 'open' || !selectionFormat}
+                key={button.key}
+                onClick={() => button.action()}
+                onPointerDown={(event) => event.preventDefault()}
+                size="sm"
+              >
+                {button.icon}
+              </GhostIconButton>
+            ))}
+          </div>
+        </footer>
       </div>
     </div>
   )

@@ -8,6 +8,8 @@
 .rec-card-slot {
   --rec-card-morph-duration: 320ms;
   --rec-card-backdrop-duration: 200ms;
+  --rec-card-toolbar-duration: 220ms;
+  --rec-card-toolbar-ease: cubic-bezier(0.32, 0.72, 0, 1);
 
   position: relative;
   width: 100%;
@@ -19,13 +21,15 @@
 @media (max-width: 640px) {
   .rec-card-slot {
     --rec-card-morph-duration: 1000ms;
+    --rec-card-toolbar-duration: 280ms;
   }
 }
 
-/* DEBUG 开关:展开/收起、阴影与遮罩统一改为 3s;移动端也保持 3s。 */
+/* DEBUG 开关:展开/收起、阴影、遮罩与底栏统一改为 3s;移动端也保持 3s。 */
 .rec-card-slot[data-debug='true'] {
   --rec-card-morph-duration: 3000ms;
   --rec-card-backdrop-duration: 3000ms;
+  --rec-card-toolbar-duration: 3000ms;
 }
 
 /* 演示页底部 DEBUG 开关行:居中 */
@@ -192,16 +196,41 @@
   pointer-events: none;
 }
 
+/* 底栏常驻 DOM,由 .rec-card 的 data-phase 驱动显隐:
+   opening/open 展开,closed/closing 收起。高度、内边距、透明度与位移
+   同步过渡,避免挂载/卸载瞬间的 48px 布局跳变。
+   时长需不超过关闭 morph 时长 + 24ms,保证收起结束时已归零。 */
 .rec-card__toolbar {
   display: flex;
   box-sizing: border-box;
-  height: 48px;
+  height: 0;
   flex: none;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 6px 12px;
-  padding-block-end: max(6px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  padding: 0 12px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    height var(--rec-card-toolbar-duration) var(--rec-card-toolbar-ease),
+    padding-block-start var(--rec-card-toolbar-duration) var(--rec-card-toolbar-ease),
+    padding-block-end var(--rec-card-toolbar-duration) var(--rec-card-toolbar-ease),
+    opacity var(--rec-card-toolbar-duration) ease,
+    transform var(--rec-card-toolbar-duration) var(--rec-card-toolbar-ease);
+}
+
+.rec-card[data-phase='opening'] .rec-card__toolbar,
+.rec-card[data-phase='open'] .rec-card__toolbar {
+  height: 48px;
+  padding-block: 6px max(6px, env(safe-area-inset-bottom));
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 动画结束后允许焦点环溢出,避免被底栏自身裁剪。 */
+.rec-card[data-phase='open'] .rec-card__toolbar {
+  overflow: visible;
 }
 
 .rec-card__toolbar-group {
@@ -214,7 +243,8 @@
 @media (prefers-reduced-motion: reduce) {
   .rec-card,
   .rec-card--animating,
-  .rec-card-backdrop {
+  .rec-card-backdrop,
+  .rec-card__toolbar {
     transition-duration: 1ms;
   }
 }
