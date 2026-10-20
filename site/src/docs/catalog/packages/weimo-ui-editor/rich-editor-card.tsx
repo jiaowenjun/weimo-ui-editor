@@ -35,7 +35,7 @@ const cardSample: RichEditorContent = {
         {
           type: 'text',
           marks: [{ type: 'bold' }],
-          text: '选区、撤销历史和滚动位置都不会丢',
+          text: '光标自动落到文档末尾，撤销历史和滚动位置都不会丢',
         },
         { type: 'text', text: '。' },
       ],
@@ -269,7 +269,6 @@ export function RichEditorCard({
   const editorRef = useRef<RichEditorHandle | null>(null)
   const editButtonRef = useRef<HTMLButtonElement | null>(null)
   const phaseRef = useRef<EditorPhase>('closed')
-  const hasOpenedRef = useRef(false)
   const editorScrollTopRef = useRef(0)
   const timerRef = useRef<number | null>(null)
   const openStartedAtRef = useRef(0)
@@ -351,18 +350,8 @@ export function RichEditorCard({
   }, [unlockPage])
 
   const focusEditorForOpen = useCallback(() => {
-    const editor = editorRef.current
-    if (!editor) return
-
-    // 首次展开落到末尾;再次展开恢复上一次的 Tiptap 选区。
-    if (hasOpenedRef.current) {
-      editor.focus()
-    } else {
-      // Tiptap 的 focus 命令会先同步 state selection,再在下一帧真正聚焦;
-      // 所以这里立即记为已展开过,避免动画结束的兜底再次把光标推到末尾。
-      hasOpenedRef.current = true
-      editor.focus('end')
-    }
+    // 每次展开都把光标固定到文档末尾。
+    editorRef.current?.focus('end')
   }, [])
 
   // 展开一开始就聚焦,不必等 FLIP 动画结束(调试期 3s)才能输入。
@@ -422,8 +411,9 @@ export function RichEditorCard({
     })
 
     // 聚焦必须在原始点击的同步任务里完成;iOS Safari 在 rAF/effect 中
-    // 调用 focus 不会弹出软键盘。
+    // 调用 focus 不会弹出软键盘。同时写入选区,让本次聚焦就落在末尾。
     focusEditorDomInGesture(shell)
+    focusEditorForOpen()
 
     // 强制一次布局,确保"卡片几何"是过渡起点。
     void shell.getBoundingClientRect()
