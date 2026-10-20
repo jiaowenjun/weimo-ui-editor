@@ -2,6 +2,44 @@
 .rich-editor-docs-toolbar { display: flex; justify-content: center; gap: 4px; }
 .rich-editor-dialog-docs-preview { width: 100%; min-width: 0; align-self: center; justify-self: stretch; }
 .rich-editor-dialog-docs-hint { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+
+/* === SPIKE(仅 site demo):卡片→对话框 View Transition 原型 === */
+
+/* prepare 阶段:对话框已挂载(供 Tiptap 创建实例)但不可见、不可点 */
+.spike-editor-dialog--preparing {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* prepare 阶段遮罩直接到位,避免 VT 旧快照里遮罩停在中途透明度 */
+html[data-spike-dialog='prepare'] .coss-dialog__backdrop {
+  opacity: 1 !important;
+  backdrop-filter: blur(var(--backdrop-blur)) !important;
+  transition: none !important;
+}
+
+/* 卡片与对话框共享同一个 view-transition-name,由浏览器做容器变形 */
+/* 调试期:整段放慢到 3s(原值 group 260ms / old 90ms / new 200ms+60ms) */
+::view-transition-group(rich-editor-dialog-shell) {
+  animation-duration: 3000ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+::view-transition-old(rich-editor-dialog-shell) {
+  animation: 1000ms ease-out both spike-shell-fade-out;
+}
+
+::view-transition-new(rich-editor-dialog-shell) {
+  animation: 2300ms ease-out 700ms both spike-shell-fade-in;
+}
+
+@keyframes spike-shell-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes spike-shell-fade-in {
+  from { opacity: 0; }
+}
 .wdf-view-docs-actions { display: flex; align-items: center; gap: 4px; }
 .component-preview-card:has(.rich-editor-docs-preview) .base-card__content { border-radius: var(--radius-xs); }
 .md-style-preview__group-effect { display: flex; min-width: 0; min-height: 112px; align-items: center; justify-content: center; overflow: hidden; padding: 16px; color: var(--color-text-primary); }
