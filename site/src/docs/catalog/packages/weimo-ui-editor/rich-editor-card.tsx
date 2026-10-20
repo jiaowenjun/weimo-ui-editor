@@ -223,6 +223,26 @@ function getFocusableElements(root: HTMLElement) {
   )
 }
 
+function focusEditorDomInGesture(shell: HTMLElement) {
+  const editorDom = shell.querySelector<HTMLElement>('.rich-editor__content')
+  if (!editorDom) return
+
+  // RichEditor 的 disabled -> editable 更新在 passive effect 中。
+  // iOS Safari 只认可原始点击任务同步栈里的原生 focus;这里先同步
+  // 打开 contenteditable,让本次点击能直接唤起软键盘,随后由
+  // Tiptap editable effect 与展开 effect 里的 focus('end') 补上
+  // 内部状态和选区。
+  if (editorDom.getAttribute('contenteditable') !== 'true') {
+    editorDom.setAttribute('contenteditable', 'true')
+  }
+  editorDom.focus()
+  logPrototypeEvent(
+    editorDom.contains(document.activeElement)
+      ? 'editor focused in gesture'
+      : 'editor focus in gesture failed',
+  )
+}
+
 type RichEditorCardProps = {
   debug?: boolean
   defaultValue: RichEditorContent
@@ -395,9 +415,15 @@ export function RichEditorCard({
       height: first.height,
     })
 
-    setPhase('opening')
-    setMode('dialog')
-    setSelectionFormat(null)
+    flushSync(() => {
+      setPhase('opening')
+      setMode('dialog')
+      setSelectionFormat(null)
+    })
+
+    // 聚焦必须在原始点击的同步任务里完成;iOS Safari 在 rAF/effect 中
+    // 调用 focus 不会弹出软键盘。
+    focusEditorDomInGesture(shell)
 
     // 强制一次布局,确保"卡片几何"是过渡起点。
     void shell.getBoundingClientRect()
