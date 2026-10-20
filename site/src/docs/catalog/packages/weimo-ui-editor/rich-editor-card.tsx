@@ -103,11 +103,6 @@ type WindowWithPrototypeLog = Window & {
   __richEditorCardPrototype?: PrototypeEvent[]
 }
 
-type RichTextNode = {
-  content?: RichTextNode[]
-  text?: string
-}
-
 type Rect = {
   height: number
   left: number
@@ -226,17 +221,6 @@ function getFocusableElements(root: HTMLElement) {
     (element) =>
       element.getClientRects().length > 0 && !element.hasAttribute('inert'),
   )
-}
-
-function countTextLength(node: RichTextNode | undefined): number {
-  if (!node) return 0
-
-  const own = node.text?.length ?? 0
-  const children =
-    node.content?.reduce((total, child) => total + countTextLength(child), 0) ??
-    0
-
-  return own + children
 }
 
 type RichEditorCardProps = {
@@ -651,7 +635,6 @@ export function RichEditorCard({
     }
   }, [closeEditor, phase])
 
-  const textLength = countTextLength(content as unknown as RichTextNode)
   const editing = phase !== 'closed'
 
   const toolbarButtons = [
@@ -767,14 +750,7 @@ export function RichEditorCard({
           />
         </div>
 
-        {mode === 'card' ? (
-          <footer className="rec-card__footer">
-            <span className="rec-card__hint">
-              只读预览 · 点击卡片或铅笔继续编辑
-            </span>
-            <span className="rec-card__stats">{textLength} 字</span>
-          </footer>
-        ) : (
+        {mode !== 'card' ? (
           <footer className="rec-card__toolbar">
             <div
               aria-label="编辑工具栏"
@@ -796,7 +772,7 @@ export function RichEditorCard({
               ))}
             </div>
           </footer>
-        )}
+        ) : null}
       </div>
     </div>
   )

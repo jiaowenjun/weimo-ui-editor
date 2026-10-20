@@ -179,31 +179,6 @@
   pointer-events: none;
 }
 
-.rec-card__footer {
-  display: flex;
-  box-sizing: border-box;
-  height: 48px;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 16px;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-}
-
-.rec-card__hint {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rec-card__stats {
-  flex: none;
-  font-variant-numeric: tabular-nums;
-}
-
 .rec-card__toolbar {
   display: flex;
   box-sizing: border-box;
