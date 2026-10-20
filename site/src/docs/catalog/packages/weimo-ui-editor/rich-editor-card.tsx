@@ -89,6 +89,10 @@ const cardSample: RichEditorContent = {
 const MORPH_DURATION = 3000
 const KEYBOARD_CLOSE_WAIT = 180
 
+// 移动端展开态顶部对齐,桌面端保持垂直居中。
+const MOBILE_VIEWPORT_QUERY = '(max-width: 640px)'
+const DIALOG_MARGIN = 12
+
 type EditorPhase = 'closed' | 'opening' | 'open' | 'closing'
 type EditorMode = 'card' | 'dialog'
 type CloseReason = 'done' | 'dismiss'
@@ -140,12 +144,18 @@ function getDialogRect(): Rect {
   const viewportHeight = viewport?.height ?? window.innerHeight
   const offsetLeft = viewport?.offsetLeft ?? 0
   const offsetTop = viewport?.offsetTop ?? 0
-  const width = Math.min(720, Math.max(280, viewportWidth - 24))
-  const height = Math.min(620, Math.max(240, viewportHeight - 24))
+  const width = Math.min(720, Math.max(280, viewportWidth - DIALOG_MARGIN * 2))
+  const height = Math.min(
+    620,
+    Math.max(240, viewportHeight - DIALOG_MARGIN * 2),
+  )
+  const isMobile = window.matchMedia(MOBILE_VIEWPORT_QUERY).matches
 
   return {
     left: offsetLeft + (viewportWidth - width) / 2,
-    top: offsetTop + (viewportHeight - height) / 2,
+    top: isMobile
+      ? offsetTop + DIALOG_MARGIN
+      : offsetTop + (viewportHeight - height) / 2,
     width,
     height,
   }
