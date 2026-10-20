@@ -146,6 +146,12 @@ function getMorphDuration(debug: boolean) {
     : MORPH_DURATION
 }
 
+function easeInOutCubic(progress: number) {
+  return progress < 0.5
+    ? 4 * progress * progress * progress
+    : 1 - Math.pow(-2 * progress + 2, 3) / 2
+}
+
 function getDialogRect(): Rect {
   const viewport = window.visualViewport
   const viewportWidth = viewport?.width ?? window.innerWidth
@@ -277,6 +283,7 @@ export function RichEditorCard({
   const editButtonRef = useRef<HTMLButtonElement | null>(null)
   const phaseRef = useRef<EditorPhase>('closed')
   const timerRef = useRef<number | null>(null)
+  const scrollAnimationRef = useRef<number | null>(null)
   const openStartedAtRef = useRef(0)
   const bodyOverflowRef = useRef('')
   const bodyPaddingRightRef = useRef('')
@@ -348,12 +355,52 @@ export function RichEditorCard({
       if (timerRef.current !== null) {
         window.clearTimeout(timerRef.current)
       }
+      if (scrollAnimationRef.current !== null) {
+        window.cancelAnimationFrame(scrollAnimationRef.current)
+      }
 
       hideFromTopLayer(shellRef.current)
       hideFromTopLayer(backdropRef.current)
       unlockPage()
     }
   }, [unlockPage])
+
+  // 收起动画期间同步把视口平滑滚回文档开头;时长与 morph 同步,缓动为 ease-in-out。
+  const animateEditorScrollToStart = useCallback(
+    (shell: HTMLElement, duration: number) => {
+      const viewport =
+        shell.querySelector<HTMLElement>('.rich-editor__viewport')
+      if (!viewport) return
+
+      if (scrollAnimationRef.current !== null) {
+        window.cancelAnimationFrame(scrollAnimationRef.current)
+        scrollAnimationRef.current = null
+      }
+
+      const start = viewport.scrollTop
+      if (start <= 0 || duration <= 0) {
+        viewport.scrollTop = 0
+        return
+      }
+
+      let startedAt: number | null = null
+
+      const step = (now: number) => {
+        startedAt ??= now
+        const progress = Math.min(1, (now - startedAt) / duration)
+        viewport.scrollTop = start * (1 - easeInOutCubic(progress))
+
+        if (progress < 1) {
+          scrollAnimationRef.current = window.requestAnimationFrame(step)
+        } else {
+          scrollAnimationRef.current = null
+        }
+      }
+
+      scrollAnimationRef.current = window.requestAnimationFrame(step)
+    },
+    [],
+  )
 
   const focusEditorForOpen = useCallback(() => {
     // 每次展开都把光标固定到文档开头。
@@ -468,8 +515,13 @@ export function RichEditorCard({
       const slot = slotRef.current
       if (!shell || !slot) return
 
-      const target = slot.getBoundingClientRect()
       const duration = getMorphDuration(debug)
+
+      // 收起过程中平滑回到内容开头,保证初始态卡片始终展示文档起始部分。
+      animateEditorScrollToStart(shell, duration)
+      logPrototypeEvent('editor scrolling to start')
+
+      const target = slot.getBoundingClientRect()
 
       if (duration > 0) {
         shell.classList.add('rec-card--animating')
@@ -517,7 +569,7 @@ export function RichEditorCard({
         logPrototypeEvent('close finished')
       }, duration + 24)
     },
-    [content, debug, unlockPage],
+    [animateEditorScrollToStart, content, debug, unlockPage],
   )
 
   const closeEditor = useCallback(
