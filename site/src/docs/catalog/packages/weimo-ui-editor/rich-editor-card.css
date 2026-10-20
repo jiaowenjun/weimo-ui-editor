@@ -9,7 +9,7 @@
   --rec-card-morph-duration: 320ms;
   --rec-card-backdrop-duration: 200ms;
   --rec-card-toolbar-duration: 220ms;
-  --rec-card-toolbar-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --rec-card-toolbar-ease: ease-in-out;
 
   position: relative;
   width: 100%;
@@ -116,10 +116,10 @@
 /* 与 rich-editor-card.tsx 的 MORPH_DURATION / MOBILE_MORPH_DURATION / DEBUG_MORPH_DURATION 同步。 */
 .rec-card--animating {
   transition:
-    top var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),
-    left var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),
-    width var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),
-    height var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),
+    top var(--rec-card-morph-duration) ease-in-out,
+    left var(--rec-card-morph-duration) ease-in-out,
+    width var(--rec-card-morph-duration) ease-in-out,
+    height var(--rec-card-morph-duration) ease-in-out,
     box-shadow var(--rec-card-morph-duration) ease,
     border-color var(--rec-card-morph-duration) ease;
   will-change: top, left, width, height;
