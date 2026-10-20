@@ -730,15 +730,29 @@ export function RichEditorCard({
               <Pencil />
             </GhostIconButton>
           ) : (
-            <GhostIconButton
-              aria-label="收起"
-              className="rec-card__collapse"
-              disabled={phase !== 'open'}
-              onClick={() => closeEditor('dismiss')}
-              size="sm"
+            <div
+              aria-label="编辑操作"
+              className="rec-card__actions"
+              role="group"
             >
-              <X />
-            </GhostIconButton>
+              <GhostIconButton
+                aria-label="收起"
+                className="rec-card__collapse"
+                disabled={phase !== 'open'}
+                onClick={() => closeEditor('dismiss')}
+                size="sm"
+              >
+                <X />
+              </GhostIconButton>
+              <GhostIconButton
+                aria-label="完成"
+                disabled={phase !== 'open'}
+                onClick={() => closeEditor('done')}
+                size="sm"
+              >
+                <Check />
+              </GhostIconButton>
+            </div>
           )}
         </header>
 
@@ -781,15 +795,6 @@ export function RichEditorCard({
                 </GhostIconButton>
               ))}
             </div>
-            <GhostIconButton
-              aria-label="完成"
-              className="rec-card__done"
-              disabled={phase !== 'open'}
-              onClick={() => closeEditor('done')}
-              size="sm"
-            >
-              <Check />
-            </GhostIconButton>
           </footer>
         )}
       </div>

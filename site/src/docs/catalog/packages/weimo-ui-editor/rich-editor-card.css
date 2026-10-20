@@ -131,14 +131,15 @@
   white-space: nowrap;
 }
 
-.rec-card__header .rec-card__edit,
-.rec-card__header .rec-card__collapse {
+.rec-card__header .rec-card__edit {
   justify-self: end;
 }
 
-.rec-card__done {
+.rec-card__actions {
+  display: flex;
+  align-items: center;
   justify-self: end;
-  color: var(--color-primary);
+  gap: 4px;
 }
 
 .rec-card__editor {
@@ -204,20 +205,15 @@
 }
 
 .rec-card__toolbar {
-  display: grid;
+  display: flex;
   box-sizing: border-box;
   height: 48px;
   flex: none;
-  grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 6px 12px;
   padding-block-end: max(6px, env(safe-area-inset-bottom));
-}
-
-/* 左侧占位,让格式按钮组保持在底栏正中。 */
-.rec-card__toolbar::before {
-  content: '';
 }
 
 .rec-card__toolbar-group {
