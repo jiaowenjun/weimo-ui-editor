@@ -35,7 +35,7 @@ const cardSample: RichEditorContent = {
         {
           type: 'text',
           marks: [{ type: 'bold' }],
-          text: '光标自动落到文档末尾，撤销历史不会丢',
+          text: '光标自动落到文档开头，撤销历史不会丢',
         },
         { type: 'text', text: '。' },
       ],
@@ -237,7 +237,7 @@ function focusEditorDomInGesture(shell: HTMLElement) {
   // RichEditor 的 disabled -> editable 更新在 passive effect 中。
   // iOS Safari 只认可原始点击任务同步栈里的原生 focus;这里先同步
   // 打开 contenteditable,让本次点击能直接唤起软键盘,随后由
-  // Tiptap editable effect 与展开 effect 里的 focus('end') 补上
+  // Tiptap editable effect 与展开 effect 里的 focus('start') 补上
   // 内部状态和选区。
   if (editorDom.getAttribute('contenteditable') !== 'true') {
     editorDom.setAttribute('contenteditable', 'true')
@@ -356,8 +356,8 @@ export function RichEditorCard({
   }, [unlockPage])
 
   const focusEditorForOpen = useCallback(() => {
-    // 每次展开都把光标固定到文档末尾。
-    editorRef.current?.focus('end')
+    // 每次展开都把光标固定到文档开头。
+    editorRef.current?.focus('start')
   }, [])
 
   // 展开一开始就聚焦,不必等 FLIP 动画结束(调试期 3s)才能输入。
@@ -417,7 +417,7 @@ export function RichEditorCard({
     })
 
     // 聚焦必须在原始点击的同步任务里完成;iOS Safari 在 rAF/effect 中
-    // 调用 focus 不会弹出软键盘。同时写入选区,让本次聚焦就落在末尾。
+    // 调用 focus 不会弹出软键盘。同时写入选区,让本次聚焦就落在开头。
     focusEditorDomInGesture(shell)
     focusEditorForOpen()
 
