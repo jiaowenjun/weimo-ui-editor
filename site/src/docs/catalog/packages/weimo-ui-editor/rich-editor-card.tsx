@@ -6,10 +6,9 @@ import {
   useState,
 } from 'react'
 import { flushSync } from 'react-dom'
-import { Bold, Check, Heading1, List, Pencil, Quote } from 'lucide-react'
+import { Bold, Check, Heading1, List, Pencil, Quote, X } from 'lucide-react'
 
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
-import { TextButton } from 'weimo-ui-core/components/text-button'
 import {
   RichEditor,
   type RichEditorContent,
@@ -703,11 +702,11 @@ export function RichEditorCard({
         role={phase !== 'closed' ? 'dialog' : undefined}
         tabIndex={-1}
       >
-        {mode === 'card' ? (
-          <header className="rec-card__header rec-card__header--card">
-            <span className="rec-card__title" id={titleId}>
-              {title}
-            </span>
+        <header className="rec-card__header">
+          <span className="rec-card__title" id={titleId}>
+            {title}
+          </span>
+          {mode === 'card' ? (
             <GhostIconButton
               aria-label="展开编辑"
               className="rec-card__edit"
@@ -717,20 +716,18 @@ export function RichEditorCard({
             >
               <Pencil />
             </GhostIconButton>
-          </header>
-        ) : (
-          <header className="rec-card__header rec-card__header--dialog">
-            <TextButton
+          ) : (
+            <GhostIconButton
+              aria-label="收起"
+              className="rec-card__collapse"
               disabled={phase !== 'open'}
               onClick={() => closeEditor('dismiss')}
+              size="sm"
             >
-              收起
-            </TextButton>
-            <span className="rec-card__title" id={titleId}>
-              {title}
-            </span>
-          </header>
-        )}
+              <X />
+            </GhostIconButton>
+          )}
+        </header>
 
         <div className="rec-card__editor">
           <RichEditor

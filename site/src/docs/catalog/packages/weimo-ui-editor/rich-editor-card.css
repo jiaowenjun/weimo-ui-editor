@@ -95,21 +95,13 @@
 
 .rec-card__header {
   display: grid;
-  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
   box-sizing: border-box;
   height: 48px;
   flex: none;
   align-items: center;
   gap: 8px;
   padding: 0 16px;
-}
-
-.rec-card__header--card {
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.rec-card__header--dialog {
-  border-bottom: 1px solid var(--color-border-divider, var(--color-border));
 }
 
 .rec-card__title {
@@ -119,20 +111,13 @@
   font-size: var(--font-size-sm);
   font-weight: 650;
   line-height: 1.2;
-  text-align: center;
+  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rec-card__header--card .rec-card__title {
-  text-align: left;
-}
-
-.rec-card__header--dialog > .text-button:first-child {
-  justify-self: start;
-}
-
-.rec-card__header--card .rec-card__edit {
+.rec-card__header .rec-card__edit,
+.rec-card__header .rec-card__collapse {
   justify-self: end;
 }
 
@@ -181,7 +166,7 @@
 .rec-card__footer {
   display: flex;
   box-sizing: border-box;
-  height: 40px;
+  height: 48px;
   flex: none;
   align-items: center;
   justify-content: space-between;
@@ -213,7 +198,6 @@
   gap: 4px;
   padding: 6px 12px;
   padding-block-end: max(6px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--color-border-divider, var(--color-border));
 }
 
 /* 左侧占位,让格式按钮组保持在底栏正中。 */
