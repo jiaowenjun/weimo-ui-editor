@@ -69,8 +69,10 @@
   box-shadow: var(--shadow-card);
   color: var(--color-text-primary);
   cursor: pointer;
-  /* 阴影随展开/收起过渡,与 FLIP 同步;暗主题 --shadow-* 均为 none,无可见差异。 */
-  transition: box-shadow var(--rec-card-morph-duration) ease;
+  /* 阴影与暗主题边框色随展开/收起过渡,与 FLIP 同步。 */
+  transition:
+    box-shadow var(--rec-card-morph-duration) ease,
+    border-color var(--rec-card-morph-duration) ease;
 }
 
 .dark .rec-card {
@@ -88,7 +90,9 @@
   box-shadow: var(--shadow-overlay);
 }
 
-.dark .rec-card[data-mode='dialog'] {
+/* 暗主题展开态边框色;收起时随 data-phase=closing 过渡回卡片边框色。 */
+.dark .rec-card[data-phase='opening'],
+.dark .rec-card[data-phase='open'] {
   border-color: var(--color-border-divider, var(--color-border));
 }
 
@@ -104,7 +108,8 @@
     left var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),
     width var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),
     height var(--rec-card-morph-duration) cubic-bezier(0.32, 0.72, 0, 1),
-    box-shadow var(--rec-card-morph-duration) ease;
+    box-shadow var(--rec-card-morph-duration) ease,
+    border-color var(--rec-card-morph-duration) ease;
   will-change: top, left, width, height;
 }
 
