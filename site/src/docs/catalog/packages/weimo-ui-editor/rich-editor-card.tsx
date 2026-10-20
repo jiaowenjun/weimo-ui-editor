@@ -8,7 +8,6 @@ import {
 import { flushSync } from 'react-dom'
 import { Bold, Heading1, List, Pencil, Quote } from 'lucide-react'
 
-import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
 import { TextButton } from 'weimo-ui-core/components/text-button'
 import {
@@ -775,31 +774,13 @@ export function RichEditorCard({
 }
 
 function RichEditorCardDemo() {
-  const [lastSaved, setLastSaved] = useState<string | null>(null)
-
   return (
-    <ComponentPreviewCard
-      action={<span className="rec-card-demo__badge">prototype</span>}
-      footer={
-        <span className="rich-editor-dialog-docs-hint">
-          {lastSaved ??
-            '同一个 Tiptap 实例 · 单壳 FLIP · Popover top layer'}
-        </span>
-      }
-      label={
-        <>
-          卡片式编辑{' '}
-          <code className="docs-component-class">rich-editor-card</code>
-        </>
-      }
-    >
-      <div className="rec-card-demo">
-        <RichEditorCard
-          defaultValue={cardSample}
-          onSave={() => setLastSaved('已保存 · 编辑器实例未重建')}
-        />
-      </div>
-    </ComponentPreviewCard>
+    <div className="rec-card-demo">
+      <RichEditorCard
+        defaultValue={cardSample}
+        title="卡片式编辑 rich-editor-card"
+      />
+    </div>
   )
 }
 
