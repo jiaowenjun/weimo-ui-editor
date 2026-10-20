@@ -1,0 +1,230 @@
+/* === DEMO PROTOTYPE(仅 site):卡片即迷你编辑器 === */
+
+.rec-card-demo {
+  width: 100%;
+  min-width: 0;
+}
+
+.rec-card-demo__badge {
+  padding: 2px 7px;
+  border: 1px solid var(--color-border-divider, var(--color-border));
+  border-radius: var(--radius-round, 999px);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.rec-card-slot {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.rec-card-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--color-bg-backdrop);
+  backdrop-filter: blur(var(--backdrop-blur));
+  opacity: 0;
+  pointer-events: none;
+  /* 调试期:3s(原值 200ms)。 */
+  transition: opacity 3000ms ease;
+}
+
+.rec-card-backdrop[data-visible='true'] {
+  opacity: 1;
+}
+
+.rec-card-backdrop[data-interactive='true'] {
+  pointer-events: auto;
+}
+
+.rec-card {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: 220px;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  outline: none;
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.dark .rec-card {
+  border-color: var(--color-border);
+}
+
+.rec-card[data-mode='dialog'] {
+  z-index: 101;
+  box-shadow: var(--shadow-overlay);
+  cursor: auto;
+}
+
+.dark .rec-card[data-mode='dialog'] {
+  border-color: var(--color-border-divider, var(--color-border));
+}
+
+.rec-card[data-phase='opening'],
+.rec-card[data-phase='closing'] {
+  pointer-events: none;
+}
+
+/* 调试期:3s(原值 320ms),与 rich-editor-card.tsx 的 MORPH_DURATION 同步。 */
+.rec-card--animating {
+  transition:
+    top 3000ms cubic-bezier(0.32, 0.72, 0, 1),
+    left 3000ms cubic-bezier(0.32, 0.72, 0, 1),
+    width 3000ms cubic-bezier(0.32, 0.72, 0, 1),
+    height 3000ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 3000ms ease;
+  will-change: top, left, width, height;
+}
+
+.rec-card__header {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  box-sizing: border-box;
+  height: 48px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.rec-card__header--card {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.rec-card__header--dialog {
+  border-bottom: 1px solid var(--color-border-divider, var(--color-border));
+}
+
+.rec-card__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rec-card__header--card .rec-card__title {
+  text-align: left;
+}
+
+.rec-card__header--dialog > .text-button:first-child {
+  justify-self: start;
+}
+
+.rec-card__header--card .rec-card__edit {
+  justify-self: end;
+}
+
+.rec-card__done {
+  justify-self: end;
+  color: var(--color-primary);
+  font-weight: 560;
+}
+
+.rec-card__editor {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 10px 18px 4px;
+  overflow: hidden;
+}
+
+.rec-card__editor .rich-editor {
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+.rec-card__editor .rich-editor__viewport {
+  min-height: 0;
+  flex: 1;
+}
+
+.rec-card[data-mode='card'] .rec-card__editor {
+  pointer-events: none;
+}
+
+.rec-card[data-mode='card'] .rec-card__editor::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 36px;
+  background: linear-gradient(to bottom, transparent, var(--color-bg-card));
+  content: '';
+  pointer-events: none;
+}
+
+.rec-card__footer {
+  display: flex;
+  box-sizing: border-box;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.rec-card__hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rec-card__stats {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.rec-card__toolbar {
+  display: flex;
+  box-sizing: border-box;
+  height: 48px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  padding-block-end: max(6px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border-divider, var(--color-border));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-card--animating,
+  .rec-card-backdrop {
+    transition-duration: 1ms;
+  }
+}

@@ -32,5 +32,12 @@ export const editorCatalog = {
       registryName: 'rich-editor-dialog',
       packageExport: './components/rich-editor-dialog',
     },
+    {
+      id: 'rich-editor-card',
+      name: '卡片式编辑',
+      exportName: 'RichEditorCard',
+      registryName: 'rich-editor-card',
+      packageExport: './components/rich-editor-card',
+    },
   ],
 } as const satisfies PackageCatalog
