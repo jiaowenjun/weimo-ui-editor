@@ -14,11 +14,11 @@
   min-width: 0;
 }
 
-/* 移动端软键盘弹出约 300-400ms;morph 略长于键盘,避免展开过程中被视口裁切。
-   断点与 rich-editor-card.tsx 的 MOBILE_VIEWPORT_QUERY 保持一致。 */
+/* 移动端使用 1s 与软键盘弹出同步,给 visualViewport 变化留出时间,
+   避免展开过程中被视口裁切。断点与 rich-editor-card.tsx 的 MOBILE_VIEWPORT_QUERY 保持一致。 */
 @media (max-width: 640px) {
   .rec-card-slot {
-    --rec-card-morph-duration: 500ms;
+    --rec-card-morph-duration: 1000ms;
   }
 }
 
