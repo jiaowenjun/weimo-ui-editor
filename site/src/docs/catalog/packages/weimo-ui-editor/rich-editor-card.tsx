@@ -259,6 +259,7 @@ function focusEditorDomInGesture(shell: HTMLElement) {
 type RichEditorCardProps = {
   debug?: boolean
   defaultValue: RichEditorContent
+  focusOnOpen?: boolean
   onSave?: (content: RichEditorContent) => void
   title?: string
 }
@@ -266,6 +267,7 @@ type RichEditorCardProps = {
 export function RichEditorCard({
   debug = false,
   defaultValue,
+  focusOnOpen = true,
   onSave,
   title = '周一产品例会',
 }: RichEditorCardProps) {
@@ -408,8 +410,9 @@ export function RichEditorCard({
   }, [])
 
   // 展开一开始就聚焦,不必等 FLIP 动画结束(调试期 3s)才能输入。
+  // focusOnOpen=false 的对照页不聚焦,软键盘保持收起。
   useEffect(() => {
-    if (phase !== 'opening') return
+    if (phase !== 'opening' || !focusOnOpen) return
 
     const frame = window.requestAnimationFrame(() => {
       if (phaseRef.current === 'opening' || phaseRef.current === 'open') {
@@ -418,7 +421,7 @@ export function RichEditorCard({
     })
 
     return () => window.cancelAnimationFrame(frame)
-  }, [focusEditorForOpen, phase])
+  }, [focusEditorForOpen, focusOnOpen, phase])
 
   const openEditor = useCallback(() => {
     if (phaseRef.current !== 'closed') return
@@ -464,9 +467,12 @@ export function RichEditorCard({
     })
 
     // 聚焦必须在原始点击的同步任务里完成;iOS Safari 在 rAF/effect 中
-    // 调用 focus 不会弹出软键盘。同时写入选区,让本次聚焦就落在开头。
-    focusEditorDomInGesture(shell)
-    focusEditorForOpen()
+    // 调用 focus 不会弹出软键盘。focusOnOpen=false 时跳过,保持键盘收起,
+    // 用于排查状态栏白带是否由软键盘唤起引起。
+    if (focusOnOpen) {
+      focusEditorDomInGesture(shell)
+      focusEditorForOpen()
+    }
 
     // 强制一次布局,确保"卡片几何"是过渡起点。
     void shell.getBoundingClientRect()
@@ -497,17 +503,20 @@ export function RichEditorCard({
 
       window.requestAnimationFrame(() => {
         // 展开开始时已聚焦;这里只做兜底,避免某些浏览器在动画中丢焦点。
-        const editorDom = shell.querySelector<HTMLElement>(
-          '.rich-editor__content',
-        )
-        if (!editorDom || !editorDom.contains(document.activeElement)) {
-          focusEditorForOpen()
+        // 不聚焦的对照页没有初始焦点,同样跳过兜底。
+        if (focusOnOpen) {
+          const editorDom = shell.querySelector<HTMLElement>(
+            '.rich-editor__content',
+          )
+          if (!editorDom || !editorDom.contains(document.activeElement)) {
+            focusEditorForOpen()
+          }
         }
 
         setSelectionFormat(editorRef.current?.getSelectionFormat() ?? null)
       })
     }, duration + 24)
-  }, [debug, focusEditorForOpen, lockPage])
+  }, [debug, focusEditorForOpen, focusOnOpen, lockPage])
 
   const runCloseAnimation = useCallback(
     (reason: CloseReason) => {
@@ -842,7 +851,11 @@ export function RichEditorCard({
   )
 }
 
-function RichEditorCardDemo() {
+export function RichEditorCardDemo({
+  focusOnOpen = true,
+}: {
+  focusOnOpen?: boolean
+}) {
   const [debug, setDebug] = useState(false)
 
   return (
@@ -850,6 +863,7 @@ function RichEditorCardDemo() {
       <RichEditorCard
         debug={debug}
         defaultValue={cardSample}
+        focusOnOpen={focusOnOpen}
         title="卡片式编辑 rich-editor-card"
       />
       <div className="docs-debug-toggle">
