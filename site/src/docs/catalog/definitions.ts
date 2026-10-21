@@ -2,6 +2,7 @@ import { richEditorDefinition } from './packages/weimo-ui-editor/rich-editor'
 import { richEditorCardDefinition } from './packages/weimo-ui-editor/rich-editor-card'
 import { richEditorCardIsolationDefinition } from './packages/weimo-ui-editor/rich-editor-card-isolation'
 import { richEditorCardNoShadowDefinition } from './packages/weimo-ui-editor/rich-editor-card-no-shadow'
+import { richEditorCardSubtractDefinition } from './packages/weimo-ui-editor/rich-editor-card-subtract'
 import { richEditorDialogDefinition } from './packages/weimo-ui-editor/rich-editor-dialog'
 import { wdfRenderDefinition } from './packages/weimo-ui-editor/wdf-render'
 import { wdfViewDefinition } from './packages/weimo-ui-editor/wdf-view'
@@ -16,4 +17,5 @@ export const componentDefinitionsById = {
   'rich-editor-card': richEditorCardDefinition,
   'rich-editor-card-no-shadow': richEditorCardNoShadowDefinition,
   'rich-editor-card-isolation': richEditorCardIsolationDefinition,
+  'rich-editor-card-subtract': richEditorCardSubtractDefinition,
 } satisfies Record<ComponentId, ComponentDefinition>
