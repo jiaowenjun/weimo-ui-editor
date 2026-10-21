@@ -212,6 +212,17 @@ function showInTopLayer(element: HTMLElement | null) {
   }
 }
 
+/*
+ * 不用 portal,但用 Popover API 把同一个节点提升到 top layer:
+ * - 仍然是同一个 DOM 节点 / 同一个 Tiptap 实例
+ * - 逃出文档内容列的 overflow/transform 裁剪(原地 fixed 做不到)
+ * - 关闭时 hidePopover,节点原样回到卡片槽位
+ *
+ * iOS Safari 状态栏修复之一(隔离页 A1/A2 判定):hidePopover 后同步
+ * removeAttribute('popover') 会让状态栏回退成白带,属性必须常驻,只切换
+ * :popover-open。关闭态下 UA 对 [popover]:not(:popover-open) 的
+ * display:none 会被 .rec-card 的 author 样式覆盖,卡片照常显示。
+ */
 function hideFromTopLayer(element: HTMLElement | null) {
   if (!element) return
 
@@ -223,8 +234,6 @@ function hideFromTopLayer(element: HTMLElement | null) {
   } catch {
     // 节点已经在关闭/卸载流程里时忽略。
   }
-
-  element.removeAttribute('popover')
 }
 
 function getFocusableElements(root: HTMLElement) {
@@ -248,7 +257,9 @@ function focusEditorDomInGesture(shell: HTMLElement) {
   if (editorDom.getAttribute('contenteditable') !== 'true') {
     editorDom.setAttribute('contenteditable', 'true')
   }
-  editorDom.focus()
+  // preventScroll:iOS 会把聚焦元素滚进视口,导致展开期间页面被滚下去且
+  // 收起后不回位(卡片上漂)。对话框是 fixed 定位,不需要滚进视口。
+  editorDom.focus({ preventScroll: true })
   logPrototypeEvent(
     editorDom.contains(document.activeElement)
       ? 'editor focused in gesture'
@@ -290,6 +301,8 @@ export function RichEditorCard({
   const inertedRef = useRef<HTMLElement[]>([])
   const lockedRef = useRef(false)
   const onSaveRef = useRef(onSave)
+  // iOS Safari 在展开期间可能把页面滚下去(聚焦/键盘),收起时用于回位。
+  const savedScrollYRef = useRef(0)
 
   phaseRef.current = phase
   onSaveRef.current = onSave
@@ -429,6 +442,7 @@ export function RichEditorCard({
 
     phaseRef.current = 'opening'
     openStartedAtRef.current = performance.now()
+    savedScrollYRef.current = window.scrollY
     logPrototypeEvent('open requested')
 
     // 先锁页再测量,避免滚动条消失导致卡片位置偏移。
@@ -560,6 +574,31 @@ export function RichEditorCard({
 
         unlockPage()
         editButtonRef.current?.focus({ preventScroll: true })
+
+        // iOS Safari 修复之二:展开期间聚焦/键盘可能把页面滚下去且收起后
+        // 不回位(卡片上漂),恢复展开前的滚动位置。
+        if (window.scrollY !== savedScrollYRef.current) {
+          window.scrollTo(0, savedScrollYRef.current)
+        }
+
+        /*
+         * iOS Safari 修复之三(隔离页 G 系列判定):top layer 元素关闭后
+         * 仍处于渲染状态(author display 覆盖 UA 隐藏)会导致状态栏色调
+         * 不恢复;关闭后短暂 visibility:hidden(保留布局盒)可唤回重采样。
+         * 窗口压到约 1 个绘制帧(双 rAF 恢复,setTimeout 兜底 rAF 挂起的
+         * 环境),把落位处的隐形闪烁压到人眼难感知;若真机复验白带回归,
+         * 依次放宽到 50ms/100ms(G5 实验验证过的窗口)。
+         */
+        shell.style.visibility = 'hidden'
+        const restoreVisibility = () => {
+          if (shellRef.current === shell) {
+            shell.style.visibility = ''
+          }
+        }
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(restoreVisibility)
+        })
+        window.setTimeout(restoreVisibility, 64)
 
         if (reason === 'done') {
           const nextContent = editorRef.current?.getContent() ?? content
@@ -860,6 +899,8 @@ function RichEditorCardDemo() {
           labelOn="已开启 DEBUG 动画 · 3 秒"
           onCheckedChange={setDebug}
         />
+        {/* 诊断标记:真机确认加载了含状态栏修复的代码,排查结束后移除 */}
+        <span className="rec-card-demo__build">fix-v2</span>
       </div>
     </div>
   )

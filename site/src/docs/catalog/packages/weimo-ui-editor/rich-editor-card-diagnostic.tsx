@@ -631,6 +631,19 @@ export function RichEditorCardDiagnostic({
           window.scrollTo(0, savedScrollYRef.current)
         }
 
+        // iOS Safari 修复(隔离页 G5 判定):关闭后短暂 visibility:hidden
+        // 唤回状态栏重采样;约 1 帧后恢复(双 rAF + setTimeout 兜底)。
+        shell.style.visibility = 'hidden'
+        const restoreVisibility = () => {
+          if (shellRef.current === shell) {
+            shell.style.visibility = ''
+          }
+        }
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(restoreVisibility)
+        })
+        window.setTimeout(restoreVisibility, 64)
+
         if (reason === 'done') {
           const nextContent = editorRef.current?.getContent() ?? content
           onSaveRef.current?.(nextContent)

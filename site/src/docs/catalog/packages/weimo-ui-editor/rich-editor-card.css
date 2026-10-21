@@ -32,8 +32,16 @@
 /* 演示页底部 DEBUG 开关行:居中 */
 .docs-debug-toggle {
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 8px;
   margin-top: 16px;
+}
+
+/* 诊断标记(真机确认代码版本),排查结束后随标记一起移除 */
+.rec-card-demo__build {
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-2xs);
 }
 
 .rec-card-backdrop {
