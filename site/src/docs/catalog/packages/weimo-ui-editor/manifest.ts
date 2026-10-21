@@ -60,5 +60,12 @@ export const editorCatalog = {
       registryName: 'rich-editor-card',
       packageExport: './components/rich-editor-card',
     },
+    {
+      id: 'rich-editor-card-stepwise',
+      name: '卡片式编辑（渐进式构建）',
+      exportName: 'RichEditorCard',
+      registryName: 'rich-editor-card',
+      packageExport: './components/rich-editor-card',
+    },
   ],
 } as const satisfies PackageCatalog
