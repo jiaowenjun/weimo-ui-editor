@@ -212,6 +212,18 @@ function showInTopLayer(element: HTMLElement | null) {
   }
 }
 
+/*
+ * 不用 portal,但用 Popover API 把同一个节点提升到 top layer:
+ * - 仍然是同一个 DOM 节点 / 同一个 Tiptap 实例
+ * - 逃出文档内容列的 overflow/transform 裁剪(原地 fixed 做不到)
+ * - 关闭时 hidePopover,节点原样回到卡片槽位
+ *
+ * iOS Safari 实测(机制隔离页实验 A1/A2):hidePopover 后同步
+ * removeAttribute('popover') 会导致状态栏安全区回退成白带;保留属性
+ * 则保持透明。因此属性一旦设置就常驻,只切换 :popover-open。关闭态下
+ * UA 对 [popover]:not(:popover-open) 的 display:none 会被 .rec-card
+ * 的 author 样式覆盖,卡片照常显示。
+ */
 function hideFromTopLayer(element: HTMLElement | null) {
   if (!element) return
 
@@ -223,8 +235,6 @@ function hideFromTopLayer(element: HTMLElement | null) {
   } catch {
     // 节点已经在关闭/卸载流程里时忽略。
   }
-
-  element.removeAttribute('popover')
 }
 
 function getFocusableElements(root: HTMLElement) {
