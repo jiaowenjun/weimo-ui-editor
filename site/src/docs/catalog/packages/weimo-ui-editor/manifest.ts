@@ -46,5 +46,12 @@ export const editorCatalog = {
       registryName: 'rich-editor-card',
       packageExport: './components/rich-editor-card',
     },
+    {
+      id: 'rich-editor-card-isolation',
+      name: '卡片式编辑（机制隔离）',
+      exportName: 'RichEditorCard',
+      registryName: 'rich-editor-card',
+      packageExport: './components/rich-editor-card',
+    },
   ],
 } as const satisfies PackageCatalog
