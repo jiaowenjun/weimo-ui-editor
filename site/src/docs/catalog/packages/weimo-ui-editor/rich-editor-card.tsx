@@ -212,18 +212,6 @@ function showInTopLayer(element: HTMLElement | null) {
   }
 }
 
-/*
- * 不用 portal,但用 Popover API 把同一个节点提升到 top layer:
- * - 仍然是同一个 DOM 节点 / 同一个 Tiptap 实例
- * - 逃出文档内容列的 overflow/transform 裁剪(原地 fixed 做不到)
- * - 关闭时 hidePopover,节点原样回到卡片槽位
- *
- * iOS Safari 实测(机制隔离页实验 A1/A2):hidePopover 后同步
- * removeAttribute('popover') 会导致状态栏安全区回退成白带;保留属性
- * 则保持透明。因此属性一旦设置就常驻,只切换 :popover-open。关闭态下
- * UA 对 [popover]:not(:popover-open) 的 display:none 会被 .rec-card
- * 的 author 样式覆盖,卡片照常显示。
- */
 function hideFromTopLayer(element: HTMLElement | null) {
   if (!element) return
 
@@ -235,6 +223,8 @@ function hideFromTopLayer(element: HTMLElement | null) {
   } catch {
     // 节点已经在关闭/卸载流程里时忽略。
   }
+
+  element.removeAttribute('popover')
 }
 
 function getFocusableElements(root: HTMLElement) {
@@ -269,7 +259,6 @@ function focusEditorDomInGesture(shell: HTMLElement) {
 type RichEditorCardProps = {
   debug?: boolean
   defaultValue: RichEditorContent
-  focusOnOpen?: boolean
   onSave?: (content: RichEditorContent) => void
   title?: string
 }
@@ -277,7 +266,6 @@ type RichEditorCardProps = {
 export function RichEditorCard({
   debug = false,
   defaultValue,
-  focusOnOpen = true,
   onSave,
   title = '周一产品例会',
 }: RichEditorCardProps) {
@@ -420,9 +408,8 @@ export function RichEditorCard({
   }, [])
 
   // 展开一开始就聚焦,不必等 FLIP 动画结束(调试期 3s)才能输入。
-  // focusOnOpen=false 的对照页不聚焦,软键盘保持收起。
   useEffect(() => {
-    if (phase !== 'opening' || !focusOnOpen) return
+    if (phase !== 'opening') return
 
     const frame = window.requestAnimationFrame(() => {
       if (phaseRef.current === 'opening' || phaseRef.current === 'open') {
@@ -431,7 +418,7 @@ export function RichEditorCard({
     })
 
     return () => window.cancelAnimationFrame(frame)
-  }, [focusEditorForOpen, focusOnOpen, phase])
+  }, [focusEditorForOpen, phase])
 
   const openEditor = useCallback(() => {
     if (phaseRef.current !== 'closed') return
@@ -477,12 +464,9 @@ export function RichEditorCard({
     })
 
     // 聚焦必须在原始点击的同步任务里完成;iOS Safari 在 rAF/effect 中
-    // 调用 focus 不会弹出软键盘。focusOnOpen=false 时跳过,保持键盘收起,
-    // 用于排查状态栏白带是否由软键盘唤起引起。
-    if (focusOnOpen) {
-      focusEditorDomInGesture(shell)
-      focusEditorForOpen()
-    }
+    // 调用 focus 不会弹出软键盘。同时写入选区,让本次聚焦就落在开头。
+    focusEditorDomInGesture(shell)
+    focusEditorForOpen()
 
     // 强制一次布局,确保"卡片几何"是过渡起点。
     void shell.getBoundingClientRect()
@@ -513,20 +497,17 @@ export function RichEditorCard({
 
       window.requestAnimationFrame(() => {
         // 展开开始时已聚焦;这里只做兜底,避免某些浏览器在动画中丢焦点。
-        // 不聚焦的对照页没有初始焦点,同样跳过兜底。
-        if (focusOnOpen) {
-          const editorDom = shell.querySelector<HTMLElement>(
-            '.rich-editor__content',
-          )
-          if (!editorDom || !editorDom.contains(document.activeElement)) {
-            focusEditorForOpen()
-          }
+        const editorDom = shell.querySelector<HTMLElement>(
+          '.rich-editor__content',
+        )
+        if (!editorDom || !editorDom.contains(document.activeElement)) {
+          focusEditorForOpen()
         }
 
         setSelectionFormat(editorRef.current?.getSelectionFormat() ?? null)
       })
     }, duration + 24)
-  }, [debug, focusEditorForOpen, focusOnOpen, lockPage])
+  }, [debug, focusEditorForOpen, lockPage])
 
   const runCloseAnimation = useCallback(
     (reason: CloseReason) => {
@@ -861,11 +842,7 @@ export function RichEditorCard({
   )
 }
 
-export function RichEditorCardDemo({
-  focusOnOpen = true,
-}: {
-  focusOnOpen?: boolean
-}) {
+function RichEditorCardDemo() {
   const [debug, setDebug] = useState(false)
 
   return (
@@ -873,7 +850,6 @@ export function RichEditorCardDemo({
       <RichEditorCard
         debug={debug}
         defaultValue={cardSample}
-        focusOnOpen={focusOnOpen}
         title="卡片式编辑 rich-editor-card"
       />
       <div className="docs-debug-toggle">
