@@ -39,5 +39,12 @@ export const editorCatalog = {
       registryName: 'rich-editor-card',
       packageExport: './components/rich-editor-card',
     },
+    {
+      id: 'rich-editor-card-no-shadow',
+      name: '卡片式编辑（无阴影/遮罩）',
+      exportName: 'RichEditorCard',
+      registryName: 'rich-editor-card',
+      packageExport: './components/rich-editor-card',
+    },
   ],
 } as const satisfies PackageCatalog

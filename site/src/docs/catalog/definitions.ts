@@ -1,5 +1,6 @@
 import { richEditorDefinition } from './packages/weimo-ui-editor/rich-editor'
 import { richEditorCardDefinition } from './packages/weimo-ui-editor/rich-editor-card'
+import { richEditorCardNoShadowDefinition } from './packages/weimo-ui-editor/rich-editor-card-no-shadow'
 import { richEditorDialogDefinition } from './packages/weimo-ui-editor/rich-editor-dialog'
 import { wdfRenderDefinition } from './packages/weimo-ui-editor/wdf-render'
 import { wdfViewDefinition } from './packages/weimo-ui-editor/wdf-view'
@@ -12,4 +13,5 @@ export const componentDefinitionsById = {
   'rich-editor': richEditorDefinition,
   'rich-editor-dialog': richEditorDialogDefinition,
   'rich-editor-card': richEditorCardDefinition,
+  'rich-editor-card-no-shadow': richEditorCardNoShadowDefinition,
 } satisfies Record<ComponentId, ComponentDefinition>
