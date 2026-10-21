@@ -135,6 +135,9 @@ function ClosePathVariantRow({
   useScroller = false,
   editableFocus = false,
   twinVisible = false,
+  deferHideToTimer = false,
+  visibleClosed = false,
+  recoverMode,
   label,
   note,
 }: {
@@ -147,6 +150,9 @@ function ClosePathVariantRow({
   useScroller?: boolean
   editableFocus?: boolean
   twinVisible?: boolean
+  deferHideToTimer?: boolean
+  visibleClosed?: boolean
+  recoverMode?: 'blink' | 'nudge' | 'visibility'
   label: string
   note: string
 }) {
@@ -234,6 +240,31 @@ function ClosePathVariantRow({
     }
     setOpen(false)
 
+    /*
+     * 修复路径实验(G4-G6):基线为常显元素(G2,必失败),关闭后尝试
+     * 不同手段唤回状态栏重采样。G4 短暂 display:none(元素离开渲染,
+     * 100ms 后恢复常显);G6 visibility:hidden(保留布局盒);G5 滚动扰动。
+     */
+    const target = targetRef.current
+    if (recoverMode === 'blink' && target) {
+      target.style.display = 'none'
+      window.setTimeout(() => {
+        if (targetRef.current) targetRef.current.style.display = ''
+      }, 100)
+    }
+    if (recoverMode === 'visibility' && target) {
+      target.style.visibility = 'hidden'
+      window.setTimeout(() => {
+        if (targetRef.current) targetRef.current.style.visibility = ''
+      }, 100)
+    }
+    if (recoverMode === 'nudge') {
+      window.setTimeout(() => {
+        window.scrollBy(0, 4)
+        window.setTimeout(() => window.scrollBy(0, -4), 50)
+      }, 300)
+    }
+
     // 关闭后给 Safari 一次滚动扰动,验证能否强制状态栏重新采样。
     if (nudgeScroll) {
       window.setTimeout(() => {
@@ -310,6 +341,14 @@ function ClosePathVariantRow({
       return
     }
 
+    if (deferHideToTimer) {
+      // G 系列:点击任务里不退出 top layer,24ms 后的定时器里才
+      // hidePopover(卡片/渐进页的关闭时序)。
+      setOpen(false)
+      closeTimerRef.current = window.setTimeout(finishClose, 24)
+      return
+    }
+
     if (animateGeometry && targetRef.current && naturalRectRef.current) {
       // 复刻卡片收起:仍在 top layer 时先过渡回槽位矩形,动画结束后退出。
       setOpen(false)
@@ -343,7 +382,15 @@ function ClosePathVariantRow({
         </span>
       </div>
       {/* 开启后的 fixed 矩形会盖住行首按钮,关闭按钮必须放在 popover 内部。 */}
-      <div className="ric-iso-popover-target" popover="manual" ref={targetRef}>
+      <div
+        className={
+          visibleClosed
+            ? 'ric-iso-popover-target ric-iso-popover-target--visible'
+            : 'ric-iso-popover-target'
+        }
+        popover="manual"
+        ref={targetRef}
+      >
         <span>{label}</span>
         {useScroller && (
           <div className="ric-iso-scroll-box" ref={scrollerRef}>
@@ -894,11 +941,11 @@ function RichEditorCardIsolationDemo() {
   return (
     <div className="ric-iso-demo">
         <p className="ric-iso-note">
-        机制隔离诊断页(构建标记 iso-v4,看不到此标记说明未整页刷新)。
-        基线(实验 A2/E1 实测):popover 开启期间状态栏脱掉系统磨砂(页面
-        背景直透),关闭后恢复磨砂——这是健康表现,真正的 bug 是「关闭后
-        未恢复」。请一次只操作一个实验,开合 3~5 次;关闭后未恢复才算复现。
-        E/F 系列开启后的浮层是全覆盖矩形,请用浮层内部的按钮关闭。
+        机制隔离诊断页(构建标记 iso-v6,看不到此标记说明未整页刷新)。
+        已定位根因:top layer 元素关闭后若仍在渲染(author display 覆盖
+        UA 隐藏)则状态栏不恢复;真正 display:none 才恢复(G1/G2/G3 判定)。
+        G4-G6 在必失败的常显基线上验证三条修复路径。开启后的浮层是全覆盖
+        矩形,请用浮层内部的按钮关闭;一次只操作一个实验。
       </p>
 
       <section className="ric-iso-section">
@@ -1013,6 +1060,67 @@ function RichEditorCardIsolationDemo() {
           useGeometry
           label="F5 + contenteditable 聚焦"
           note="开启即聚焦可编辑区并弹出软键盘"
+        />
+      </section>
+
+      <section className="ric-iso-section">
+        <header className="ric-iso-section__header">
+          <span className="ric-iso-section__badge">G</span>
+          <span className="ric-iso-section__title">渐进页步骤 0 差异判别</span>
+        </header>
+        <p className="ric-iso-section__desc">
+          渐进式构建页步骤 0 复现白带,但 F1-F5 全部可恢复——两者仅剩两个
+          结构差异,本节逐一验证:G1 关闭时机(E/F 的 hidePopover 在点击
+          手势同步执行;卡片/渐进页在 24ms+ 的定时器里,且中间有过重绘);
+          G2 关闭后渲染状态(E/F 元素关闭后 display:none,卡片靠 author
+          display 常显);G3 两者叠加(渐进页步骤 0 等价)。E2 已证
+          「同步 hide + 延迟清理」可恢复。判定:关闭后是否恢复系统磨砂。
+        </p>
+        <ClosePathVariantRow
+          deferHideToTimer
+          lockBody
+          useGeometry
+          label="G1 关闭延后到定时器(24ms)"
+          note="E1 + hidePopover 移出点击手势,卡片时序"
+        />
+        <ClosePathVariantRow
+          lockBody
+          useGeometry
+          visibleClosed
+          label="G2 关闭后元素常显"
+          note="E1 + author display 覆盖 UA 隐藏,同卡片常显"
+        />
+        <ClosePathVariantRow
+          deferHideToTimer
+          lockBody
+          useGeometry
+          visibleClosed
+          label="G3 延后关闭 + 常显(渐进页步骤 0 等价)"
+          note="两个差异叠加,应能复现白带"
+        />
+        <ClosePathVariantRow
+          lockBody
+          recoverMode="blink"
+          useGeometry
+          visibleClosed
+          label="G4 常显 + 关闭后短暂 display:none"
+          note="关闭即 display:none,100ms 后恢复常显;若恢复磨砂则闪烁方案可行"
+        />
+        <ClosePathVariantRow
+          lockBody
+          recoverMode="visibility"
+          useGeometry
+          visibleClosed
+          label="G5 常显 + 关闭后短暂 visibility:hidden"
+          note="隐藏但保留布局盒,100ms 后恢复;若可行则无闪烁修复"
+        />
+        <ClosePathVariantRow
+          lockBody
+          recoverMode="nudge"
+          useGeometry
+          visibleClosed
+          label="G6 常显 + 关闭后滚动扰动"
+          note="关闭 300ms 后 scrollBy ±4px;若恢复磨砂则滚动重采样方案可行"
         />
       </section>
 

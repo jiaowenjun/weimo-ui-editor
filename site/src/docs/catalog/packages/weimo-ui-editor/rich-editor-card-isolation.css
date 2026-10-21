@@ -113,6 +113,17 @@
   display: none;
 }
 
+/* G2/G3:author 样式覆盖 UA 的 popover 规则,元素在关闭态保持渲染,
+   并回到普通流——等价卡片 .rec-card 的常显做法。 */
+.ric-iso-popover-target--visible {
+  position: static;
+  inset: auto;
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
 /* F2:FLIP 过渡,时长变量挂在演示根上,与 D 实验共用。 */
 .ric-iso-demo {
   --ric-iso-flip-duration: 320ms;
