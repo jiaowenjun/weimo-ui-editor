@@ -533,14 +533,18 @@ export function StepwiseCard({
        * iOS Safari 状态栏修复(隔离页 G5 实测):top layer 元素关闭后
        * 仍处于渲染状态(author display 覆盖 UA 隐藏)则状态栏色调不恢复;
        * 关闭后短暂 visibility:hidden(保留布局盒,无重排闪烁)可唤回
-       * 重采样,100ms 后恢复可见。
+       * 重采样,约 1 帧后恢复(双 rAF + setTimeout 兜底)。
        */
       shell.style.visibility = 'hidden'
-      window.setTimeout(() => {
+      const restoreVisibility = () => {
         if (shellRef.current === shell) {
           shell.style.visibility = ''
         }
-      }, 100)
+      }
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(restoreVisibility)
+      })
+      window.setTimeout(restoreVisibility, 64)
     }, duration + MORPH_PAD)
   }, [animateScrollToStart, commit, has])
 
@@ -787,9 +791,9 @@ function StepwiseDemo() {
   return (
     <div className="step-demo">
       <p className="step-demo__note">
-        渐进式构建页(构建标记 step-v2,看不到说明未整页刷新)。基线已含
+        渐进式构建页(构建标记 step-v3,看不到说明未整页刷新)。基线已含
         iOS Safari 状态栏修复(隔离页 G5:关闭后短暂 visibility:hidden
-        唤回重采样,100ms 后恢复)。从基线出发逐步叠加 rich-editor-card 的
+        唤回重采样,约 1 帧后恢复)。从基线出发逐步叠加 rich-editor-card 的
         功能;每一步在真机开合 3~5 次、确认关闭后状态栏恢复系统磨砂,再进入
         下一步——从哪一步开始不恢复,该步新增的功能即与修复存在冲突。
         切换步骤会重置卡片。
