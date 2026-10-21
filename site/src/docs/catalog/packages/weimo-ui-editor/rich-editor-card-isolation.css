@@ -107,6 +107,48 @@
   font-size: var(--font-size-sm);
 }
 
+/* E3 的孪生元素:author display:none 优先于 UA,进 top layer 也保持隐藏,
+   复刻 no-shadow 页遮罩(display:none 仍被 showPopover 提升)的情形。 */
+.ric-iso-popover-target--hidden {
+  display: none;
+}
+
+/* F2:FLIP 过渡,时长变量挂在演示根上,与 D 实验共用。 */
+.ric-iso-demo {
+  --ric-iso-flip-duration: 320ms;
+}
+
+.ric-iso-popover-target--animating {
+  transition:
+    top var(--ric-iso-flip-duration) ease-in-out,
+    left var(--ric-iso-flip-duration) ease-in-out,
+    width var(--ric-iso-flip-duration) ease-in-out,
+    height var(--ric-iso-flip-duration) ease-in-out;
+  will-change: top, left, width, height;
+}
+
+/* F3:浮层内部滚动容器。 */
+.ric-iso-scroll-box {
+  max-height: 140px;
+  overflow-y: auto;
+  padding: 8px 12px;
+  border: 1px dashed var(--color-border-divider);
+  border-radius: var(--radius-xs);
+}
+
+.ric-iso-scroll-box p {
+  margin: 0 0 8px;
+}
+
+/* F5:可编辑正文。 */
+.ric-iso-editable {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px dashed var(--color-border-divider);
+  border-radius: var(--radius-xs);
+  outline: none;
+}
+
 .ric-iso-dialog {
   box-sizing: border-box;
   display: flex;
@@ -139,9 +181,8 @@
 
 /* --- 实验 D:FLIP 几何 --- */
 
+/* 时长变量挂在演示根上,D 实验与 F2 过渡共用。 */
 .ric-iso-flip-slot {
-  --ric-iso-flip-duration: 320ms;
-
   position: relative;
   width: 100%;
   min-width: 0;
@@ -149,7 +190,7 @@
 
 /* 移动端 1s 与卡片 MOBILE_MORPH_DURATION 同步;断点与 tsx 保持一致。 */
 @media (max-width: 640px) {
-  .ric-iso-flip-slot {
+  .ric-iso-demo {
     --ric-iso-flip-duration: 1000ms;
   }
 }

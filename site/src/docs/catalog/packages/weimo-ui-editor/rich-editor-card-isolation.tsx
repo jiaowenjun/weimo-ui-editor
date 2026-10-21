@@ -79,6 +79,379 @@ function applyRect(element: HTMLElement, rect: Rect) {
   element.style.height = `${rect.height}px`
 }
 
+/* --- 实验 E:Popover 关闭路径变体 --- */
+
+function applyTestGeometry(element: HTMLElement) {
+  element.style.position = 'fixed'
+  element.style.zIndex = '101'
+  applyRect(element, getDialogRect())
+}
+
+function clearTestGeometry(element: HTMLElement) {
+  element.style.position = ''
+  element.style.zIndex = ''
+  element.style.top = ''
+  element.style.left = ''
+  element.style.width = ''
+  element.style.height = ''
+}
+
+/* 卡片 lockPage 的 inert 循环:锚点祖先链的兄弟节点批量加 inert。 */
+function inertSiblingsOf(anchor: HTMLElement) {
+  const inerted: HTMLElement[] = []
+  let node: HTMLElement | null = anchor
+
+  while (node && node !== document.body) {
+    const parentElement: HTMLElement | null = node.parentElement
+    if (!parentElement) break
+
+    for (const sibling of Array.from(parentElement.children)) {
+      if (sibling === node) continue
+      if (sibling instanceof HTMLElement && !sibling.hasAttribute('inert')) {
+        sibling.setAttribute('inert', '')
+        inerted.push(sibling)
+      }
+    }
+
+    node = parentElement
+  }
+
+  return inerted
+}
+
+/*
+ * 基线(实验 A2 实测):popover 开启期间状态栏脱掉系统磨砂(页面背景直透),
+ * 关闭后恢复——这是健康表现,真正的 bug 是「关闭后未恢复」。
+ * E1(同步清理/全覆盖几何/滚动锁/focus)实测可恢复;F 系列在此基线上
+ * 每次只加一个卡片特有因素(FLIP 过渡/inert/滚动容器/可见遮罩/软键盘)。
+ */
+function ClosePathVariantRow({
+  deferCleanup = false,
+  lockBody = false,
+  useGeometry = false,
+  nudgeScroll = false,
+  inertSiblings = false,
+  animateGeometry = false,
+  useScroller = false,
+  editableFocus = false,
+  twinVisible = false,
+  label,
+  note,
+}: {
+  deferCleanup?: boolean
+  lockBody?: boolean
+  useGeometry?: boolean
+  nudgeScroll?: boolean
+  inertSiblings?: boolean
+  animateGeometry?: boolean
+  useScroller?: boolean
+  editableFocus?: boolean
+  twinVisible?: boolean
+  label: string
+  note: string
+}) {
+  const [open, setOpen] = useState(false)
+  const targetRef = useRef<HTMLDivElement | null>(null)
+  const twinRef = useRef<HTMLDivElement | null>(null)
+  const rowRef = useRef<HTMLDivElement | null>(null)
+  const scrollerRef = useRef<HTMLDivElement | null>(null)
+  const editableRef = useRef<HTMLDivElement | null>(null)
+  const bodyOverflowRef = useRef('')
+  const bodyPaddingRef = useRef('')
+  const inertedRef = useRef<HTMLElement[]>([])
+  const naturalRectRef = useRef<Rect | null>(null)
+  const closeTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      try {
+        ;(targetRef.current as PopoverElement | null)?.hidePopover?.()
+      } catch {
+        // 卸载兜底
+      }
+      try {
+        ;(twinRef.current as PopoverElement | null)?.hidePopover?.()
+      } catch {
+        // 卸载兜底
+      }
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current)
+      }
+      if (lockBody) {
+        document.body.style.overflow = bodyOverflowRef.current
+        document.body.style.paddingRight = bodyPaddingRef.current
+      }
+      for (const element of inertedRef.current) {
+        element.removeAttribute('inert')
+      }
+    }
+  }, [lockBody])
+
+  const finishClose = () => {
+    closeTimerRef.current = null
+
+    try {
+      const target = targetRef.current as PopoverElement | null
+      if (target?.matches(':popover-open')) {
+        target.hidePopover?.()
+      }
+    } catch {
+      // 已在关闭流程里时忽略
+    }
+    try {
+      const twin = twinRef.current as PopoverElement | null
+      if (twinVisible && twin?.matches(':popover-open')) {
+        twin.hidePopover?.()
+      }
+    } catch {
+      // 忽略
+    }
+
+    const cleanup = () => {
+      const target = targetRef.current
+      if (target) {
+        target.classList.remove('ric-iso-popover-target--animating')
+        clearTestGeometry(target)
+      }
+      if (lockBody) {
+        document.body.style.overflow = bodyOverflowRef.current
+        document.body.style.paddingRight = bodyPaddingRef.current
+      }
+      for (const element of inertedRef.current) {
+        element.removeAttribute('inert')
+      }
+      inertedRef.current = []
+      if (useScroller && scrollerRef.current) {
+        scrollerRef.current.scrollTop = 0
+      }
+      rowRef.current?.querySelector<HTMLElement>('button')?.focus()
+    }
+
+    if (deferCleanup) {
+      window.setTimeout(cleanup, 0)
+    } else {
+      cleanup()
+    }
+    setOpen(false)
+
+    // 关闭后给 Safari 一次滚动扰动,验证能否强制状态栏重新采样。
+    if (nudgeScroll) {
+      window.setTimeout(() => {
+        window.scrollBy(0, 4)
+        window.setTimeout(() => window.scrollBy(0, -4), 50)
+      }, 300)
+    }
+  }
+
+  const toggle = () => {
+    // FLIP 收起动画进行中,忽略连点。
+    if (closeTimerRef.current !== null) return
+
+    const target = targetRef.current as PopoverElement | null
+    if (!target) return
+
+    if (!target.matches(':popover-open')) {
+      try {
+        target.showPopover?.()
+      } catch {
+        // 不支持时按已开处理
+      }
+      if (twinVisible) {
+        try {
+          ;(twinRef.current as PopoverElement | null)?.showPopover?.()
+        } catch {
+          // 忽略
+        }
+      }
+
+      if (animateGeometry) {
+        // FLIP:先钉在自身矩形,强制回流后过渡到 dialog 矩形。
+        const first = target.getBoundingClientRect()
+        naturalRectRef.current = {
+          top: first.top,
+          left: first.left,
+          width: first.width,
+          height: first.height,
+        }
+        target.classList.remove('ric-iso-popover-target--animating')
+        target.style.position = 'fixed'
+        target.style.zIndex = '101'
+        applyRect(target, naturalRectRef.current)
+        void target.getBoundingClientRect()
+
+        const duration = getFlipDuration()
+        window.requestAnimationFrame(() => {
+          const el = targetRef.current
+          if (!el?.matches(':popover-open')) return
+          if (duration > 0) {
+            el.classList.add('ric-iso-popover-target--animating')
+          }
+          applyRect(el, getDialogRect())
+        })
+      } else if (useGeometry) {
+        applyTestGeometry(target)
+      }
+
+      if (inertSiblings && rowRef.current) {
+        inertedRef.current = inertSiblingsOf(rowRef.current)
+      }
+      if (lockBody) {
+        bodyOverflowRef.current = document.body.style.overflow
+        bodyPaddingRef.current = document.body.style.paddingRight
+        document.body.style.overflow = 'hidden'
+      }
+      if (useScroller && scrollerRef.current) {
+        scrollerRef.current.scrollTop = 160
+      }
+      if (editableFocus && editableRef.current) {
+        editableRef.current.focus()
+      }
+      setOpen(true)
+      return
+    }
+
+    if (animateGeometry && targetRef.current && naturalRectRef.current) {
+      // 复刻卡片收起:仍在 top layer 时先过渡回槽位矩形,动画结束后退出。
+      setOpen(false)
+      const el = targetRef.current
+      const duration = getFlipDuration()
+      if (duration > 0) {
+        el.classList.add('ric-iso-popover-target--animating')
+      }
+      applyRect(el, naturalRectRef.current)
+      closeTimerRef.current = window.setTimeout(
+        finishClose,
+        duration + FLIP_DURATION_PAD,
+      )
+      return
+    }
+
+    finishClose()
+  }
+
+  return (
+    <div className="ric-iso-row" ref={rowRef}>
+      <div className="ric-iso-row__head">
+        <strong>{label}</strong>
+        <span className="ric-iso-row__note">{note}</span>
+        <TextButton onClick={toggle}>{open ? '关闭' : '开启'}</TextButton>
+        <span
+          className="ric-iso-section__status"
+          data-on={open ? 'true' : undefined}
+        >
+          {open ? '已开启' : '已关闭'}
+        </span>
+      </div>
+      {/* 开启后的 fixed 矩形会盖住行首按钮,关闭按钮必须放在 popover 内部。 */}
+      <div className="ric-iso-popover-target" popover="manual" ref={targetRef}>
+        <span>{label}</span>
+        {useScroller && (
+          <div className="ric-iso-scroll-box" ref={scrollerRef}>
+            <p>内部滚动容器:第一段。</p>
+            <p>第二段,展开时会滚动到中部。</p>
+            <p>第三段。</p>
+            <p>第四段,关闭时回到顶部。</p>
+            <p>第五段。</p>
+            <p>第六段。</p>
+          </div>
+        )}
+        {editableFocus && (
+          <div className="ric-iso-editable" contentEditable ref={editableRef}>
+            可编辑正文,展开时会聚焦并弹出软键盘
+          </div>
+        )}
+        <TextButton onClick={toggle}>{open ? '关闭' : '开启'}</TextButton>
+      </div>
+      {twinVisible && (
+        <div className="ric-iso-popover-target" popover="manual" ref={twinRef}>
+          可见遮罩孪生元素(与主浮层一起进出 top layer)
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* 卡片实际会同时把壳与遮罩两个元素送进 top layer(no-shadow 页的遮罩
+ * display:none 但仍被提升),复刻双元素同 tick 依次退出的情形。 */
+function TwinPopoverRow() {
+  const [open, setOpen] = useState(false)
+  const targetRef = useRef<HTMLDivElement | null>(null)
+  const twinRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    return () => {
+      for (const element of [targetRef.current, twinRef.current]) {
+        try {
+          ;(element as PopoverElement | null)?.hidePopover?.()
+        } catch {
+          // 卸载兜底
+        }
+      }
+    }
+  }, [])
+
+  const toggle = () => {
+    const target = targetRef.current as PopoverElement | null
+    const twin = twinRef.current as PopoverElement | null
+    if (!target) return
+
+    if (!target.matches(':popover-open')) {
+      try {
+        target.showPopover?.()
+      } catch {
+        // 不支持时按已开处理
+      }
+      try {
+        twin?.showPopover?.()
+      } catch {
+        // display:none 的孪生元素,失败忽略
+      }
+      setOpen(true)
+      return
+    }
+
+    try {
+      target.hidePopover?.()
+    } catch {
+      // 忽略
+    }
+    try {
+      twin?.hidePopover?.()
+    } catch {
+      // 忽略
+    }
+    setOpen(false)
+  }
+
+  return (
+    <div className="ric-iso-row">
+      <div className="ric-iso-row__head">
+        <strong>E3 双元素同 tick 退出</strong>
+        <span className="ric-iso-row__note">
+          壳 + 隐藏遮罩两个 popover 一起进出 top layer,无其他变更
+        </span>
+        <TextButton onClick={toggle}>{open ? '关闭' : '开启'}</TextButton>
+        <span
+          className="ric-iso-section__status"
+          data-on={open ? 'true' : undefined}
+        >
+          {open ? '已开启' : '已关闭'}
+        </span>
+      </div>
+      <div className="ric-iso-popover-target" popover="manual" ref={targetRef}>
+        E3:可见 popover
+      </div>
+      <div
+        className="ric-iso-popover-target ric-iso-popover-target--hidden"
+        popover="manual"
+        ref={twinRef}
+      >
+        E3:隐藏孪生元素
+      </div>
+    </div>
+  )
+}
+
 function ExperimentSection({
   badge,
   description,
@@ -520,10 +893,12 @@ function FlipGeometryExperiment() {
 function RichEditorCardIsolationDemo() {
   return (
     <div className="ric-iso-demo">
-      <p className="ric-iso-note">
-        机制隔离诊断页:四个实验各自只复刻卡片展开流程中的一个机制,互不叠加。
-        请一次只操作一个实验,开合 3~5 次;状态栏出现白带即停下,记录是哪个实验。
-        白带出现后可上下滚动页面或切换标签页再返回,观察是否恢复(区分渲染残留与持久状态)。
+        <p className="ric-iso-note">
+        机制隔离诊断页(构建标记 iso-v4,看不到此标记说明未整页刷新)。
+        基线(实验 A2/E1 实测):popover 开启期间状态栏脱掉系统磨砂(页面
+        背景直透),关闭后恢复磨砂——这是健康表现,真正的 bug 是「关闭后
+        未恢复」。请一次只操作一个实验,开合 3~5 次;关闭后未恢复才算复现。
+        E/F 系列开启后的浮层是全覆盖矩形,请用浮层内部的按钮关闭。
       </p>
 
       <section className="ric-iso-section">
@@ -533,20 +908,112 @@ function RichEditorCardIsolationDemo() {
         </header>
         <p className="ric-iso-section__desc">
           复刻 showInTopLayer/hideFromTopLayer 的时序。A1 与卡片逐字一致
-          (hidePopover 后同步 removeAttribute);A2 保留 popover 属性;
-          A3 用原生 dialog 对照。判定:哪个变体开合循环后状态栏出现白带。
+          (hidePopover 后同步 removeAttribute,已定罪:关闭后白带不恢复);
+          A2 保留属性(关闭后恢复);A3 用原生 dialog 对照。判定:关闭后
+          状态栏是否恢复透明。
         </p>
         <PopoverRoundTripRow
           keepAttribute={false}
           label="A1 hidePopover + removeAttribute"
-          note="与卡片一致"
+          note="已定罪:关闭后白带不恢复"
         />
         <PopoverRoundTripRow
           keepAttribute
           label="A2 hidePopover 保留属性"
-          note="时序变体"
+          note="基线:开=白带,关=恢复"
         />
         <NativeDialogRow />
+      </section>
+
+      <section className="ric-iso-section">
+        <header className="ric-iso-section__header">
+          <span className="ric-iso-section__badge">E</span>
+          <span className="ric-iso-section__title">Popover 关闭路径变体</span>
+        </header>
+        <p className="ric-iso-section__desc">
+          卡片关闭路径在 hidePopover 同一个 tick 里还有大量同步变更(清 fixed
+          几何、解锁滚动、移除 inert、focus),本节验证哪类变更破坏恢复。
+          E1/E2/E5 开启后的浮层是全覆盖矩形,会盖住行首按钮——请用浮层内部
+          的按钮关闭。判定:关闭后状态栏是否恢复透明。
+        </p>
+        <ClosePathVariantRow
+          deferCleanup={false}
+          lockBody
+          useGeometry
+          label="E1 同步清理(复刻卡片关闭 tick)"
+          note="hidePopover 同 tick 清几何+解锁+focus;开启后用浮层内按钮关闭"
+        />
+        <ClosePathVariantRow
+          deferCleanup
+          lockBody
+          useGeometry
+          label="E2 延迟清理"
+          note="hidePopover 后 setTimeout(0) 再做同样清理"
+        />
+        <TwinPopoverRow />
+        <ClosePathVariantRow
+          deferCleanup={false}
+          lockBody
+          useGeometry={false}
+          label="E4 仅滚动锁组合"
+          note="hidePopover 同 tick 恢复 body,无几何无 focus"
+        />
+        <ClosePathVariantRow
+          deferCleanup={false}
+          lockBody
+          nudgeScroll
+          useGeometry
+          label="E5 同步清理 + 关闭后滚动扰动"
+          note="同 E1,关闭 300ms 后 scrollBy ±4px,验证能否强制恢复"
+        />
+      </section>
+
+      <section className="ric-iso-section">
+        <header className="ric-iso-section__header">
+          <span className="ric-iso-section__badge">F</span>
+          <span className="ric-iso-section__title">
+            Popover + 单一卡片增量
+          </span>
+        </header>
+        <p className="ric-iso-section__desc">
+          E1 基线(同步清理+全覆盖几何+滚动锁,实测可恢复)之上,每次只加一个
+          卡片特有的因素。开启后的浮层是全覆盖矩形,请用浮层内部的按钮关闭。
+          判定:关闭后状态栏是否恢复系统磨砂态。
+        </p>
+        <ClosePathVariantRow
+          inertSiblings
+          lockBody
+          useGeometry
+          label="F1 + 批量 inert"
+          note="开启期间祖先链兄弟 inert,关闭同 tick 移除"
+        />
+        <ClosePathVariantRow
+          animateGeometry
+          lockBody
+          label="F2 + FLIP 过渡"
+          note="几何带 320ms/移动端 1s 过渡,收起先动画回槽位再退 top layer"
+        />
+        <ClosePathVariantRow
+          lockBody
+          useGeometry
+          useScroller
+          label="F3 + 内部滚动容器"
+          note="浮层内有 overflow 滚动区,开启滚到中部,关闭归零"
+        />
+        <ClosePathVariantRow
+          lockBody
+          twinVisible
+          useGeometry
+          label="F4 + 可见遮罩孪生"
+          note="第二个可见 popover 与主浮层一起进出 top layer"
+        />
+        <ClosePathVariantRow
+          editableFocus
+          lockBody
+          useGeometry
+          label="F5 + contenteditable 聚焦"
+          note="开启即聚焦可编辑区并弹出软键盘"
+        />
       </section>
 
       <ScrollLockExperiment />
