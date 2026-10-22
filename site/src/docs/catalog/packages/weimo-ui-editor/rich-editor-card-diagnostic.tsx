@@ -631,13 +631,23 @@ export function RichEditorCardDiagnostic({
           window.scrollTo(0, savedScrollYRef.current)
         }
 
-        // iOS Safari 修复(隔离页 G5 判定):关闭后短暂 visibility:hidden
-        // 唤回状态栏重采样;约 1 帧后恢复(双 rAF + setTimeout 兜底)。
+        // iOS Safari 修复(隔离页 G5 判定):关闭后经历一次不可见绘制
+        // 唤回状态栏重采样;约 1 帧后恢复,期间用克隆替身消除闪烁。
+        const ghost = shell.cloneNode(true) as HTMLElement
+        ghost.setAttribute('aria-hidden', 'true')
+        ghost.removeAttribute('id')
+        ghost.querySelectorAll('[id]').forEach((node) => {
+          node.removeAttribute('id')
+        })
+        ghost.style.position = 'absolute'
+        ghost.style.inset = '0'
+        slot.appendChild(ghost)
         shell.style.visibility = 'hidden'
         const restoreVisibility = () => {
           if (shellRef.current === shell) {
             shell.style.visibility = ''
           }
+          ghost.remove()
         }
         window.requestAnimationFrame(() => {
           window.requestAnimationFrame(restoreVisibility)

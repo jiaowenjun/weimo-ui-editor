@@ -584,16 +584,27 @@ export function RichEditorCard({
         /*
          * iOS Safari 修复之三(隔离页 G 系列判定):top layer 元素关闭后
          * 仍处于渲染状态(author display 覆盖 UA 隐藏)会导致状态栏色调
-         * 不恢复;关闭后短暂 visibility:hidden(保留布局盒)可唤回重采样。
-         * 窗口压到约 1 个绘制帧(双 rAF 恢复,setTimeout 兜底 rAF 挂起的
-         * 环境),把落位处的隐形闪烁压到人眼难感知;若真机复验白带回归,
-         * 依次放宽到 50ms/100ms(G5 实验验证过的窗口)。
+         * 不恢复;关闭后经历一次不可见绘制即可唤回重采样。隐形窗口约
+         * 1 个绘制帧(双 rAF 恢复,setTimeout 兜底 rAF 挂起的环境);
+         * 期间用一次性克隆替身盖在同一几何上顶住视觉,彻底消除落位闪烁。
+         * 若真机复验白带回归,优先去掉替身,再依次放宽窗口到 50/100ms
+         * (G5 实验验证过的窗口)。
          */
+        const ghost = shell.cloneNode(true) as HTMLElement
+        ghost.setAttribute('aria-hidden', 'true')
+        ghost.removeAttribute('id')
+        ghost.querySelectorAll('[id]').forEach((node) => {
+          node.removeAttribute('id')
+        })
+        ghost.style.position = 'absolute'
+        ghost.style.inset = '0'
+        slot.appendChild(ghost)
         shell.style.visibility = 'hidden'
         const restoreVisibility = () => {
           if (shellRef.current === shell) {
             shell.style.visibility = ''
           }
+          ghost.remove()
         }
         window.requestAnimationFrame(() => {
           window.requestAnimationFrame(restoreVisibility)
@@ -900,7 +911,7 @@ function RichEditorCardDemo() {
           onCheckedChange={setDebug}
         />
         {/* 诊断标记:真机确认加载了含状态栏修复的代码,排查结束后移除 */}
-        <span className="rec-card-demo__build">fix-v2</span>
+        <span className="rec-card-demo__build">fix-v3</span>
       </div>
     </div>
   )
