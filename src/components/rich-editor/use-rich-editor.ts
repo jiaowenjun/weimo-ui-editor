@@ -27,6 +27,12 @@ export type UseRichEditorProps = {
   onCancel?: () => void
   onChange?: (content: RichEditorContent) => void
   onSelectionFormatChange?: (format: RichEditorSelectionFormat | null) => void
+  /**
+   * Fires once when the Tiptap instance has mounted (immediatelyRender: false
+   * defers creation). Use this instead of DOM polling to start animations or
+   * focus flows that must wait for a real editor.
+   */
+  onReady?: () => void
   onSave?: (content: RichEditorContent) => void
   placeholder?: string
   value?: RichEditorContent
@@ -123,6 +129,7 @@ export function useRichEditor({
   onCancel,
   onChange,
   onSelectionFormatChange,
+  onReady,
   onSave,
   placeholder,
   value,
@@ -134,6 +141,7 @@ export function useRichEditor({
   const onSelectionFormatChangeRef = useRef(onSelectionFormatChange)
   const onSaveRef = useRef(onSave)
   const onCancelRef = useRef(onCancel)
+  const onReadyRef = useRef(onReady)
   const disabledRef = useRef(disabled)
   const lastSelectionFormatRef = useRef<RichEditorSelectionFormat | null>(null)
   // The editor instance is created asynchronously (immediatelyRender: false),
@@ -153,8 +161,9 @@ export function useRichEditor({
     onSelectionFormatChangeRef.current = onSelectionFormatChange
     onSaveRef.current = onSave
     onCancelRef.current = onCancel
+    onReadyRef.current = onReady
     disabledRef.current = disabled
-  }, [disabled, onCancel, onChange, onSave, onSelectionFormatChange])
+  }, [disabled, onCancel, onChange, onReady, onSave, onSelectionFormatChange])
 
   const emitSelectionFormat = useCallback((currentEditor: Editor | null) => {
     const nextFormat = currentEditor
@@ -204,6 +213,7 @@ export function useRichEditor({
     if (!editor) return
 
     emitSelectionFormat(editor)
+    onReadyRef.current?.()
 
     return () => emitSelectionFormat(null)
   }, [editor, emitSelectionFormat])

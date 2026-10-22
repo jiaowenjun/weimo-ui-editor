@@ -31,6 +31,8 @@ export type RichEditorProps = {
   onChange?: (content: RichEditorContent) => void
   onContentHeightChange?: (height: number) => void
   onSelectionFormatChange?: (format: RichEditorSelectionFormat | null) => void
+  /** Fires once the async-mounted Tiptap instance exists (per mount). */
+  onReady?: () => void
   onSave?: (content: RichEditorContent) => void
   placeholder?: string
 }
@@ -61,6 +63,7 @@ export const RichEditor = forwardRef<RichEditorHandle, RichEditorProps>(
       onChange,
       onContentHeightChange,
       onSelectionFormatChange,
+      onReady,
       onSave,
       placeholder,
       value,
@@ -87,6 +90,7 @@ export const RichEditor = forwardRef<RichEditorHandle, RichEditorProps>(
       onCancel,
       onChange,
       onSelectionFormatChange,
+      onReady,
       onSave,
       placeholder,
       value,
