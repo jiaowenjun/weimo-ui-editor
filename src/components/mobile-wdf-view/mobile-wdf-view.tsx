@@ -4,6 +4,7 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
   type ComponentPropsWithoutRef,
@@ -359,19 +360,22 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
         readyTimerRef.current = null
       }
 
-      setEditorReady(true)
       phaseRef.current = 'opening'
-      setPhase('opening')
-
+      // 先落定 prepare 布局(过渡 before-change 快照),再同步提交
+      // data-phase='opening',并在同一任务内加过渡类 + 应用对话框矩形——
+      // chrome 过渡与 FLIP 几何过渡在同一次样式重算起跑。原先矩形经
+      // rAF 延后一帧,tiptap 挂载的主线程卡顿会放大裂缝:chrome 先展开、
+      // 卡盒仍钉在折叠位,实机表现为点击后内容下探一帧的跳闪。
       void shell.getBoundingClientRect()
-      const duration = getMorphDuration()
-      window.requestAnimationFrame(() => {
-        if (phaseRef.current !== 'opening') return
-        if (duration > 0) {
-          shell.classList.add(ANIMATING_CLASS)
-        }
-        applyRect(shell, getDialogRect())
+      flushSync(() => {
+        setEditorReady(true)
+        setPhase('opening')
       })
+      const duration = getMorphDuration()
+      if (duration > 0) {
+        shell.classList.add(ANIMATING_CLASS)
+      }
+      applyRect(shell, getDialogRect())
       timerRef.current = window.setTimeout(() => {
         if (phaseRef.current !== 'opening' || !shell.isConnected) return
 
@@ -623,6 +627,24 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       closeSourceRef.current = 'external'
       settleToView()
     }, [activeMode, openCard, settleToView])
+
+    /*
+     * WebKit 衬底漏排兜底:首次提升(popover 属性新增 + showPopover +
+     * 同帧内联几何)后,衬底内容子树可能被跳过重排——实测 rect 全零而
+     * 计算样式正常,读取几何无法治愈;display 翻转夹一次强刷可强制
+     * 重建子树。在 prepare 提交后、首帧绘制前修复:衬底在等待编辑器
+     * 就绪的整个准备期保持可见,后续过渡也从干净布局起步。
+     */
+    useLayoutEffect(() => {
+      if (phase !== 'prepare') return
+      const render = shellRef.current?.querySelector<HTMLElement>(
+        '.mobile-wdf-view__render',
+      )
+      if (!render) return
+      render.style.display = 'none'
+      void render.offsetHeight
+      render.style.display = ''
+    }, [phase])
 
     const requestMode = useCallback((next: MobileWdfViewMode) => {
       onModeChangeRef.current?.(next)
