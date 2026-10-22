@@ -10,7 +10,7 @@
  */
 
 export const MORPH_DURATION = 320
-export const MOBILE_MORPH_DURATION = 500
+export const MOBILE_MORPH_DURATION = 320
 export const MORPH_PAD = 24
 export const KEYBOARD_CLOSE_WAIT = 180
 export const MOBILE_VIEWPORT_QUERY = '(max-width: 640px)'

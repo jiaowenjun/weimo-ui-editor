@@ -10,7 +10,7 @@
 
 @media (max-width: 640px) {
   .mobile-wdf-view {
-    --mobile-wdf-morph-duration: 500ms;
+    --mobile-wdf-morph-duration: 320ms;
   }
 }
 
