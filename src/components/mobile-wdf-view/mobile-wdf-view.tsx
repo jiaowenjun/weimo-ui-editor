@@ -102,6 +102,14 @@ export type MobileWdfViewProps = Omit<
   autoFocusPosition?: RichEditorFocusPosition
   /** 卡片标题(展开态作为 dialog 的可访问名称)。 */
   title?: ReactNode
+  /**
+   * 嵌入外部卡片帧(如 docs 站 ComponentPreviewCard)时使用:折叠态
+   * 隐藏自身卡面与标题栏(标题、编辑入口、内容边距由外部帧承担),
+   * 展开对话框态照常随 morph 滑出完整 chrome——关闭操作必须留在
+   * top layer 内,不可外置(会话期间外部交互全部被 inert)。
+   * 默认 false(自含标题栏与卡面)。
+   */
+  embedded?: boolean
   /** 透传 WdfRender(查看态与常驻衬底)。 */
   renderProps?: Omit<WdfRenderProps, 'content'>
   /**
@@ -157,6 +165,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       defaultMode = 'view',
       defaultValue,
       editorProps,
+      embedded = false,
       mode,
       onChange,
       onConversionError,
@@ -474,15 +483,22 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       contentProbe.style.width = `${slot.clientWidth - borderWidth}px`
       contentProbe.style.maxHeight = 'none'
       contentProbe.style.overflow = 'visible'
+      // 嵌入态 view 衬底边距为 0(边距由外部帧承担),探针同步归零,
+      // 避免把会话态过渡中的边距计入目标高度。
+      if (embedded) {
+        contentProbe.style.padding = '0'
+      }
       slot.appendChild(contentProbe)
       const contentHeight = contentProbe.scrollHeight
       contentProbe.remove()
       if (!(contentHeight > 0)) return null
 
-      const nextHeight = header.offsetHeight + contentHeight + borderWidth
+      // 嵌入态折叠卡无标题栏(高度 0),目标高度仅内容 + 边框。
+      const foldedHeaderHeight = embedded ? 0 : header.offsetHeight
+      const nextHeight = foldedHeaderHeight + contentHeight + borderWidth
 
       return nextHeight > 0 ? nextHeight : null
-    }, [])
+    }, [embedded])
 
     const runCloseAnimation = useCallback(() => {
       const shell = shellRef.current
@@ -824,12 +840,16 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
           aria-labelledby={editing ? titleId : undefined}
           aria-modal={editing ? true : undefined}
           className="mobile-wdf-view__card"
+          data-embedded={embedded ? 'true' : undefined}
           data-phase={phase}
           ref={shellRef}
           role={editing ? 'dialog' : undefined}
           tabIndex={-1}
         >
-          <header className="mobile-wdf-view__header">
+          <header
+            className="mobile-wdf-view__header"
+            inert={embedded && phase !== 'opening' && phase !== 'edit'}
+          >
             <span className="mobile-wdf-view__title" id={titleId}>
               {title}
             </span>

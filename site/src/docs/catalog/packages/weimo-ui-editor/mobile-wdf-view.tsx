@@ -1,25 +1,56 @@
-import './mobile-wdf-view.css'
+import { useState } from 'react'
+import { Pencil } from 'lucide-react'
 
-import { MobileWdfView } from 'weimo-ui-editor/components/mobile-wdf-view'
+import { ComponentPreviewCard } from 'weimo-ui-core/components/component-preview-card'
+import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
+import {
+  MobileWdfView,
+  type MobileWdfViewMode,
+} from 'weimo-ui-editor/components/mobile-wdf-view'
 import type { WdfDocument } from 'weimo-wdf'
 
 import { wdfRenderSample } from '../../fixtures/wdf-sample'
 import type { ComponentDefinition } from '../../types'
 
 /*
- * 移动卡片式视图演示页(仅 site):src 正式组件的薄壳,无附加控制。
- * 组件实现见 src/components/mobile-wdf-view/(方案与 iOS Safari 状态栏
- * 修复背景详见 docs/ios-safari-statusbar-toplayer.md)。
+ * 移动卡片式视图演示页(仅 site):对齐 wdf-view 演示,由
+ * ComponentPreviewCard 提供标题栏与编辑入口(铅笔);组件以 embedded
+ * 模式嵌入——折叠态融入外卡(无自有卡面/标题栏/内容边距),展开
+ * 对话框态随 morph 滑出 chrome。关闭操作与工具栏留在卡片内:会话期
+ * 外部交互全部被 inert,不可外置。组件实现见 src/components/
+ * mobile-wdf-view/(iOS Safari 状态栏修复背景详见
+ * docs/ios-safari-statusbar-toplayer.md)。
  */
 
 function MobileWdfViewDemo() {
+  const [mode, setMode] = useState<MobileWdfViewMode>('view')
+
   return (
-    <div className="mwv-demo">
+    <ComponentPreviewCard
+      action={
+        <GhostIconButton
+          aria-label="切换到编辑模式"
+          onClick={() => setMode('edit')}
+          size="sm"
+        >
+          <Pencil />
+        </GhostIconButton>
+      }
+      label={
+        <>
+          移动卡片式视图{' '}
+          <code className="docs-component-class">mobile-wdf-view</code>
+        </>
+      }
+    >
       <MobileWdfView
         defaultValue={wdfRenderSample as WdfDocument}
-        title="移动卡片式视图 · mwv-v9"
+        embedded
+        mode={mode}
+        onModeChange={setMode}
+        title="移动卡片式视图"
       />
-    </div>
+    </ComponentPreviewCard>
   )
 }
 

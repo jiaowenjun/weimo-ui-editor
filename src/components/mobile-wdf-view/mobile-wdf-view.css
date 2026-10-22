@@ -48,6 +48,32 @@
   will-change: top, left, width, height;
 }
 
+/*
+ * 嵌入态(embedded):折叠卡片融入外部卡片帧(如 docs 站
+ * ComponentPreviewCard)——无自有卡面/标题栏,内容边距交由外部帧的
+ * padding 承担;展开对话框态随 morph 滑回完整 chrome(卡面/标题栏/
+ * 边距与内置底栏同一时间轴)。关闭操作留在 top layer 内,外部交互
+ * 在会话期会被 inert,不可外置。
+ */
+.mobile-wdf-view__card[data-embedded='true']:not([data-phase='opening'], [data-phase='edit']) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* 卡面过渡必须挂在 animating 变体上与几何过渡合并声明,单独声明会
+   覆盖(更高特异性)飞行动画的 top/left/width/height 过渡。 */
+.mobile-wdf-view__card[data-embedded='true'].mobile-wdf-view__card--animating {
+  transition:
+    top var(--mobile-wdf-morph-duration) ease-in-out,
+    left var(--mobile-wdf-morph-duration) ease-in-out,
+    width var(--mobile-wdf-morph-duration) ease-in-out,
+    height var(--mobile-wdf-morph-duration) ease-in-out,
+    background-color var(--mobile-wdf-morph-duration) ease-in-out,
+    border-color var(--mobile-wdf-morph-duration) ease-in-out,
+    box-shadow var(--mobile-wdf-morph-duration) ease-in-out;
+}
+
 .mobile-wdf-view__header {
   display: flex;
   box-sizing: border-box;
@@ -72,6 +98,26 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 嵌入态标题栏:折叠高度 0(可聚焦性由组件的 inert 门控),仅对话框
+   态占据布局;高度 40 = 上 8 + 内容 28(sm 图标按钮)+ 下 4。 */
+.mobile-wdf-view__card[data-embedded='true'] .mobile-wdf-view__header {
+  height: 0;
+  padding-block: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    height var(--mobile-wdf-morph-duration) ease-in-out,
+    padding-block var(--mobile-wdf-morph-duration) ease-in-out,
+    opacity var(--mobile-wdf-morph-duration) ease-in-out;
+}
+
+.mobile-wdf-view__card[data-embedded='true'][data-phase='opening'] .mobile-wdf-view__header,
+.mobile-wdf-view__card[data-embedded='true'][data-phase='edit'] .mobile-wdf-view__header {
+  height: 40px;
+  padding-block: 8px 4px;
+  opacity: 1;
 }
 
 /* 转换失败提示:保留编辑会话时显示在头部下方。 */
@@ -112,6 +158,21 @@
 .mobile-wdf-view__card[data-phase='view'] .mobile-wdf-view__render {
   position: static;
   inset: auto;
+}
+
+/* 嵌入态内容边距:折叠为 0(外部帧的卡 padding 承担,衬底与编辑层
+   同步过渡,就绪瞬间与衬底几何一致,避免内容跳位)。 */
+.mobile-wdf-view__card[data-embedded='true'] .mobile-wdf-view__render,
+.mobile-wdf-view__card[data-embedded='true'] .mobile-wdf-view__editor-layer {
+  padding: 0;
+  transition: padding var(--mobile-wdf-morph-duration) ease-in-out;
+}
+
+.mobile-wdf-view__card[data-embedded='true'][data-phase='opening'] .mobile-wdf-view__render,
+.mobile-wdf-view__card[data-embedded='true'][data-phase='edit'] .mobile-wdf-view__render,
+.mobile-wdf-view__card[data-embedded='true'][data-phase='opening'] .mobile-wdf-view__editor-layer,
+.mobile-wdf-view__card[data-embedded='true'][data-phase='edit'] .mobile-wdf-view__editor-layer {
+  padding: 10px 18px 12px;
 }
 
 /* 编辑器层:会话期间覆盖衬底;就绪前不可见,由衬底顶住画面。 */

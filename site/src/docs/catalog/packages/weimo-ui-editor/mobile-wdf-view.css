@@ -1,8 +1,0 @@
-/* === MobileWdfView 演示页(仅 site):卡片样式随包走,这里只留页面布局 === */
-
-.mwv-demo {
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  flex-direction: column;
-}
