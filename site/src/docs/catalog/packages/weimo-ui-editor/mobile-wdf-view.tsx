@@ -17,7 +17,12 @@ function MobileWdfViewDemo() {
     <div className="mwv-demo">
       <MobileWdfView
         defaultValue={wdfRenderSample as WdfDocument}
-        title="移动卡片式视图 · mwv-v9"
+        editorProps={{ placeholder: '写点什么...' }}
+        title={
+          <>
+            移动卡片式视图 <code className="docs-component-class">mobile-wdf-view</code>
+          </>
+        }
       />
     </div>
   )
