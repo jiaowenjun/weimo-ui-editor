@@ -82,6 +82,18 @@
   white-space: nowrap;
 }
 
+/* 转换失败提示:保留编辑会话时显示在头部下方。 */
+.mwv-card__error {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px 16px;
+  background: var(--color-bg-raised);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
 .mwv-card__body {
   position: relative;
   display: flex;
