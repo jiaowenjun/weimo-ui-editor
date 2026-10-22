@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   type ComponentPropsWithoutRef,
-  type CSSProperties,
   type ReactNode,
 } from 'react'
 import { flushSync } from 'react-dom'
@@ -103,12 +102,6 @@ export type MobileWdfViewProps = Omit<
   autoFocusPosition?: RichEditorFocusPosition
   /** 卡片标题(展开态作为 dialog 的可访问名称)。 */
   title?: ReactNode
-  /**
-   * 查看态内容区最大高度(默认 300):卡片高度由内容撑起,超出此值
-   * 在卡片内部滚动;传 'none' 则不设上限(内容整体撑高,卡片可超出
-   * 视口);编辑态为对话框几何,不受此参数影响。
-   */
-  viewMaxHeight?: number | string
   /** 透传 WdfRender(查看态与常驻衬底)。 */
   renderProps?: Omit<WdfRenderProps, 'content'>
   /**
@@ -173,7 +166,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       style,
       title,
       value,
-      viewMaxHeight = 300,
       ...props
     },
     ref,
@@ -221,7 +213,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     const autoFocusPositionRef = useRef(autoFocusPosition)
     const isModeControlledRef = useRef(isModeControlled)
     const currentDocumentRef = useRef(currentDocument)
-    const viewMaxHeightRef = useRef(viewMaxHeight)
 
     phaseRef.current = phase
     onChangeRef.current = onChange
@@ -232,7 +223,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     autoFocusPositionRef.current = autoFocusPosition
     isModeControlledRef.current = isModeControlled
     currentDocumentRef.current = currentDocument
-    viewMaxHeightRef.current = viewMaxHeight
 
     const lockBody = useCallback(() => {
       if (lockedRef.current) return
@@ -460,10 +450,8 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
      * 测量「收起后的 view 态卡片高度」:复制衬底 DOM 到脱离会话布局的
      * 隐藏探针(定宽、高自动)读内容高度。不能直接读 render.scrollHeight
      * ——会话态衬底是 absolute inset:0,scrollHeight 的下限是盒高
-     * (对话框 body 高),短内容会被抬高,经 viewMaxHeight 钳制后恒等于
-     * 上限,导致删短保存/取消路径的动画目标错到 header+viewMax。
-     * 内容高度经 viewMaxHeight(任意 CSS 长度,同样经探针解析为像素)
-     * 钳制后加 header 与边框。测量失败返回 null,回退钉住矩形。
+     * (对话框 body 高),短内容会被抬高。查看态无高度上限,内容高度
+     * 加 header 与边框即精确目标。测量失败返回 null,回退钉住矩形。
      */
     const measureNextViewHeight = useCallback((): number | null => {
       const shell = shellRef.current
@@ -476,21 +464,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       const borderWidth =
         parseFloat(shellStyle.borderTopWidth || '0') +
         parseFloat(shellStyle.borderBottomWidth || '0')
-
-      // 'none' = 不设上限:内容整体撑高,跳过钳制与上限探针。
-      const unbounded = viewMaxHeightRef.current === 'none'
-
-      // viewMaxHeight → px(任意 CSS 长度经隐藏探针解析)
-      let maxPx = Number.POSITIVE_INFINITY
-      if (!unbounded) {
-        const maxProbe = document.createElement('div')
-        maxProbe.style.cssText =
-          'position:absolute;visibility:hidden;pointer-events:none;height:var(--mobile-wdf-view-max-height, 300px)'
-        slot.appendChild(maxProbe)
-        maxPx = maxProbe.offsetHeight
-        maxProbe.remove()
-        if (!(maxPx > 0)) return null
-      }
 
       // 真实内容高度:克隆衬底 DOM,脱离 inset 布局,与 view 态同宽。
       const contentProbe = render.cloneNode(true) as HTMLElement
@@ -506,8 +479,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       contentProbe.remove()
       if (!(contentHeight > 0)) return null
 
-      const nextHeight =
-        header.offsetHeight + Math.min(contentHeight, maxPx) + borderWidth
+      const nextHeight = header.offsetHeight + contentHeight + borderWidth
 
       return nextHeight > 0 ? nextHeight : null
     }, [])
@@ -828,17 +800,12 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     )
 
     const editing = phase !== 'view'
-    const rootStyle = {
-      ...style,
-      '--mobile-wdf-view-max-height':
-        typeof viewMaxHeight === 'number' ? `${viewMaxHeight}px` : viewMaxHeight,
-    } as CSSProperties
 
     return (
       <div
         className={cn('mobile-wdf-view', className)}
         ref={slotRef}
-        style={rootStyle}
+        style={style}
         {...props}
       >
         <div

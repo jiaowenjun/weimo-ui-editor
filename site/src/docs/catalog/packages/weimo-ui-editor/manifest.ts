@@ -32,12 +32,5 @@ export const editorCatalog = {
       registryName: 'wdf-view',
       packageExport: './components/wdf-view',
     },
-    {
-      id: 'mobile-wdf-view-unbounded',
-      name: '移动卡片式视图（无高度上限）',
-      exportName: 'WdfView',
-      registryName: 'wdf-view',
-      packageExport: './components/wdf-view',
-    },
   ],
 } as const satisfies PackageCatalog

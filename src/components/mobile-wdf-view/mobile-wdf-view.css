@@ -99,9 +99,8 @@
 /*
  * WdfRender 衬底双态:
  * - 会话态(prepare 起,默认规则):绝对填充对话框高度的 body,内滚;
- * - 查看态:转文档流,内容撑起卡片高度,超过 --mobile-wdf-view-max-height
- *   (默认 400)在卡片内部滚动。两态切换发生在 promote 前/settle 后,
- *   均为不可见时刻。
+ * - 查看态:转文档流,内容整体撑起卡片高度(无上限,不设卡内滚动)。
+ *   两态切换发生在 promote 前/settle 后,均为不可见时刻。
  */
 .mobile-wdf-view__render {
   position: absolute;
@@ -113,8 +112,6 @@
 .mobile-wdf-view__card[data-phase='view'] .mobile-wdf-view__render {
   position: static;
   inset: auto;
-  max-height: var(--mobile-wdf-view-max-height, 300px);
-  overflow-y: auto;
 }
 
 /* 编辑器层:会话期间覆盖衬底;就绪前不可见,由衬底顶住画面。 */

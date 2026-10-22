@@ -14,9 +14,10 @@ import { wdfRenderSample } from '../../fixtures/wdf-sample'
 import type { ComponentDefinition } from '../../types'
 
 /*
- * MobileWdfView 演示页(仅 site):src 正式组件的薄壳。
+ * 移动卡片式视图演示页(仅 site):src 正式组件的薄壳。
  * 组件实现见 src/components/mobile-wdf-view/(方案与 iOS Safari 状态栏
  * 修复背景详见 docs/ios-safari-statusbar-toplayer.md)。
+ * 查看态卡片由内容整体撑高(无上限);此前 300px 钳制实验版已移除。
  */
 
 function MobileWdfViewDemo() {
@@ -36,13 +37,13 @@ function MobileWdfViewDemo() {
   return (
     <div className="mwv-demo">
       <p className="mwv-demo__note">
-        MobileWdfView 演示页(构建标记 mwv-v6,看不到说明未整页刷新;组件
-        为包导出 weimo-ui-editor/components/mobile-wdf-view)。默认非受控:
-        点右上角铅笔进入编辑(卡片本体不可点,对齐 WdfView;编辑器 onReady
-        后启动展开动画)→ 点正文打字 → 取消(X/Esc/遮罩,丢弃草稿)或
-        保存(Check,经 fromTiptap 提交;转换失败保留编辑会话)。受控
-        模式开关验证 mode/onModeChange 契约与 handle 命令式 API。真机
-        观察:收起后状态栏恢复磨砂、无闪烁、滚动位置保持。
+        MobileWdfView 演示页(构建标记 mwv-v8,看不到说明未整页刷新;组件
+        为包导出 weimo-ui-editor/components/mobile-wdf-view)。查看态卡片
+        由内容整体撑高、无上限。默认非受控:点右上角铅笔进入编辑(卡片
+        本体不可点,对齐 WdfView)→ 点正文打字 → 取消(X/Esc/遮罩,丢弃
+        草稿)或保存(Check,经 fromTiptap 提交;转换失败保留编辑会话)。
+        受控模式开关验证 mode/onModeChange 契约与 handle 命令式 API。
+        真机观察:收起后状态栏恢复磨砂、无闪烁、落位高度无跳变。
       </p>
 
       <div className="mwv-demo__switch">
@@ -91,7 +92,7 @@ function MobileWdfViewDemo() {
         mode={controlled ? mode : undefined}
         onModeChange={controlled ? setMode : undefined}
         ref={viewRef}
-        title="移动卡片式视图 · mwv-v6"
+        title="移动卡片式视图 · mwv-v8"
       />
     </div>
   )
@@ -100,7 +101,7 @@ function MobileWdfViewDemo() {
 export const mobileWdfViewDefinition = {
   id: 'mobile-wdf-view',
   summary:
-    'MobileWdfView:卡片式 WDF 读写视图(CardShell + WdfRender 衬底 + 按会话挂载 RichEditor + iOS Safari 状态栏修复)',
+    'MobileWdfView:卡片式 WDF 读写视图(CardShell + WdfRender 衬底 + 按会话挂载 RichEditor + 内容撑高无上限 + iOS Safari 状态栏修复)',
   status: 'Preview',
   frame: 'plain',
   preview: () => <MobileWdfViewDemo />,
