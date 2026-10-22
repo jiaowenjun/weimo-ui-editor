@@ -4,7 +4,6 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
-  useLayoutEffect,
   useRef,
   useState,
   type ComponentPropsWithoutRef,
@@ -103,14 +102,6 @@ export type MobileWdfViewProps = Omit<
   autoFocusPosition?: RichEditorFocusPosition
   /** 卡片标题(展开态作为 dialog 的可访问名称)。 */
   title?: ReactNode
-  /**
-   * 嵌入外部卡片帧(如 docs 站 ComponentPreviewCard)时使用:折叠态
-   * 隐藏自身卡面与标题栏(标题、编辑入口、内容边距由外部帧承担),
-   * 展开对话框态照常随 morph 滑出完整 chrome——关闭操作必须留在
-   * top layer 内,不可外置(会话期间外部交互全部被 inert)。
-   * 默认 false(自含标题栏与卡面)。
-   */
-  embedded?: boolean
   /** 透传 WdfRender(查看态与常驻衬底)。 */
   renderProps?: Omit<WdfRenderProps, 'content'>
   /**
@@ -166,7 +157,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       defaultMode = 'view',
       defaultValue,
       editorProps,
-      embedded = false,
       mode,
       onChange,
       onConversionError,
@@ -360,22 +350,19 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
         readyTimerRef.current = null
       }
 
+      setEditorReady(true)
       phaseRef.current = 'opening'
-      // 先落定 prepare 布局(过渡 before-change 快照),再同步提交
-      // data-phase='opening',并在同一任务内加过渡类 + 应用对话框矩形——
-      // chrome 过渡与 FLIP 几何过渡在同一次样式重算起跑。原先矩形经
-      // rAF 延后一帧,tiptap 挂载的主线程卡顿会放大裂缝:chrome 先展开、
-      // 卡盒仍钉在折叠位,实机表现为点击后内容下探一帧的跳闪。
+      setPhase('opening')
+
       void shell.getBoundingClientRect()
-      flushSync(() => {
-        setEditorReady(true)
-        setPhase('opening')
-      })
       const duration = getMorphDuration()
-      if (duration > 0) {
-        shell.classList.add(ANIMATING_CLASS)
-      }
-      applyRect(shell, getDialogRect())
+      window.requestAnimationFrame(() => {
+        if (phaseRef.current !== 'opening') return
+        if (duration > 0) {
+          shell.classList.add(ANIMATING_CLASS)
+        }
+        applyRect(shell, getDialogRect())
+      })
       timerRef.current = window.setTimeout(() => {
         if (phaseRef.current !== 'opening' || !shell.isConnected) return
 
@@ -487,22 +474,15 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       contentProbe.style.width = `${slot.clientWidth - borderWidth}px`
       contentProbe.style.maxHeight = 'none'
       contentProbe.style.overflow = 'visible'
-      // 嵌入态 view 衬底边距为 0(边距由外部帧承担),探针同步归零,
-      // 避免把会话态过渡中的边距计入目标高度。
-      if (embedded) {
-        contentProbe.style.padding = '0'
-      }
       slot.appendChild(contentProbe)
       const contentHeight = contentProbe.scrollHeight
       contentProbe.remove()
       if (!(contentHeight > 0)) return null
 
-      // 嵌入态折叠卡无标题栏(高度 0),目标高度仅内容 + 边框。
-      const foldedHeaderHeight = embedded ? 0 : header.offsetHeight
-      const nextHeight = foldedHeaderHeight + contentHeight + borderWidth
+      const nextHeight = header.offsetHeight + contentHeight + borderWidth
 
       return nextHeight > 0 ? nextHeight : null
-    }, [embedded])
+    }, [])
 
     const runCloseAnimation = useCallback(() => {
       const shell = shellRef.current
@@ -627,24 +607,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       closeSourceRef.current = 'external'
       settleToView()
     }, [activeMode, openCard, settleToView])
-
-    /*
-     * WebKit 衬底漏排兜底:首次提升(popover 属性新增 + showPopover +
-     * 同帧内联几何)后,衬底内容子树可能被跳过重排——实测 rect 全零而
-     * 计算样式正常,读取几何无法治愈;display 翻转夹一次强刷可强制
-     * 重建子树。在 prepare 提交后、首帧绘制前修复:衬底在等待编辑器
-     * 就绪的整个准备期保持可见,后续过渡也从干净布局起步。
-     */
-    useLayoutEffect(() => {
-      if (phase !== 'prepare') return
-      const render = shellRef.current?.querySelector<HTMLElement>(
-        '.mobile-wdf-view__render',
-      )
-      if (!render) return
-      render.style.display = 'none'
-      void render.offsetHeight
-      render.style.display = ''
-    }, [phase])
 
     const requestMode = useCallback((next: MobileWdfViewMode) => {
       onModeChangeRef.current?.(next)
@@ -862,16 +824,12 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
           aria-labelledby={editing ? titleId : undefined}
           aria-modal={editing ? true : undefined}
           className="mobile-wdf-view__card"
-          data-embedded={embedded ? 'true' : undefined}
           data-phase={phase}
           ref={shellRef}
           role={editing ? 'dialog' : undefined}
           tabIndex={-1}
         >
-          <header
-            className="mobile-wdf-view__header"
-            inert={embedded && phase !== 'opening' && phase !== 'edit'}
-          >
+          <header className="mobile-wdf-view__header">
             <span className="mobile-wdf-view__title" id={titleId}>
               {title}
             </span>
