@@ -76,7 +76,7 @@ export const STEPWISE_STEPS = [
   {
     level: 2,
     key: 'flip',
-    title: 'FLIP 过渡动画(展开/收起 320ms,移动端 600ms;收起先动画回槽位再退 top layer)',
+    title: 'FLIP 过渡动画(展开/收起 320ms,移动端 500ms;收起先动画回槽位再退 top layer)',
   },
   {
     level: 3,
@@ -127,7 +127,7 @@ const STEP_LEVEL = Object.fromEntries(
 ) as Record<StepwiseStepKey, number>
 
 const MORPH_DURATION = 320
-const MOBILE_MORPH_DURATION = 600
+const MOBILE_MORPH_DURATION = 500
 const KEYBOARD_CLOSE_WAIT = 180
 const MORPH_PAD = 24
 const MOBILE_VIEWPORT_QUERY = '(max-width: 640px)'

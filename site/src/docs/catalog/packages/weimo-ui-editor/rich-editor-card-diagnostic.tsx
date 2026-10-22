@@ -81,10 +81,10 @@ const cardSample: RichEditorContent = {
  * - 上漂修复:手势聚焦 preventScroll + 收起时恢复展开前 scrollY
  */
 
-// 正常动画时长;移动端使用 600ms 与软键盘弹出同步,DEBUG 开关开启时改为 3s。
+// 正常动画时长;移动端使用 500ms 与软键盘弹出同步,DEBUG 开关开启时改为 3s。
 // JS 定时器与 CSS transition 必须同步。
 const MORPH_DURATION = 320
-const MOBILE_MORPH_DURATION = 600
+const MOBILE_MORPH_DURATION = 500
 const DEBUG_MORPH_DURATION = 3000
 const KEYBOARD_CLOSE_WAIT = 180
 

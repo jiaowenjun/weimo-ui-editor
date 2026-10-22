@@ -199,10 +199,10 @@
   min-width: 0;
 }
 
-/* 移动端 600ms 与卡片 MOBILE_MORPH_DURATION 同步;断点与 tsx 保持一致。 */
+/* 移动端 500ms 与卡片 MOBILE_MORPH_DURATION 同步;断点与 tsx 保持一致。 */
 @media (max-width: 640px) {
   .ric-iso-demo {
-    --ric-iso-flip-duration: 600ms;
+    --ric-iso-flip-duration: 500ms;
   }
 }
 
