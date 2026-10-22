@@ -454,11 +454,13 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     }, [lockBody, startOpening])
 
     /**
-     * 测量「收起后的 view 态卡片高度」:衬底就是新内容的 WdfRender,其
-     * scrollHeight 即 view 态内容高度(同一元素/内容/样式,static 与
-     * absolute 布局的内容高度等价),经 viewMaxHeight 钳制后加 header 与
-     * 边框。viewMaxHeight 可能是任意 CSS 长度,用隐藏探针解析为像素。
-     * 测量失败返回 null,调用方回退钉住矩形(旧行为)。
+     * 测量「收起后的 view 态卡片高度」:复制衬底 DOM 到脱离会话布局的
+     * 隐藏探针(定宽、高自动)读内容高度。不能直接读 render.scrollHeight
+     * ——会话态衬底是 absolute inset:0,scrollHeight 的下限是盒高
+     * (对话框 body 高),短内容会被抬高,经 viewMaxHeight 钳制后恒等于
+     * 上限,导致删短保存/取消路径的动画目标错到 header+viewMax。
+     * 内容高度经 viewMaxHeight(任意 CSS 长度,同样经探针解析为像素)
+     * 钳制后加 header 与边框。测量失败返回 null,回退钉住矩形。
      */
     const measureNextViewHeight = useCallback((): number | null => {
       const shell = shellRef.current
@@ -467,22 +469,36 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       const header = shell?.querySelector<HTMLElement>('.mobile-wdf-view__header')
       if (!shell || !slot || !render || !header) return null
 
-      const probe = document.createElement('div')
-      probe.style.position = 'absolute'
-      probe.style.visibility = 'hidden'
-      probe.style.pointerEvents = 'none'
-      probe.style.height = 'var(--mobile-wdf-view-max-height, 300px)'
-      slot.appendChild(probe)
-      const maxPx = probe.offsetHeight
-      probe.remove()
-      if (!(maxPx > 0)) return null
-
-      const contentHeight = Math.min(render.scrollHeight, maxPx)
       const shellStyle = getComputedStyle(shell)
       const borderWidth =
         parseFloat(shellStyle.borderTopWidth || '0') +
         parseFloat(shellStyle.borderBottomWidth || '0')
-      const nextHeight = header.offsetHeight + contentHeight + borderWidth
+
+      // viewMaxHeight → px
+      const maxProbe = document.createElement('div')
+      maxProbe.style.cssText =
+        'position:absolute;visibility:hidden;pointer-events:none;height:var(--mobile-wdf-view-max-height, 300px)'
+      slot.appendChild(maxProbe)
+      const maxPx = maxProbe.offsetHeight
+      maxProbe.remove()
+      if (!(maxPx > 0)) return null
+
+      // 真实内容高度:克隆衬底 DOM,脱离 inset 布局,与 view 态同宽。
+      const contentProbe = render.cloneNode(true) as HTMLElement
+      contentProbe.style.position = 'absolute'
+      contentProbe.style.visibility = 'hidden'
+      contentProbe.style.pointerEvents = 'none'
+      contentProbe.style.inset = 'auto'
+      contentProbe.style.width = `${slot.clientWidth - borderWidth}px`
+      contentProbe.style.maxHeight = 'none'
+      contentProbe.style.overflow = 'visible'
+      slot.appendChild(contentProbe)
+      const contentHeight = contentProbe.scrollHeight
+      contentProbe.remove()
+      if (!(contentHeight > 0)) return null
+
+      const nextHeight =
+        header.offsetHeight + Math.min(contentHeight, maxPx) + borderWidth
 
       return nextHeight > 0 ? nextHeight : null
     }, [])
