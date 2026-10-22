@@ -26,13 +26,6 @@ export const editorCatalog = {
       packageExport: './components/rich-editor',
     },
     {
-      id: 'rich-editor-card',
-      name: '卡片式编辑',
-      exportName: 'RichEditorCard',
-      registryName: 'rich-editor-card',
-      packageExport: './components/rich-editor-card',
-    },
-    {
       id: 'mobile-wdf-view',
       name: '移动卡片式视图',
       exportName: 'WdfView',

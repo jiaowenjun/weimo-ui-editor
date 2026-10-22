@@ -145,8 +145,8 @@ Safari 以页面可见内容采样状态栏区域着色;top layer 打开期间�
 ## 6. 遗留事项
 
 - [x] fix-v2/fix-v3 真机复验(2026-10-21):闪烁彻底消除、白带保持修复
-- [ ] 清理诊断设施(待定):`fix-v3` 标记(`rich-editor-card.tsx` demo 与对应 CSS)、三个诊断页(隔离 iso-v6 / 减法 sub-v1 / 渐进 step-v4)及其 manifest/definitions 注册;建议至少保留渐进页作回归页
-- [ ] 回归验证入口:渐进页(`.../components/rich-editor-card-stepwise`)11 步走一遍,或直接开合「卡片式编辑」页数次观察状态栏
+- [x] 清理诊断设施:三个诊断页(隔离/减法/渐进)已随 b232a04 删除;`rich-editor-card` 演示页(含 `fix-v3` 标记)已删除,其能力由正式组件 MobileWdfView(内含全部三项修复)承接
+- [x] 回归验证入口:开合「移动卡片式视图」页(`.../components/mobile-wdf-view`,基于 MobileWdfView 组件)数次观察状态栏即可;该组件即修复的活体回归载体
 
 ## 7. 相关提交
 
