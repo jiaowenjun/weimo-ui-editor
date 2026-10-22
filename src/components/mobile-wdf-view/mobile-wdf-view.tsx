@@ -10,7 +10,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
-import { Bold, Heading1, List, Quote, X } from 'lucide-react'
+import { Bold, Check, Heading1, List, Pencil, Quote, X } from 'lucide-react'
 
 import { cn } from 'weimo-ui-core/lib/utils'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
@@ -457,23 +457,30 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       }, duration + MORPH_PAD)
     }, [settleToView])
 
-    const closeCard = useCallback(
-      (source: CloseSource) => {
+    /**
+     * 收起编辑器。intent 语义对齐 WdfView 演示:
+     * - save(Check/Esc 外的提交路径):草稿经 fromTiptap 转换成功才提交;
+     *   用户请求下转换失败保留会话,外部强制收起失败不提交但完成退出。
+     * - cancel(X/Esc/遮罩):丢弃草稿直接收起,WdfRender 衬底本就显示
+     *   已提交文档,无需任何转换。
+     */
+    const closeEditor = useCallback(
+      (intent: 'save' | 'cancel', source: CloseSource) => {
         if (phaseRef.current !== 'edit') return
 
-        // 用户请求:转换失败保留会话(不收起、草稿不动);外部强制收起
-        // 对齐 WdfView 语义:失败不提交但完成退出。
-        const committed = commitDraft('change')
-        if (!committed && source === 'user') {
-          setConversionError(true)
-          if (errorTimerRef.current !== null) {
-            window.clearTimeout(errorTimerRef.current)
+        if (intent === 'save') {
+          const committed = commitDraft('change')
+          if (!committed && source === 'user') {
+            setConversionError(true)
+            if (errorTimerRef.current !== null) {
+              window.clearTimeout(errorTimerRef.current)
+            }
+            errorTimerRef.current = window.setTimeout(
+              () => setConversionError(false),
+              CONVERSION_ERROR_RESET,
+            )
+            return
           }
-          errorTimerRef.current = window.setTimeout(
-            () => setConversionError(false),
-            CONVERSION_ERROR_RESET,
-          )
-          return
         }
 
         closeSourceRef.current = source
@@ -499,8 +506,8 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       },
       [commitDraft, runCloseAnimation],
     )
-    const closeCardRef = useRef(closeCard)
-    closeCardRef.current = closeCard
+    const closeEditorRef = useRef(closeEditor)
+    closeEditorRef.current = closeEditor
 
     // mode 协调:edit 请求展开;view 请求收起(prepare/opening 直接取消,
     // edit 走收起流程,external 语义)。
@@ -516,7 +523,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       if (currentPhase === 'view' || currentPhase === 'closing') return
 
       if (currentPhase === 'edit') {
-        closeCardRef.current('external')
+        closeEditorRef.current('save', 'external')
         return
       }
 
@@ -583,7 +590,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
         if (event.key === 'Escape') {
           event.preventDefault()
           event.stopPropagation()
-          closeCardRef.current('user')
+          closeEditorRef.current('cancel', 'user')
           return
         }
 
@@ -693,7 +700,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       ref,
       () => ({
         open: () => requestMode('edit'),
-        close: () => closeCardRef.current('user'),
+        close: () => closeEditorRef.current('save', 'user'),
         focus: (position) => {
           if (phaseRef.current !== 'view') {
             editorRef.current?.focus(position)
@@ -744,18 +751,17 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
           data-visible={
             phase === 'opening' || phase === 'edit' ? 'true' : undefined
           }
-          onClick={() => closeCardRef.current('user')}
+          onClick={() => closeEditorRef.current('cancel', 'user')}
           ref={backdropRef}
         />
 
+        {/* 卡片本体不可点击:进入编辑的唯一入口是右上角铅笔按钮(对齐
+            WdfView 演示的交互模型)。 */}
         <div
           aria-labelledby={editing ? titleId : undefined}
           aria-modal={editing ? true : undefined}
           className="mobile-wdf-view__card"
           data-phase={phase}
-          onClick={
-            phase === 'view' ? () => requestMode('edit') : undefined
-          }
           ref={shellRef}
           role={editing ? 'dialog' : undefined}
           tabIndex={-1}
@@ -764,14 +770,38 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
             <span className="mobile-wdf-view__title" id={titleId}>
               {title}
             </span>
-            <GhostIconButton
-              aria-label="收起"
-              disabled={phase !== 'edit'}
-              onClick={() => closeCardRef.current('user')}
-              size="sm"
-            >
-              <X />
-            </GhostIconButton>
+            {phase === 'view' ? (
+              <GhostIconButton
+                aria-label="切换到编辑模式"
+                onClick={() => requestMode('edit')}
+                size="sm"
+              >
+                <Pencil />
+              </GhostIconButton>
+            ) : (
+              <div
+                aria-label="编辑操作"
+                className="mobile-wdf-view__actions"
+                role="group"
+              >
+                <GhostIconButton
+                  aria-label="取消编辑"
+                  disabled={phase !== 'edit'}
+                  onClick={() => closeEditorRef.current('cancel', 'user')}
+                  size="sm"
+                >
+                  <X />
+                </GhostIconButton>
+                <GhostIconButton
+                  aria-label="保存编辑"
+                  disabled={phase !== 'edit'}
+                  onClick={() => closeEditorRef.current('save', 'user')}
+                  size="sm"
+                >
+                  <Check />
+                </GhostIconButton>
+              </div>
+            )}
           </header>
 
           {conversionError && (

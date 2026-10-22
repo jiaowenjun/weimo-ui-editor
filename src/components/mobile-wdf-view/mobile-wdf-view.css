@@ -67,6 +67,12 @@
   white-space: nowrap;
 }
 
+.mobile-wdf-view__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* 转换失败提示:保留编辑会话时显示在头部下方。 */
 .mobile-wdf-view__error {
   box-sizing: border-box;

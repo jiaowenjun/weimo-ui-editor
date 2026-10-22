@@ -36,12 +36,13 @@ function MobileWdfViewDemo() {
   return (
     <div className="mwv-demo">
       <p className="mwv-demo__note">
-        MobileWdfView 演示页(构建标记 mwv-v5,看不到说明未整页刷新;组件
+        MobileWdfView 演示页(构建标记 mwv-v6,看不到说明未整页刷新;组件
         为包导出 weimo-ui-editor/components/mobile-wdf-view)。默认非受控:
-        点卡片展开(编辑器 onReady 后启动动画,无空白首帧)→ 点正文打字 →
-        X/Esc/遮罩收起(草稿经 fromTiptap 提交;转换失败保留编辑会话)。
-        受控模式开关验证 mode/onModeChange 契约与 handle 命令式 API。
-        真机观察:收起后状态栏恢复磨砂、无闪烁、滚动位置保持。
+        点右上角铅笔进入编辑(卡片本体不可点,对齐 WdfView;编辑器 onReady
+        后启动展开动画)→ 点正文打字 → 取消(X/Esc/遮罩,丢弃草稿)或
+        保存(Check,经 fromTiptap 提交;转换失败保留编辑会话)。受控
+        模式开关验证 mode/onModeChange 契约与 handle 命令式 API。真机
+        观察:收起后状态栏恢复磨砂、无闪烁、滚动位置保持。
       </p>
 
       <div className="mwv-demo__switch">
@@ -90,7 +91,7 @@ function MobileWdfViewDemo() {
         mode={controlled ? mode : undefined}
         onModeChange={controlled ? setMode : undefined}
         ref={viewRef}
-        title="移动卡片式视图 · mwv-v5"
+        title="移动卡片式视图 · mwv-v6"
       />
     </div>
   )
