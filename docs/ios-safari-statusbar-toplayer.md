@@ -2,7 +2,7 @@
 
 - **日期**: 2026-10-21
 - **影响范围**: site 演示页「卡片式编辑」(`rich-editor-card`)与「卡片式编辑(无阴影/遮罩)」;仅 iOS Safari 真机
-- **最终状态**: 白带已真机修复;G5 隐形窗口已压至约 1 帧(fix-v2),待真机复验闪烁消除且白带不回归
+- **最终状态**: **已闭环**(2026-10-21 真机复验通过)——白带修复保持,落位闪烁经克隆替身(fix-v3)彻底消除
 
 ## TL;DR
 
@@ -12,7 +12,7 @@
 
 1. popover 属性常驻:`hideFromTopLayer` 不再 `removeAttribute`,只切换 `:popover-open`
 2. 滚动恢复:手势聚焦加 `preventScroll`,展开保存 `scrollY`、收起恢复(兼修卡片上漂)
-3. 收起清理末尾短暂 `visibility: hidden`(双 rAF 恢复 + `setTimeout(64)` 兜底,隐形约 1 帧)
+3. 收起清理末尾短暂 `visibility: hidden`(约 1 帧,双 rAF 恢复 + `setTimeout(64)` 兜底);隐形期间用 shell 的一次性深克隆**替身**盖住同一几何,画面像素连续
 
 ---
 
@@ -52,7 +52,8 @@ iOS Safari 真机上,卡片式编辑页的卡片展开为对话框、再收起�
 | 4 | 修复路径:G4(`display:none` 100ms)可恢复但有重排;G5(`visibility:hidden` 100ms)可恢复且保留布局盒;G6(滚动扰动 ±4px)无效 | 选 **G5** |
 | 5 | 渐进式构建 11 步(基线→真实 RichEditor→FLIP→槽位钉高→inert→可见遮罩→收起滚动归零→flushSync→vv 跟随→modal→完整 chrome)逐级真机验证 | **全部通过** → 修复与完整功能兼容 |
 | 6 | 三项修复移植回真实卡片 | **白带真机修复**;但 100ms 隐形期被感知为落位闪烁 |
-| 7 | G5 窗口压至约 1 帧(双 rAF + 64ms 兜底,实测隐形 ~20ms) | fix-v2,待真机复验 |
+| 7 | G5 窗口压至约 1 帧(双 rAF + 64ms 兜底,实测隐形 ~20ms) | fix-v2:白带保持修复(1 帧不可见绘制足以触发重采样),但 1 帧闪烁仍可感知——已是不闪路径的下限 |
+| 8 | fix-v3 克隆替身:隐形窗口内用 shell 深克隆盖住同一几何,像素连续 | **闪烁彻底消除、白带保持修复,问题闭环** |
 
 ### 2.3 排查中的坑(工程教训)
 
@@ -90,12 +91,23 @@ Safari 以页面可见内容采样状态栏区域着色;top layer 打开期间�
 
 1. **popover 属性常驻**:`hideFromTopLayer` 只调 `hidePopover()`,属性设置后常驻,只切换 `:popover-open`。关闭态下 UA 对 `[popover]:not(:popover-open)` 的 `display:none` 会被 `.rec-card { display:flex }` 覆盖,卡片照常显示(author origin 优先于 UA origin,逐属性级联)。
 2. **滚动恢复**:`focusEditorDomInGesture` 聚焦加 `{ preventScroll: true }`(对话框是 fixed 定位,无需滚进视口);展开时保存 `window.scrollY`,收起清理时若变化则 `scrollTo` 恢复。
-3. **G5 可见性窗口**:收起清理末尾(顺序固定:`hidePopover` → 清 inline 样式 → 解锁/去 inert → 滚动恢复 → 本项):
+3. **G5 可见性窗口 + 克隆替身**:收起清理末尾(顺序固定:`hidePopover` → 清 inline 样式 → 解锁/去 inert → 滚动恢复 → 本项):
 
    ```ts
+   // 隐形窗口内用一次性克隆替身盖住同一几何,画面像素连续,消除闪烁
+   const ghost = shell.cloneNode(true) as HTMLElement
+   ghost.setAttribute('aria-hidden', 'true')
+   ghost.removeAttribute('id')
+   ghost.querySelectorAll('[id]').forEach((node) => {
+     node.removeAttribute('id')
+   })
+   ghost.style.position = 'absolute'
+   ghost.style.inset = '0'
+   slot.appendChild(ghost)
    shell.style.visibility = 'hidden'
    const restoreVisibility = () => {
      if (shellRef.current === shell) shell.style.visibility = ''
+     ghost.remove()
    }
    window.requestAnimationFrame(() => {
      window.requestAnimationFrame(restoreVisibility)
@@ -103,23 +115,37 @@ Safari 以页面可见内容采样状态栏区域着色;top layer 打开期间�
    window.setTimeout(restoreVisibility, 64) // 兜底 rAF 挂起的环境
    ```
 
-   隐形窗口约 1 个绘制帧(~16-20ms),布局盒保留(无重排);双 rAF 保证至少一帧以不可见状态绘制,`setTimeout(64)` 兜底恢复(rAF 可能被挂起)。
+   要点:克隆时机在 inline 样式清空之后(替身回普通流,与 shell 同位);slot 为
+   `position: relative`(absolute inset:0 精确覆盖);替身去 id、aria-hidden,
+   1~2 帧后移除;shell 恢复与替身移除在同一回调内,恢复后 shell(z-index 更高)
+   盖住替身直至移除,无视觉冲突。
 
-### 4.1 已知取舍
+### 4.1 G5 演进与回退路径
 
-- **白带 vs 闪烁此消彼长**:G5 窗口越长越保险(100ms 是实验验证值),但隐形期越可感知。当前取 ~1 帧;若真机复验白带回归,依次放宽 50ms → 100ms。
-- 修复仅针对 iOS Safari 的 top layer 行为,对其他浏览器无副作用(visibility 一帧不可见,`setTimeout` 恢复幂等)。
+**演进**(闪烁与白带此消彼长,最终由替身解耦):
+
+1. **100ms**(G5 实验验证值):隐形期被感知为「落位后闪一下」
+2. **约 1 帧**(fix-v2,双 rAF 恢复):真机证实 1 帧不可见绘制足以触发重采样,但 1 帧全卡消失依旧可感知——已是不闪路径的下限
+3. **克隆替身**(fix-v3):隐形期间替身盖住同一几何,像素连续,**闪烁彻底消除**(真机复验通过)
+
+**回退路径**(若未来 Safari 版本白带回归,如重采样改为以像素变化为触发):
+依次尝试去掉替身(fix-v2 形态,接受 1 帧闪烁)→ 纯背景替身(文字仍闪 1 帧)
+→ 放宽窗口 50/100ms。
+
+修复仅针对 iOS Safari 的 top layer 行为,对其他浏览器无副作用(替身存在
+1~2 帧、无 id、aria-hidden,恢复/移除幂等)。
 
 ## 5. 修复验证
 
 - 渐进页 11 步(完整卡片功能 + 三项修复)真机逐级验证全部通过
 - 三项修复移植回真实卡片后,真机复验:**白带修复**(100ms 版)
-- 短窗口版(fix-v2,~1 帧):IAB 实测隐藏 ~20ms 后恢复、样式/属性常驻/清理全部正确;真机复验进行中
+- fix-v2(约 1 帧):真机证实 1 帧不可见绘制足以触发重采样(白带保持修复),但闪烁仍可感知
+- fix-v3(克隆替身):**真机复验通过——闪烁彻底消除、白带保持修复,问题闭环**
 
 ## 6. 遗留事项
 
-- [ ] fix-v2 真机复验:闪烁是否不可感知、白带是否保持修复;失败则按 §4.1 放宽窗口
-- [ ] 确认稳定后清理诊断设施:`fix-v2` 标记(`rich-editor-card.tsx` demo 与对应 CSS)、三个诊断页(隔离 iso-v6 / 减法 sub-v1 / 渐进 step-v3)及其 manifest/definitions 注册(建议至少保留渐进页作回归页)
+- [x] fix-v2/fix-v3 真机复验(2026-10-21):闪烁彻底消除、白带保持修复
+- [ ] 清理诊断设施(待定):`fix-v3` 标记(`rich-editor-card.tsx` demo 与对应 CSS)、三个诊断页(隔离 iso-v6 / 减法 sub-v1 / 渐进 step-v4)及其 manifest/definitions 注册;建议至少保留渐进页作回归页
 - [ ] 回归验证入口:渐进页(`.../components/rich-editor-card-stepwise`)11 步走一遍,或直接开合「卡片式编辑」页数次观察状态栏
 
 ## 7. 相关提交
@@ -136,3 +162,4 @@ Safari 以页面可见内容采样状态栏区域着色;top layer 打开期间�
 | `14f763c` | G 系列:根因统一 + 修复路径判定 |
 | `04371db` | 三项修复移植回真实卡片,G5 压至约 1 帧 |
 | `694bb26` | 渐进页 G5 窗口同步 |
+| `6651e38` | G5 克隆替身,彻底消除落位闪烁(最终修复) |
