@@ -315,8 +315,14 @@ function MobileWdfViewCard() {
       inertedRef.current = inertSiblingsOf(shell, backdropRef.current)
     }
 
-    showInTopLayer(backdropRef.current)
+    const topLayerSupported = showInTopLayer(backdropRef.current)
     showInTopLayer(shell)
+    if (!topLayerSupported) {
+      // 降级:无 popover API 的浏览器继续走 fixed+zIndex,可能被祖先
+      // overflow/transform 裁剪(演示站文档列场景);现代浏览器均支持,
+      // 此路径仅为兜底,产品化需评估降级布局。
+      console.warn('[mobile-wdf-view] Popover API 不可用,降级为 fixed 覆盖层')
+    }
 
     shell.classList.remove('mwv-card--animating')
     shell.style.position = 'fixed'
