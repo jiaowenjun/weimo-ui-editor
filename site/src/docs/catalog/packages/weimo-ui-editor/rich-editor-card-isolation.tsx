@@ -34,7 +34,7 @@ type Rect = {
 const MOBILE_VIEWPORT_QUERY = '(max-width: 640px)'
 const DIALOG_MARGIN = 12
 const FLIP_DURATION = 320
-const MOBILE_FLIP_DURATION = 1000
+const MOBILE_FLIP_DURATION = 600
 const FLIP_DURATION_PAD = 24
 
 function prefersReducedMotion() {
@@ -1038,7 +1038,7 @@ function RichEditorCardIsolationDemo() {
           animateGeometry
           lockBody
           label="F2 + FLIP 过渡"
-          note="几何带 320ms/移动端 1s 过渡,收起先动画回槽位再退 top layer"
+          note="几何带 320ms/移动端 600ms 过渡,收起先动画回槽位再退 top layer"
         />
         <ClosePathVariantRow
           lockBody

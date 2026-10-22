@@ -78,7 +78,7 @@
 
 @media (max-width: 640px) {
   .step-card-slot {
-    --step-morph-duration: 1000ms;
+    --step-morph-duration: 600ms;
   }
 }
 

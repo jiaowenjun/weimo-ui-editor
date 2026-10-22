@@ -85,10 +85,10 @@ const cardSample: RichEditorContent = {
  * 通用组件化仍需处理不支持 popover 的浏览器、多个实例和移动端键盘。
  */
 
-// 正常动画时长;移动端使用 1s 与软键盘弹出同步,DEBUG 开关开启时改为 3s。
+// 正常动画时长;移动端使用 600ms 与软键盘弹出同步,DEBUG 开关开启时改为 3s。
 // JS 定时器与 CSS transition 必须同步。
 const MORPH_DURATION = 320
-const MOBILE_MORPH_DURATION = 1000
+const MOBILE_MORPH_DURATION = 600
 const DEBUG_MORPH_DURATION = 3000
 const KEYBOARD_CLOSE_WAIT = 180
 
