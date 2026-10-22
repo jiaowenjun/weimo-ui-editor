@@ -15,6 +15,11 @@
   line-height: 1.6;
 }
 
+.mwv-demo__switch {
+  display: flex;
+  justify-content: center;
+}
+
 .mwv-slot {
   --mwv-morph-duration: 320ms;
 

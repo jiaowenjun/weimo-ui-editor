@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
+import { LabeledSwitch } from 'weimo-ui-core/components/labeled-switch'
 import { RichEditor, type RichEditorContent, type RichEditorHandle } from 'weimo-ui-editor/components/rich-editor'
 import { WdfRender } from 'weimo-ui-editor/components/wdf-render'
 import { fromTiptap, toTiptap, type WdfDocument } from 'weimo-wdf'
@@ -183,7 +184,7 @@ function inertSiblingsOf(anchor: HTMLElement, skip: HTMLElement | null) {
   return inerted
 }
 
-function MobileWdfViewCard() {
+function MobileWdfViewCard({ autoFocus = false }: { autoFocus?: boolean }) {
   const [phase, setPhase] = useState<CardPhase>('view')
   const [editorReady, setEditorReady] = useState(false)
   const [conversionError, setConversionError] = useState(false)
@@ -204,8 +205,10 @@ function MobileWdfViewCard() {
   const bodyPaddingRightRef = useRef('')
   const inertedRef = useRef<HTMLElement[]>([])
   const lockedRef = useRef(false)
+  const autoFocusRef = useRef(autoFocus)
 
   phaseRef.current = phase
+  autoFocusRef.current = autoFocus
 
   // 会话内容快照:进入编辑时从当前 WDF 转换,编辑期间不随外部变化;
   // 收起回 view 时清空(卸载编辑器)。
@@ -287,6 +290,25 @@ function MobileWdfViewCard() {
       shell.classList.remove('mwv-card--animating')
       phaseRef.current = 'edit'
       setPhase('edit')
+
+      /*
+       * 展开后自动聚焦(实验开关):会话挂载使编辑器就绪晚于点击手势,
+       * 此处程序化聚焦预期在 iOS 只落选区不弹键盘(手势外 focus 不唤起),
+       * Android 可能直接弹——真机观察各平台行为。RichEditor 内部的
+       * iOS/Android 聚焦路径不带 preventScroll,页面若被滚走由收起时的
+       * 滚动恢复兜底。编辑器 handle 就绪时序偶发偏晚,带守卫重试两次。
+       */
+      if (autoFocusRef.current) {
+        const tryFocusEditor = (attempts: number) => {
+          const content = shell.querySelector<HTMLElement>('.rich-editor__content')
+          if (content?.contains(document.activeElement)) return
+          if (attempts <= 0) return
+
+          editorRef.current?.focus('end')
+          window.setTimeout(() => tryFocusEditor(attempts - 1), 50)
+        }
+        tryFocusEditor(3)
+      }
     }, duration + MORPH_PAD)
   }, [])
 
@@ -579,7 +601,7 @@ function MobileWdfViewCard() {
         tabIndex={-1}
       >
         <header className="mwv-card__header">
-          <span className="mwv-card__title">移动卡片式视图 · mwv-v2</span>
+          <span className="mwv-card__title">移动卡片式视图 · mwv-v3</span>
           <GhostIconButton
             aria-label="收起"
             disabled={phase !== 'edit'}
@@ -622,16 +644,29 @@ function MobileWdfViewCard() {
 }
 
 function MobileWdfViewDemo() {
+  const [autoFocus, setAutoFocus] = useState(true)
+
   return (
     <div className="mwv-demo">
       <p className="mwv-demo__note">
-        MobileWdfView 完整版演示页(构建标记 mwv-v2,看不到说明未整页刷新)。
-        验证点:点卡片展开(编辑器 onReady 后才启动动画,无空白首帧)→ 点正文
-        打字(键盘原生唤起;弹出时对话框会避让收进可见视口)→ X 或 Esc 收起
-        (草稿经 fromTiptap 提交回 WdfRender;转换失败会保留编辑会话并提示)。
-        真机观察:收起后状态栏恢复磨砂、无闪烁无跳动、滚动位置保持。
+        MobileWdfView 演示页(构建标记 mwv-v3,看不到说明未整页刷新)。
+        验证点:点卡片展开(编辑器 onReady 后才启动动画,无空白首帧)→
+        点正文打字 → X 或 Esc 收起(草稿经 fromTiptap 提交回 WdfRender;
+        转换失败会保留编辑会话并提示)。真机观察:收起后状态栏恢复磨砂、
+        无闪烁无跳动、滚动位置保持。
       </p>
-      <MobileWdfViewCard />
+
+      <div className="mwv-demo__switch">
+        <LabeledSwitch
+          ariaLabel="展开后自动聚焦"
+          checked={autoFocus}
+          labelOff="展开后不聚焦(点正文唤起键盘)"
+          labelOn="展开后自动聚焦(观察各平台软键盘行为)"
+          onCheckedChange={setAutoFocus}
+        />
+      </div>
+
+      <MobileWdfViewCard autoFocus={autoFocus} />
     </div>
   )
 }
