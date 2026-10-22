@@ -10,6 +10,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
+import { flushSync } from 'react-dom'
 import { Bold, Check, Heading1, List, Pencil, Quote, X } from 'lucide-react'
 
 import { cn } from 'weimo-ui-core/lib/utils'
@@ -258,7 +259,24 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       const slot = slotRef.current
       if (!shell || !slot) return
 
-      // ---- fix-v3 收起清理(顺序与真机验证过的实现一致) ----
+      /*
+       * 先同步切回 view 布局,再退 top layer(fix-v3 时序修复):内容撑高
+       * 模型下,closing 态的 render 仍是 absolute(不贡献高度),若清几何/
+       * 释放钉高先于 view 重渲染被绘制,卡片会塌到 header 高度再弹回
+       * (落位闪烁)。flushSync 保证本 tick 内完成:render 转 static、编辑
+       * 层卸载、slot 回到内容高度——塌陷窗口不存在,且替身克隆的就是
+       * view 态 DOM,与真实壳渲染一致。
+       */
+      if (phaseRef.current !== 'view') {
+        phaseRef.current = 'view'
+        flushSync(() => {
+          setPhase('view')
+          setEditorReady(false)
+          setSessionContent(null)
+        })
+      }
+
+      // ---- fix-v3 收起清理(hidePopover 之后需经历一次不可见绘制) ----
       hideFromTopLayer(shell)
       hideFromTopLayer(backdropRef.current)
       clearShellGeometry(shell, ANIMATING_CLASS)
@@ -279,12 +297,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       })
       window.setTimeout(restoreHandoff, 64)
 
-      if (phaseRef.current !== 'view') {
-        phaseRef.current = 'view'
-        setPhase('view')
-        setEditorReady(false)
-        setSessionContent(null)
-      }
       if (closeSourceRef.current === 'user') {
         onModeChangeRef.current?.('view')
         if (!isModeControlledRef.current) {
