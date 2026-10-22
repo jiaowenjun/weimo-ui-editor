@@ -1,8 +1,13 @@
 import './mobile-wdf-view.css'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { LabeledSwitch } from 'weimo-ui-core/components/labeled-switch'
-import { MobileWdfView } from 'weimo-ui-editor/components/mobile-wdf-view'
+import { TextButton } from 'weimo-ui-core/components/text-button'
+import {
+  MobileWdfView,
+  type MobileWdfViewHandle,
+  type MobileWdfViewMode,
+} from 'weimo-ui-editor/components/mobile-wdf-view'
 import type { WdfDocument } from 'weimo-wdf'
 
 import { wdfRenderSample } from '../../fixtures/wdf-sample'
@@ -16,16 +21,27 @@ import type { ComponentDefinition } from '../../types'
 
 function MobileWdfViewDemo() {
   const [autoFocus, setAutoFocus] = useState(false)
+  const [controlled, setControlled] = useState(false)
+  const [mode, setMode] = useState<MobileWdfViewMode>('view')
+  const [handleInfo, setHandleInfo] = useState<string | null>(null)
+  const viewRef = useRef<MobileWdfViewHandle | null>(null)
+
+  // 切换受控开关时重置外部 mode,避免把非受控会话的中间态带进受控模式
+  // (mode='view' 会触发外部强制收起,组件自行闭环)。
+  const toggleControlled = (checked: boolean) => {
+    setControlled(checked)
+    setMode('view')
+  }
 
   return (
     <div className="mwv-demo">
       <p className="mwv-demo__note">
-        MobileWdfView 演示页(构建标记 mwv-v4,看不到说明未整页刷新;组件
-        已下沉为包导出 weimo-ui-editor/components/mobile-wdf-view)。
-        验证点:点卡片展开(编辑器 onReady 后才启动动画,无空白首帧)→
-        点正文打字 → X 或 Esc 收起(草稿经 fromTiptap 提交回 WdfRender;
-        转换失败保留编辑会话)。真机观察:收起后状态栏恢复磨砂、无闪烁
-        无跳动、滚动位置保持;自动聚焦开关(默认关)观察各平台键盘行为。
+        MobileWdfView 演示页(构建标记 mwv-v5,看不到说明未整页刷新;组件
+        为包导出 weimo-ui-editor/components/mobile-wdf-view)。默认非受控:
+        点卡片展开(编辑器 onReady 后启动动画,无空白首帧)→ 点正文打字 →
+        X/Esc/遮罩收起(草稿经 fromTiptap 提交;转换失败保留编辑会话)。
+        受控模式开关验证 mode/onModeChange 契约与 handle 命令式 API。
+        真机观察:收起后状态栏恢复磨砂、无闪烁、滚动位置保持。
       </p>
 
       <div className="mwv-demo__switch">
@@ -38,10 +54,43 @@ function MobileWdfViewDemo() {
         />
       </div>
 
+      <div className="mwv-demo__switch">
+        <LabeledSwitch
+          ariaLabel="受控模式"
+          checked={controlled}
+          labelOff="非受控(组件自管理 mode)"
+          labelOn={`受控(外部 mode=${mode},onModeChange 回写)`}
+          onCheckedChange={toggleControlled}
+        />
+      </div>
+
+      {controlled && (
+        <div aria-label="受控模式操作" className="mwv-demo__controlled" role="group">
+          <TextButton onClick={() => setMode('edit')}>mode='edit'</TextButton>
+          <TextButton onClick={() => setMode('view')}>mode='view'</TextButton>
+          <TextButton onClick={() => viewRef.current?.open()}>handle.open()</TextButton>
+          <TextButton onClick={() => viewRef.current?.close()}>handle.close()</TextButton>
+          <TextButton
+            onClick={() => {
+              const doc = viewRef.current?.getContent()
+              setHandleInfo(
+                doc ? `${JSON.stringify(doc).slice(0, 100)}…` : '(null)',
+              )
+            }}
+          >
+            handle.getContent()
+          </TextButton>
+          {handleInfo && <p className="mwv-demo__info">{handleInfo}</p>}
+        </div>
+      )}
+
       <MobileWdfView
         autoFocus={autoFocus}
         defaultValue={wdfRenderSample as WdfDocument}
-        title="移动卡片式视图 · mwv-v4"
+        mode={controlled ? mode : undefined}
+        onModeChange={controlled ? setMode : undefined}
+        ref={viewRef}
+        title="移动卡片式视图 · mwv-v5"
       />
     </div>
   )

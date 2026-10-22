@@ -19,3 +19,25 @@
   display: flex;
   justify-content: center;
 }
+
+.mwv-demo__controlled {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-divider);
+  border-radius: var(--radius-sm);
+}
+
+.mwv-demo__info {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--color-text-subtle);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--font-size-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
