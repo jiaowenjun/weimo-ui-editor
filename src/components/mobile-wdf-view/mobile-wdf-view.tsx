@@ -102,8 +102,11 @@ export type MobileWdfViewProps = Omit<
   autoFocusPosition?: RichEditorFocusPosition
   /** 卡片标题(展开态作为 dialog 的可访问名称)。 */
   title?: ReactNode
-  /** 收起态卡片高度,默认 240。 */
-  collapsedHeight?: number | string
+  /**
+   * 查看态内容区最大高度(默认 300):卡片高度由内容撑起,超出此值
+   * 在卡片内部滚动;编辑态为对话框几何,不受此参数影响。
+   */
+  viewMaxHeight?: number | string
   /** 透传 WdfRender(查看态与常驻衬底)。 */
   renderProps?: Omit<WdfRenderProps, 'content'>
   /**
@@ -156,7 +159,6 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       autoFocus = false,
       autoFocusPosition = 'end',
       className,
-      collapsedHeight = 240,
       defaultMode = 'view',
       defaultValue,
       editorProps,
@@ -169,6 +171,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       style,
       title,
       value,
+      viewMaxHeight = 300,
       ...props
     },
     ref,
@@ -732,17 +735,17 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     )
 
     const editing = phase !== 'view'
-    const collapsedStyle = {
+    const rootStyle = {
       ...style,
-      '--mobile-wdf-collapsed-height':
-        typeof collapsedHeight === 'number' ? `${collapsedHeight}px` : collapsedHeight,
+      '--mobile-wdf-view-max-height':
+        typeof viewMaxHeight === 'number' ? `${viewMaxHeight}px` : viewMaxHeight,
     } as CSSProperties
 
     return (
       <div
         className={cn('mobile-wdf-view', className)}
         ref={slotRef}
-        style={collapsedStyle}
+        style={rootStyle}
         {...props}
       >
         <div

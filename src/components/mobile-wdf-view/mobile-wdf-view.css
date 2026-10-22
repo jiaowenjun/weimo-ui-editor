@@ -17,6 +17,8 @@
 /*
  * CardShell:author display 必须保留(popover 属性常驻时,关闭态靠它
  * 覆盖 UA 的 [popover]:not(:popover-open) display:none,卡片照常显示)。
+ * 查看态高度由内容撑起(上限见 __render 的 max-height);会话态几何由
+ * 组件的 inline fixed rect 驱动。
  */
 .mobile-wdf-view__card {
   position: relative;
@@ -24,7 +26,6 @@
   box-sizing: border-box;
   display: flex;
   width: 100%;
-  height: var(--mobile-wdf-collapsed-height, 240px);
   flex-direction: column;
   overflow: hidden;
   border: 1px solid transparent;
@@ -95,12 +96,25 @@
   overflow: hidden;
 }
 
-/* WdfRender 常驻衬底:占满 body 并自身滚动。 */
+/*
+ * WdfRender 衬底双态:
+ * - 会话态(prepare 起,默认规则):绝对填充对话框高度的 body,内滚;
+ * - 查看态:转文档流,内容撑起卡片高度,超过 --mobile-wdf-view-max-height
+ *   (默认 400)在卡片内部滚动。两态切换发生在 promote 前/settle 后,
+ *   均为不可见时刻。
+ */
 .mobile-wdf-view__render {
   position: absolute;
   inset: 0;
   overflow: auto;
   padding: 10px 18px 12px;
+}
+
+.mobile-wdf-view__card[data-phase='view'] .mobile-wdf-view__render {
+  position: static;
+  inset: auto;
+  max-height: var(--mobile-wdf-view-max-height, 300px);
+  overflow-y: auto;
 }
 
 /* 编辑器层:会话期间覆盖衬底;就绪前不可见,由衬底顶住画面。 */
