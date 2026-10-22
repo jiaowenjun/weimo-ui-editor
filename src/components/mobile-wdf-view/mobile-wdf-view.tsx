@@ -453,6 +453,40 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       }, EDITOR_READY_TIMEOUT)
     }, [lockBody, startOpening])
 
+    /**
+     * 测量「收起后的 view 态卡片高度」:衬底就是新内容的 WdfRender,其
+     * scrollHeight 即 view 态内容高度(同一元素/内容/样式,static 与
+     * absolute 布局的内容高度等价),经 viewMaxHeight 钳制后加 header 与
+     * 边框。viewMaxHeight 可能是任意 CSS 长度,用隐藏探针解析为像素。
+     * 测量失败返回 null,调用方回退钉住矩形(旧行为)。
+     */
+    const measureNextViewHeight = useCallback((): number | null => {
+      const shell = shellRef.current
+      const slot = slotRef.current
+      const render = shell?.querySelector<HTMLElement>('.mobile-wdf-view__render')
+      const header = shell?.querySelector<HTMLElement>('.mobile-wdf-view__header')
+      if (!shell || !slot || !render || !header) return null
+
+      const probe = document.createElement('div')
+      probe.style.position = 'absolute'
+      probe.style.visibility = 'hidden'
+      probe.style.pointerEvents = 'none'
+      probe.style.height = 'var(--mobile-wdf-view-max-height, 300px)'
+      slot.appendChild(probe)
+      const maxPx = probe.offsetHeight
+      probe.remove()
+      if (!(maxPx > 0)) return null
+
+      const contentHeight = Math.min(render.scrollHeight, maxPx)
+      const shellStyle = getComputedStyle(shell)
+      const borderWidth =
+        parseFloat(shellStyle.borderTopWidth || '0') +
+        parseFloat(shellStyle.borderBottomWidth || '0')
+      const nextHeight = header.offsetHeight + contentHeight + borderWidth
+
+      return nextHeight > 0 ? nextHeight : null
+    }, [])
+
     const runCloseAnimation = useCallback(() => {
       const shell = shellRef.current
       const slot = slotRef.current
@@ -461,16 +495,34 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       const duration = getMorphDuration()
       const target = slot.getBoundingClientRect()
 
+      /*
+       * 高度跳闪修复:收起动画原先飞向「钉住的旧高度槽位」,而文档更新
+       * 在 settle 释放钉高后才生效,动画终点≠最终布局,落位后跳一下。
+       * 现在把动画目标高度与槽位钉高都对齐到「新内容下的 view 态高度」
+       * ——页面下方的唯一一次位移发生在动画期间(被飞行的卡片掩盖),
+       * settle 释放钉高时 Δ=0,落位即终态。取消路径文档未变,测量值与
+       * 旧钉高相等,两个赋值皆为 no-op,行为不变。
+       */
+      const nextHeight = measureNextViewHeight()
+      if (nextHeight != null) {
+        slot.style.height = `${nextHeight}px`
+      }
+
       if (duration > 0) {
         shell.classList.add(ANIMATING_CLASS)
       }
-      applyRect(shell, target)
+      applyRect(shell, {
+        top: target.top,
+        left: target.left,
+        width: target.width,
+        height: nextHeight ?? target.height,
+      })
 
       timerRef.current = window.setTimeout(() => {
         if (phaseRef.current !== 'closing' || !shell.isConnected) return
         settleToView()
       }, duration + MORPH_PAD)
-    }, [settleToView])
+    }, [measureNextViewHeight, settleToView])
 
     /**
      * 收起编辑器。intent 语义对齐 WdfView 演示:
@@ -517,7 +569,11 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
           )
           return
         }
-        runCloseAnimation()
+
+        // 延后一拍让 commitDraft 触发的衬底重渲染(新内容)先行提交,
+        // runCloseAnimation 的 scrollHeight 测量才能读到新高度;React
+        // 调度(MessageChannel)先于定时器执行,setTimeout(0) 足够。
+        timerRef.current = window.setTimeout(runCloseAnimation, 0)
       },
       [commitDraft, runCloseAnimation],
     )
