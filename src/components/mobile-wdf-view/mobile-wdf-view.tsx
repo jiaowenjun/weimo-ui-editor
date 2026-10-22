@@ -105,7 +105,8 @@ export type MobileWdfViewProps = Omit<
   title?: ReactNode
   /**
    * 查看态内容区最大高度(默认 300):卡片高度由内容撑起,超出此值
-   * 在卡片内部滚动;编辑态为对话框几何,不受此参数影响。
+   * 在卡片内部滚动;传 'none' 则不设上限(内容整体撑高,卡片可超出
+   * 视口);编辑态为对话框几何,不受此参数影响。
    */
   viewMaxHeight?: number | string
   /** 透传 WdfRender(查看态与常驻衬底)。 */
@@ -220,6 +221,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     const autoFocusPositionRef = useRef(autoFocusPosition)
     const isModeControlledRef = useRef(isModeControlled)
     const currentDocumentRef = useRef(currentDocument)
+    const viewMaxHeightRef = useRef(viewMaxHeight)
 
     phaseRef.current = phase
     onChangeRef.current = onChange
@@ -230,6 +232,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     autoFocusPositionRef.current = autoFocusPosition
     isModeControlledRef.current = isModeControlled
     currentDocumentRef.current = currentDocument
+    viewMaxHeightRef.current = viewMaxHeight
 
     const lockBody = useCallback(() => {
       if (lockedRef.current) return
@@ -474,14 +477,20 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
         parseFloat(shellStyle.borderTopWidth || '0') +
         parseFloat(shellStyle.borderBottomWidth || '0')
 
-      // viewMaxHeight → px
-      const maxProbe = document.createElement('div')
-      maxProbe.style.cssText =
-        'position:absolute;visibility:hidden;pointer-events:none;height:var(--mobile-wdf-view-max-height, 300px)'
-      slot.appendChild(maxProbe)
-      const maxPx = maxProbe.offsetHeight
-      maxProbe.remove()
-      if (!(maxPx > 0)) return null
+      // 'none' = 不设上限:内容整体撑高,跳过钳制与上限探针。
+      const unbounded = viewMaxHeightRef.current === 'none'
+
+      // viewMaxHeight → px(任意 CSS 长度经隐藏探针解析)
+      let maxPx = Number.POSITIVE_INFINITY
+      if (!unbounded) {
+        const maxProbe = document.createElement('div')
+        maxProbe.style.cssText =
+          'position:absolute;visibility:hidden;pointer-events:none;height:var(--mobile-wdf-view-max-height, 300px)'
+        slot.appendChild(maxProbe)
+        maxPx = maxProbe.offsetHeight
+        maxProbe.remove()
+        if (!(maxPx > 0)) return null
+      }
 
       // 真实内容高度:克隆衬底 DOM,脱离 inset 布局,与 view 态同宽。
       const contentProbe = render.cloneNode(true) as HTMLElement
