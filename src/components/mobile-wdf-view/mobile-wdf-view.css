@@ -48,22 +48,34 @@
   will-change: top, left, width, height;
 }
 
+/*
+ * 标题栏与 padding 均对齐 BaseCard(.base-card)体系:内容带定高
+ * --font-size-sm * 1.2(13px * 1.2 = 15.6px),28px 操作图标垂直居中、
+ * 上下各溢出带外 6.2px;四周 --space-card-pad(13px)对应 BaseCard 卡根
+ * padding(本卡无根 padding,由标题栏自带,高度含 padding)。
+ * 提层:编辑层/错误条为不透明定位元素,会盖住图标向下溢出带外的
+ * hover 圆底;标题栏 z-index 压其上,溢出部分不被裁切。
+ */
 .mobile-wdf-view__header {
+  position: relative;
+  z-index: 1;
   display: flex;
   box-sizing: border-box;
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px 4px 16px;
+  gap: 12px;
+  height: calc(var(--space-card-pad) + var(--font-size-sm) * 1.2);
+  padding: var(--space-card-pad) var(--space-card-pad) 0 var(--space-card-pad);
 }
 
 .mobile-wdf-view__title {
   min-width: 0;
   overflow: hidden;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: 650;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -79,7 +91,7 @@
   box-sizing: border-box;
   flex-shrink: 0;
   margin: 0;
-  padding: 6px 16px;
+  padding: 6px var(--space-card-pad);
   background: var(--color-bg-raised);
   color: var(--color-text-primary);
   font-size: var(--font-size-xs);
@@ -101,12 +113,15 @@
  * - 会话态(prepare 起,默认规则):绝对填充对话框高度的 body,内滚;
  * - 查看态:转文档流,内容整体撑起卡片高度(无上限,不设卡内滚动)。
  *   两态切换发生在 promote 前/settle 后,均为不可见时刻。
+ * padding 对齐 BaseCard 体系:上 = --space-card-section-gap(1em≈16px,
+ * 标题栏→内容分区距),左右/下 = --space-card-pad(13px);与编辑层
+ * 严格同值,两态替换零位移。
  */
 .mobile-wdf-view__render {
   position: absolute;
   inset: 0;
   overflow: auto;
-  padding: 10px 18px 12px;
+  padding: var(--space-card-section-gap) var(--space-card-pad) var(--space-card-pad);
 }
 
 .mobile-wdf-view__card[data-phase='view'] .mobile-wdf-view__render {
@@ -114,13 +129,14 @@
   inset: auto;
 }
 
-/* 编辑器层:会话期间覆盖衬底;就绪前不可见,由衬底顶住画面。 */
+/* 编辑器层:会话期间覆盖衬底;就绪前不可见,由衬底顶住画面。
+   padding 与衬底严格同值(对齐 BaseCard 体系),两态替换零位移。 */
 .mobile-wdf-view__editor-layer {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  padding: 10px 18px 12px;
+  padding: var(--space-card-section-gap) var(--space-card-pad) var(--space-card-pad);
   overflow: hidden;
   background: var(--color-bg-card);
   visibility: hidden;
@@ -147,7 +163,7 @@
   justify-content: center;
   gap: 4px;
   overflow: hidden;
-  padding: 0 12px;
+  padding: 0 var(--space-card-pad);
   opacity: 0;
   transform: translateY(12px);
   transition:
