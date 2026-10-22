@@ -75,7 +75,7 @@ const cardSample: RichEditorContent = {
 /*
  * DEMO PROTOTYPE(仅 site):卡片即迷你编辑器。
  *
- * 与 rich-editor-dialog 的 VT 方案不同,这里刻意使用:
+ * 刻意不使用 Dialog + visualViewport 方案,这里改用:
  * - 一个始终存在的壳(没有 Dialog.Portal,没有第二个卡片节点)
  * - 一个始终存在的 RichEditor(Tiptap)实例,只切换 disabled
  * - 手写 FLIP 几何动画 + modal 行为(焦点陷阱/inert/滚动锁)

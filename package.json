@@ -33,10 +33,6 @@
       "types": "./dist/components/wdf-view/wdf-view.d.ts",
       "import": "./dist/components/wdf-view/wdf-view.js"
     },
-    "./components/rich-editor-dialog": {
-      "types": "./dist/components/rich-editor-dialog/rich-editor-dialog.d.ts",
-      "import": "./dist/components/rich-editor-dialog/rich-editor-dialog.js"
-    },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
       "default": "./dist/styles/tokens.css"
@@ -48,10 +44,6 @@
     "./styles/rich-editor.css": {
       "types": "./dist/components/rich-editor/rich-editor.d.css.ts",
       "default": "./dist/components/rich-editor/rich-editor.css"
-    },
-    "./styles/rich-editor-dialog.css": {
-      "types": "./dist/components/rich-editor-dialog/rich-editor-dialog.d.css.ts",
-      "default": "./dist/components/rich-editor-dialog/rich-editor-dialog.css"
     }
   },
   "scripts": {
@@ -88,7 +80,6 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
-    "@base-ui/react": "1.9.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "publint": "^0.3.25",
