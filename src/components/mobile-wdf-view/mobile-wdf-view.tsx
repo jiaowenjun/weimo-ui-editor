@@ -10,7 +10,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
-import { X } from 'lucide-react'
+import { Bold, Heading1, List, Quote, X } from 'lucide-react'
 
 import { cn } from 'weimo-ui-core/lib/utils'
 import { GhostIconButton } from 'weimo-ui-core/components/ghost-icon-button'
@@ -181,6 +181,8 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
     )
     const [editorReady, setEditorReady] = useState(false)
     const [conversionError, setConversionError] = useState(false)
+    const [selectionFormat, setSelectionFormat] =
+      useState<RichEditorSelectionFormat | null>(null)
     const [sessionContent, setSessionContent] = useState<ReturnType<
       typeof toWdfEditorContent
     > | null>(null)
@@ -647,6 +649,46 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       [],
     )
 
+    const handleSelectionFormatChange = useCallback(
+      (format: RichEditorSelectionFormat | null) => {
+        setSelectionFormat(format)
+        editorProps?.onSelectionFormatChange?.(format)
+      },
+      [editorProps],
+    )
+
+    // 内置底栏(对齐 WdfView 演示:粗体/标题/无序列表/引用)。
+    const toolbarButtons = [
+      {
+        key: 'bold',
+        label: '切换粗体',
+        icon: <Bold />,
+        active: selectionFormat?.bold === true,
+        action: () => editorRef.current?.toggleBold(),
+      },
+      {
+        key: 'heading',
+        label: '切换标题',
+        icon: <Heading1 />,
+        active: selectionFormat?.block === 'heading',
+        action: () => editorRef.current?.toggleBlockFormat('heading'),
+      },
+      {
+        key: 'list',
+        label: '切换无序列表',
+        icon: <List />,
+        active: selectionFormat?.block === 'list',
+        action: () => editorRef.current?.toggleBlockFormat('list'),
+      },
+      {
+        key: 'quote',
+        label: '切换引用',
+        icon: <Quote />,
+        active: selectionFormat?.block === 'quote',
+        action: () => editorRef.current?.toggleBlockFormat('quote'),
+      },
+    ] as const
+
     useImperativeHandle(
       ref,
       () => ({
@@ -754,11 +796,40 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
                   defaultValue={sessionContent}
                   onReady={handleEditorReady}
                   onSave={handleEditorSave}
+                  onSelectionFormatChange={handleSelectionFormatChange}
                   ref={editorRef}
                 />
               </div>
             )}
           </div>
+
+          {/* 内置底栏:常驻 DOM,展开时经高度/透明度过渡显出;非编辑态
+              inert 禁焦点。收起态高度为 0,不占卡片空间。 */}
+          <footer
+            aria-label="编辑工具栏"
+            className="mobile-wdf-view__toolbar"
+            inert={phase !== 'edit'}
+          >
+            <div
+              aria-label="编辑操作"
+              className="mobile-wdf-view__toolbar-group"
+              role="group"
+            >
+              {toolbarButtons.map((button) => (
+                <GhostIconButton
+                  active={button.active}
+                  aria-label={button.label}
+                  disabled={phase !== 'edit' || !selectionFormat}
+                  key={button.key}
+                  onClick={button.action}
+                  onPointerDown={(event) => event.preventDefault()}
+                  size="sm"
+                >
+                  {button.icon}
+                </GhostIconButton>
+              ))}
+            </div>
+          </footer>
         </div>
       </div>
     )

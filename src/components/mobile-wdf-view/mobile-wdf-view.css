@@ -119,6 +119,47 @@
   flex: 1;
 }
 
+/* 内置底栏:收起态高度 0 不占空间;展开(opening/edit)经高度/透明度
+   过渡显出,贴底并让出安全区。 */
+.mobile-wdf-view__toolbar {
+  display: flex;
+  box-sizing: border-box;
+  height: 0;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
+  padding: 0 12px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    height var(--mobile-wdf-morph-duration) ease-in-out,
+    padding-block var(--mobile-wdf-morph-duration) ease-in-out,
+    opacity var(--mobile-wdf-morph-duration) ease-in-out,
+    transform var(--mobile-wdf-morph-duration) ease-in-out;
+}
+
+.mobile-wdf-view__card[data-phase='opening'] .mobile-wdf-view__toolbar,
+.mobile-wdf-view__card[data-phase='edit'] .mobile-wdf-view__toolbar {
+  height: 48px;
+  padding-block: 6px max(6px, env(safe-area-inset-bottom));
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 编辑态允许焦点环溢出,避免被底栏自身裁剪。 */
+.mobile-wdf-view__card[data-phase='edit'] .mobile-wdf-view__toolbar {
+  overflow: visible;
+}
+
+.mobile-wdf-view__toolbar-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
 /* 遮罩:未提升/关闭时透明不可点。 */
 .mobile-wdf-view__backdrop {
   position: fixed;
