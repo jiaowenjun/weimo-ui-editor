@@ -20,13 +20,12 @@ import {
   RichEditor,
   type RichEditorBlockFormat,
   type RichEditorFocusPosition,
-  type RichEditorHandle,
   type RichEditorProps,
   type RichEditorSelectionFormat,
 } from '../rich-editor/rich-editor'
 import { WdfRender, type WdfRenderProps } from '../wdf-render/wdf-render'
-import { toWdfEditorContent } from '../wdf-view/wdf-editor-content'
 // 复用已验证的 shell 原语层(基线 §6:不改其语义,旧组件同源)。
+import { useEditorSession } from './editor-session'
 import {
   applyRect,
   clearShellGeometry,
@@ -134,7 +133,6 @@ const ANIMATING_CLASS = 'new-mobile-wdf-view__card--animating'
 const EDITOR_READY_TIMEOUT = 800
 const AUTO_FOCUS_RETRIES = 3
 const AUTO_FOCUS_RETRY_DELAY = 50
-const CONVERSION_ERROR_RESET = 3000
 
 type CardPhase = 'view' | 'prepare' | 'opening' | 'edit' | 'closing'
 type CloseSource = 'user' | 'external'
@@ -181,24 +179,36 @@ export const NewMobileWdfView = forwardRef<
   const [phase, setPhase] = useState<CardPhase>('view')
   const [internalMode, setInternalMode] =
     useState<NewMobileWdfViewMode>(defaultMode)
-  const [internalDoc, setInternalDoc] = useState<WdfDocument>(
-    () => value ?? defaultValue ?? WdfDocument.empty(),
-  )
   const [editorReady, setEditorReady] = useState(false)
-  const [conversionError, setConversionError] = useState(false)
   const [selectionFormat, setSelectionFormat] =
     useState<RichEditorSelectionFormat | null>(null)
-  const [sessionContent, setSessionContent] = useState<ReturnType<
-    typeof toWdfEditorContent
-  > | null>(null)
+
+  // Editor Session(阶段二):文档/草稿/提交/错误的数据面;几何与相位
+  // 留在组件协调器,经 beginSession/endSession/commitDraft 驱动。
+  const editorSession = useEditorSession({
+    controlledValue: value,
+    defaultValue,
+    onChange,
+    onConversionError,
+    onSave,
+  })
+  const {
+    currentDocument,
+    editorRef,
+    sessionContent,
+    conversionError,
+    beginSession,
+    endSession,
+    commitDraft,
+    handleEditorSave,
+    flagConversionError,
+  } = editorSession
 
   const slotRef = useRef<HTMLDivElement | null>(null)
   const shellRef = useRef<HTMLDivElement | null>(null)
-  const editorRef = useRef<RichEditorHandle | null>(null)
   const phaseRef = useRef<CardPhase>('view')
   const timerRef = useRef<number | null>(null)
   const readyTimerRef = useRef<number | null>(null)
-  const errorTimerRef = useRef<number | null>(null)
   const savedScrollYRef = useRef(0)
   const bodyOverflowRef = useRef('')
   const bodyPaddingRightRef = useRef('')
@@ -208,25 +218,17 @@ export const NewMobileWdfView = forwardRef<
   const sessionRef = useRef(0)
 
   const isModeControlled = mode !== undefined
-  const isDocControlled = value !== undefined
   const activeMode = isModeControlled ? mode : internalMode
-  const currentDocument = isDocControlled ? value : internalDoc
 
   // 供定时器/命令式句柄读取最新 props 的 ref 集。
-  const onChangeRef = useRef(onChange)
-  const onConversionErrorRef = useRef(onConversionError)
   const onModeChangeRef = useRef(onModeChange)
-  const onSaveRef = useRef(onSave)
   const autoFocusRef = useRef(autoFocus)
   const autoFocusPositionRef = useRef(autoFocusPosition)
   const isModeControlledRef = useRef(isModeControlled)
   const currentDocumentRef = useRef(currentDocument)
 
   phaseRef.current = phase
-  onChangeRef.current = onChange
-  onConversionErrorRef.current = onConversionError
   onModeChangeRef.current = onModeChange
-  onSaveRef.current = onSave
   autoFocusRef.current = autoFocus
   autoFocusPositionRef.current = autoFocusPosition
   isModeControlledRef.current = isModeControlled
@@ -306,7 +308,7 @@ export const NewMobileWdfView = forwardRef<
         flushSync(() => {
           transitionPhase('view')
           setEditorReady(false)
-          setSessionContent(null)
+          endSession()
         })
       }
 
@@ -340,7 +342,7 @@ export const NewMobileWdfView = forwardRef<
         }
       }
     },
-    [transitionPhase, unlockBody],
+    [endSession, transitionPhase, unlockBody],
   )
 
   // 卸载兜底:清定时器、退 top layer、解锁、去 inert。
@@ -352,9 +354,6 @@ export const NewMobileWdfView = forwardRef<
       if (readyTimerRef.current !== null) {
         window.clearTimeout(readyTimerRef.current)
       }
-      if (errorTimerRef.current !== null) {
-        window.clearTimeout(errorTimerRef.current)
-      }
       hideFromTopLayer(shellRef.current)
       document.body.style.overflow = bodyOverflowRef.current
       document.body.style.paddingRight = bodyPaddingRightRef.current
@@ -364,27 +363,6 @@ export const NewMobileWdfView = forwardRef<
       inertedRef.current = []
     }
   }, [])
-
-  /** Editor Session:草稿 → fromTiptap → 提交(基线 §2.1 步骤 1-2)。 */
-  const commitDraft = useCallback(
-    (source: NewMobileWdfViewConversionSource) => {
-      const draft = editorRef.current?.getContent()
-      if (!draft) return true
-
-      const result = fromTiptap(draft)
-      if (!result.ok) {
-        onConversionErrorRef.current?.(result.diagnostics, source)
-        return false
-      }
-
-      if (!isDocControlled) {
-        setInternalDoc(result.value)
-      }
-      onChangeRef.current?.(result.value)
-      return true
-    },
-    [isDocControlled],
-  )
 
   /**
    * 显式协作点(基线 §2.1 步骤 3-4):commitDraft 触发的衬底重渲染
@@ -531,7 +509,7 @@ export const NewMobileWdfView = forwardRef<
 
     // 步骤 11:挂载编辑器(隐藏)、衬底转会话布局;DOM 属性随提交。
     setEditorReady(false)
-    setSessionContent(toWdfEditorContent(currentDocumentRef.current))
+    beginSession(currentDocumentRef.current)
 
     // 步骤 12:看门狗——编辑器就绪超时则直接展开(按会话隔离)。
     readyTimerRef.current = window.setTimeout(() => {
@@ -540,7 +518,7 @@ export const NewMobileWdfView = forwardRef<
         startOpening(session)
       }
     }, EDITOR_READY_TIMEOUT)
-  }, [isCurrentSession, lockBody, startOpening, transitionPhase])
+  }, [beginSession, isCurrentSession, lockBody, startOpening, transitionPhase])
 
   /**
    * 测量「收起后的 view 态卡片高度」:克隆衬底 DOM 到脱离会话布局的
@@ -635,14 +613,7 @@ export const NewMobileWdfView = forwardRef<
       if (intent === 'save') {
         const committed = commitDraft('change')
         if (!committed && source === 'user') {
-          setConversionError(true)
-          if (errorTimerRef.current !== null) {
-            window.clearTimeout(errorTimerRef.current)
-          }
-          errorTimerRef.current = window.setTimeout(
-            () => setConversionError(false),
-            CONVERSION_ERROR_RESET,
-          )
+          flagConversionError()
           return
         }
       }
@@ -675,6 +646,7 @@ export const NewMobileWdfView = forwardRef<
     },
     [
       commitDraft,
+      flagConversionError,
       isCurrentSession,
       runCloseAnimation,
       scheduleCloseFlightAfterBackingCommit,
@@ -824,18 +796,6 @@ export const NewMobileWdfView = forwardRef<
       document.removeEventListener('focusin', handleFocusIn, true)
     }
   }, [phase])
-
-  const handleEditorSave = useCallback(
-    (content: Parameters<typeof fromTiptap>[0]) => {
-      const result = fromTiptap(content)
-      if (result.ok) {
-        onSaveRef.current?.(result.value)
-        return
-      }
-      onConversionErrorRef.current?.(result.diagnostics, 'save')
-    },
-    [],
-  )
 
   const handleSelectionFormatChange = useCallback(
     (format: RichEditorSelectionFormat | null) => {
