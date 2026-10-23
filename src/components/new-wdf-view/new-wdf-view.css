@@ -234,6 +234,16 @@
  * 隐藏、编辑层转常规流接管内容区;prepare 期编辑器仍隐藏(挂载中),
  * 衬底照常显示。对话框流规则为默认轴,不受以下覆盖影响。
  */
+
+/* prepare 期衬底保持文档流(视觉底):内联流无钉高,若 render 按
+   会话规则(非 view 即 absolute)离流,body 无内容撑高,卡会塌到
+   header 高度再于 edit 弹回(坍缩-恢复闪烁);保持 static 后,
+   edit 时才发生单次 render→编辑层高度交接(同文档渲染,高度差
+   仅编辑器自带 padding)。 */
+.new-wdf-view__card[data-edit-style='inline'][data-phase='prepare'] .new-wdf-view__render {
+  position: static;
+  inset: auto;
+}
 .new-wdf-view__card[data-edit-style='inline'][data-phase='edit'] .new-wdf-view__render,
 .new-wdf-view__card[data-edit-style='inline'][data-phase='closing'] .new-wdf-view__render {
   display: none;
