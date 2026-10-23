@@ -20,6 +20,8 @@ DOM 层级为目标。
 - slot:top layer 提升期间保留文档流占位,兼 Ghost 宿主。
 - CardShell:卡片 chrome、Popover、固定定位几何与 morph。
 - 常驻 WdfRender:查看态撑高;会话态内容衬底。
+- 遮罩 backdrop(slot 内卡前兄弟,独立提升 top layer 并豁免 inert;
+  点外取消;CSS 须覆盖 UA popover 几何,见组件 css 注释)。
 - 会话期 RichEditor:异步就绪后显示,关闭后卸载。
 - Header/Toolbar 的 DOM 顺序、class 语义、工具栏高度态与 `inert`。
 - shell 原语层既有原语(不改动其语义)。

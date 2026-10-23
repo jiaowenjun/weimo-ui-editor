@@ -69,11 +69,11 @@ export type NewMobileWdfViewProps = Omit<
   ComponentPropsWithoutRef<'div'>,
   'children' | 'title' | 'onChange' | 'value' | 'defaultValue'
 > & {
-  /** 受控模式;省略时组件自管理(X/Esc 收起)。 */
+  /** 受控模式;省略时组件自管理(X/Esc/遮罩收起)。 */
   mode?: NewMobileWdfViewMode
   /** 非受控初始模式,默认 view。 */
   defaultMode?: NewMobileWdfViewMode
-  /** 用户交互请求切换模式时触发(X/Esc);转换失败不触发 view。 */
+  /** 用户交互请求切换模式时触发(X/Esc/遮罩);转换失败不触发 view。 */
   onModeChange?: (mode: NewMobileWdfViewMode) => void
   /** WDF 文档;会话期间外部更新不覆盖会话草稿(对齐 WdfView)。 */
   value?: WdfDocument
@@ -200,6 +200,7 @@ export const NewMobileWdfView = forwardRef<
 
   const slotRef = useRef<HTMLDivElement | null>(null)
   const shellRef = useRef<HTMLDivElement | null>(null)
+  const backdropRef = useRef<HTMLDivElement | null>(null)
   const phaseRef = useRef<CardPhase>('view')
   const timerRef = useRef<number | null>(null)
   const readyTimerRef = useRef<number | null>(null)
@@ -300,9 +301,11 @@ export const NewMobileWdfView = forwardRef<
         })
       }
 
-      // 步骤 2-5:退 top layer → 清几何 → 释放钉高/解锁/去 inert →
-      // 恢复滚动(hidePopover 之后需经历一次不可见绘制,见步骤 7)。
+      // 步骤 2-5:退 top layer(卡壳与遮罩)→ 清几何 → 释放钉高/解锁/
+      // 去 inert → 恢复滚动(hidePopover 之后需经历一次不可见绘制,见
+      // 步骤 7)。
       hideFromTopLayer(shell)
+      hideFromTopLayer(backdropRef.current)
       clearShellGeometry(shell, ANIMATING_CLASS)
       slot.style.height = ''
       viewportFocus.unlockBody()
@@ -341,6 +344,7 @@ export const NewMobileWdfView = forwardRef<
         window.clearTimeout(readyTimerRef.current)
       }
       hideFromTopLayer(shellRef.current)
+      hideFromTopLayer(backdropRef.current)
       for (const element of inertedRef.current) {
         element.removeAttribute('inert')
       }
@@ -435,11 +439,13 @@ export const NewMobileWdfView = forwardRef<
     const first = morph.captureFoldedRect()
     if (!first) return
     if (inertedRef.current.length === 0) {
-      inertedRef.current = inertSiblingsOf(shell)
+      inertedRef.current = inertSiblingsOf(shell, backdropRef.current)
     }
 
-    // 步骤 8:提升 top layer(popover 属性常驻;失败降级 fixed 覆盖)。
-    const topLayerSupported = showInTopLayer(shell)
+    // 步骤 8:提升 top layer(遮罩先于卡壳,二者独立进顶层;遮罩
+    // 豁免 inert 以保留点外取消;popover 属性常驻,失败降级 fixed 覆盖)。
+    const topLayerSupported = showInTopLayer(backdropRef.current)
+    showInTopLayer(shell)
     if (!topLayerSupported) {
       console.warn('[new-mobile-wdf-view] Popover API 不可用,降级为 fixed 覆盖层')
     }
@@ -635,6 +641,16 @@ export const NewMobileWdfView = forwardRef<
       style={style}
       {...props}
     >
+      <div
+        aria-hidden="true"
+        className="new-mobile-wdf-view__backdrop"
+        data-visible={
+          phase === 'opening' || phase === 'edit' ? 'true' : undefined
+        }
+        onClick={() => closeEditorRef.current('cancel', 'user')}
+        ref={backdropRef}
+      />
+
       {/* 卡片本体不可点击:进入编辑的唯一入口是右上角铅笔按钮。 */}
       <div
         aria-labelledby={editing ? titleId : undefined}

@@ -68,13 +68,13 @@ export type MobileWdfViewProps = Omit<
   'children' | 'title' | 'onChange' | 'value' | 'defaultValue'
 > & {
   /**
-   * 受控模式;省略时组件自管理(X/Esc 收起)。
+   * 受控模式;省略时组件自管理(X/Esc/遮罩收起)。
    */
   mode?: MobileWdfViewMode
   /** 非受控初始模式,默认 view。 */
   defaultMode?: MobileWdfViewMode
   /**
-   * 用户交互请求切换模式时触发(X/Esc)。转换失败的收起
+   * 用户交互请求切换模式时触发(X/Esc/遮罩)。转换失败的收起
    * 不会触发 view——会话被保留,父级不应切换。
    */
   onModeChange?: (mode: MobileWdfViewMode) => void
@@ -186,6 +186,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
 
     const slotRef = useRef<HTMLDivElement | null>(null)
     const shellRef = useRef<HTMLDivElement | null>(null)
+    const backdropRef = useRef<HTMLDivElement | null>(null)
     const editorRef = useRef<RichEditorHandle | null>(null)
     const phaseRef = useRef<CardPhase>('view')
     const timerRef = useRef<number | null>(null)
@@ -270,6 +271,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
 
       // ---- fix-v3 收起清理(hidePopover 之后需经历一次不可见绘制) ----
       hideFromTopLayer(shell)
+      hideFromTopLayer(backdropRef.current)
       clearShellGeometry(shell, ANIMATING_CLASS)
       slot.style.height = ''
       unlockBody()
@@ -309,6 +311,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
           window.clearTimeout(errorTimerRef.current)
         }
         hideFromTopLayer(shellRef.current)
+        hideFromTopLayer(backdropRef.current)
         document.body.style.overflow = bodyOverflowRef.current
         document.body.style.paddingRight = bodyPaddingRightRef.current
         for (const element of inertedRef.current) {
@@ -407,10 +410,11 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
       const first = shell.getBoundingClientRect()
       slot.style.height = `${slot.getBoundingClientRect().height}px`
       if (inertedRef.current.length === 0) {
-        inertedRef.current = inertSiblingsOf(shell)
+        inertedRef.current = inertSiblingsOf(shell, backdropRef.current)
       }
 
-      const topLayerSupported = showInTopLayer(shell)
+      const topLayerSupported = showInTopLayer(backdropRef.current)
+      showInTopLayer(shell)
       if (!topLayerSupported) {
         // 降级:无 popover API 的浏览器继续走 fixed 覆盖层,可能被祖先
         // overflow/transform 裁剪;现代浏览器均支持,仅为兜底。
@@ -521,7 +525,7 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
      * 收起编辑器。intent 语义对齐 WdfView 演示:
      * - save(Check/Esc 外的提交路径):草稿经 fromTiptap 转换成功才提交;
      *   用户请求下转换失败保留会话,外部强制收起失败不提交但完成退出。
-     * - cancel(X/Esc):丢弃草稿直接收起,WdfRender 衬底本就显示
+     * - cancel(X/Esc/遮罩):丢弃草稿直接收起,WdfRender 衬底本就显示
      *   已提交文档,无需任何转换。
      */
     const closeEditor = useCallback(
@@ -804,6 +808,16 @@ export const MobileWdfView = forwardRef<MobileWdfViewHandle, MobileWdfViewProps>
         style={style}
         {...props}
       >
+        <div
+          aria-hidden="true"
+          className="mobile-wdf-view__backdrop"
+          data-visible={
+            phase === 'opening' || phase === 'edit' ? 'true' : undefined
+          }
+          onClick={() => closeEditorRef.current('cancel', 'user')}
+          ref={backdropRef}
+        />
+
         {/* 卡片本体不可点击:进入编辑的唯一入口是右上角铅笔按钮(对齐
             WdfView 演示的交互模型)。 */}
         <div
