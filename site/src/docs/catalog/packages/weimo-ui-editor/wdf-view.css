@@ -1,0 +1,48 @@
+/* === WdfView 演示页(仅 site):底部工具栏带过渡(实机 A/B 择定固化) === */
+
+/*
+ * 内容 Δ 归零:编辑器滚动容器自带 14px 底距(对话框滚动光标空间),
+ * 进入编辑时内容列会比渲染列高 14px;归零后两列 ±0,卡高唯一增量
+ * =工具栏带,带过渡才对得齐(经验:be894c7)。
+ */
+.wdf-view-demo .rich-editor__viewport {
+  padding-block-end: 0;
+}
+
+/*
+ * 工具栏带:footer 常驻、grid-rows 0fr↔1fr 收展——复刻
+ * base-card__meta-region 模式(收展的内容即动画主体;A/B 中对照的
+ * "外层钉高包裹内容瞬变"方案因钉高等待窗内卡底切边闪烁被否)。
+ * 展开时机由 JS 在编辑器 onReady 后延迟两帧触发(绕开首绘延迟对
+ * 过渡前段的压缩)。
+ * 注意:负 margin 必须落在 BaseCard 的直接 flex 子元素
+ * .base-card__footer 上(slot 内容被 BaseCard 包了一层),在 band
+ * 自身上置 margin 对 flex gap 无效——经 :has() 把折叠态传到 footer。
+ */
+.wdf-toolbar-band {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows 200ms ease,
+    opacity 200ms ease;
+}
+
+.wdf-toolbar-band[data-open='false'] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wdf-toolbar-band__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.wdf-view-demo .base-card__footer {
+  transition: margin-top 200ms ease;
+}
+
+.wdf-view-demo .base-card__footer:has(.wdf-toolbar-band[data-open='false']) {
+  margin-top: calc(-1 * var(--space-card-section-gap));
+}
