@@ -300,12 +300,12 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
      * 同 tick 过站相位,flushSync 保证无中间绘制。
      */
     const settleInlineToView = useCallback(() => {
+      // resolvedEditStyle 不清除:仅作样式轴(相位规则已不命中),
+      // 保留可让工具栏瞬切规则在收起帧仍然生效(关闭同为瞬时)。
       if (phaseRef.current !== 'view') {
         flushSync(() => {
           transitionPhase('view')
           endSession()
-          setResolvedEditStyle(null)
-          resolvedEditStyleRef.current = null
         })
       }
       finishSessionMode()
@@ -320,12 +320,12 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
       if (!shell || !slot) return
 
       // 步骤 1:先 flushSync 切 view 布局再退 top layer(防塌陷帧)。
+      // resolvedEditStyle 同内联路径保留(对话框收起时工具栏已在
+      // 飞行中归零,无行为差异;轴标记统一生命周期)。
       if (phaseRef.current !== 'view') {
         flushSync(() => {
           transitionPhase('view')
           endSession()
-          setResolvedEditStyle(null)
-          resolvedEditStyleRef.current = null
         })
       }
 

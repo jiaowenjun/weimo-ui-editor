@@ -257,21 +257,21 @@
 
 /*
  * 进入编辑的连续性(内联轴专属):
- * 1) 工具栏内容即刻可见,仅高度/padding 走过渡——基础规则的
- *    opacity/translateY 滞后于高度,会在长出段形成透明空白带;
- *    内联卡静止无运动掩蔽,空白带必须消除(对话框流在飞行中被
- *    运动掩蔽,维持原样)。
+ * 1) 工具栏取消高度/透明度过渡(方案C,实机 A/B 择定):height 过渡
+ *    的时钟自样式变更起跑,而进入编辑的首帧被编辑内容首次栅格化
+ *    推迟,前段增长会被压缩进首个可见帧(「半高工具栏突现」);
+ *    内联卡静止无运动掩蔽,故取消过渡,0→48 与内容交接同帧完成,
+ *    无中间态可被截半(对齐 WdfView footer 的出现形态;关闭同经
+ *    flushSync 瞬时收起)。对话框流在飞行中被运动掩蔽,维持原过渡。
  * 2) 编辑器滚动容器 .rich-editor__viewport 自带 padding-block-end
- *    14px(为对话框滚动留光标空间);内联态层自身 13px 底距已提供
- *    视觉间隙,viewport 归零使编辑层总高与 render 层逐位对齐——
- *    消除进入编辑时 body 的离散高度跳变(同文档渲染下 ±0)。
+ *    14px(为对话框滚动留光标空间);内联态归零——编辑层自身 13px
+ *    底距已提供视觉间隙,层总高与 render 层逐位对齐——消除进入
+ *    编辑时 body 的离散高度跳变(同文档渲染下 ±0)。
  */
 .new-wdf-view__card[data-edit-style='inline'] .new-wdf-view__toolbar {
   opacity: 1;
   transform: none;
-  transition:
-    height var(--new-wdf-view-morph-duration) ease-in-out,
-    padding-block var(--new-wdf-view-morph-duration) ease-in-out;
+  transition: none;
 }
 
 .new-wdf-view__card[data-edit-style='inline'] .rich-editor__viewport {
