@@ -26,6 +26,13 @@ export const editorCatalog = {
       packageExport: './components/rich-editor',
     },
     {
+      id: 'new-wdf-view',
+      name: '自适应读写视图',
+      exportName: 'NewWdfView',
+      registryName: 'new-wdf-view',
+      packageExport: './components/new-wdf-view',
+    },
+    {
       id: 'mobile-wdf-view',
       name: '移动卡片式视图',
       exportName: 'WdfView',

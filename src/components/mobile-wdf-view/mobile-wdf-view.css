@@ -1,7 +1,7 @@
 /* === MobileWdfView(专属前缀,基线 docs/new-mobile-wdf-view-baseline.md §6)*/
 
 .mobile-wdf-view {
-  --new-mobile-wdf-morph-duration: 320ms;
+  --mobile-wdf-morph-duration: 320ms;
 
   position: relative;
   width: 100%;
@@ -10,7 +10,7 @@
 
 @media (max-width: 640px) {
   .mobile-wdf-view {
-    --new-mobile-wdf-morph-duration: 320ms;
+    --mobile-wdf-morph-duration: 320ms;
   }
 }
 
@@ -41,10 +41,10 @@
 
 .mobile-wdf-view__card--animating {
   transition:
-    top var(--new-mobile-wdf-morph-duration) ease-in-out,
-    left var(--new-mobile-wdf-morph-duration) ease-in-out,
-    width var(--new-mobile-wdf-morph-duration) ease-in-out,
-    height var(--new-mobile-wdf-morph-duration) ease-in-out;
+    top var(--mobile-wdf-morph-duration) ease-in-out,
+    left var(--mobile-wdf-morph-duration) ease-in-out,
+    width var(--mobile-wdf-morph-duration) ease-in-out,
+    height var(--mobile-wdf-morph-duration) ease-in-out;
   will-change: top, left, width, height;
 }
 
@@ -172,10 +172,10 @@
   opacity: 0;
   transform: translateY(12px);
   transition:
-    height var(--new-mobile-wdf-morph-duration) ease-in-out,
-    padding-block var(--new-mobile-wdf-morph-duration) ease-in-out,
-    opacity var(--new-mobile-wdf-morph-duration) ease-in-out,
-    transform var(--new-mobile-wdf-morph-duration) ease-in-out;
+    height var(--mobile-wdf-morph-duration) ease-in-out,
+    padding-block var(--mobile-wdf-morph-duration) ease-in-out,
+    opacity var(--mobile-wdf-morph-duration) ease-in-out,
+    transform var(--mobile-wdf-morph-duration) ease-in-out;
 }
 
 .mobile-wdf-view__card[data-phase='opening'] .mobile-wdf-view__toolbar,
