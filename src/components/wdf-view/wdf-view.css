@@ -1,7 +1,7 @@
-/* === NewWdfView(前缀独立;内联轴见文末)*/
+/* === WdfView(前缀独立;内联轴见文末)*/
 
-.new-wdf-view {
-  --new-wdf-view-morph-duration: 320ms;
+.wdf-view {
+  --wdf-view-morph-duration: 320ms;
 
   position: relative;
   width: 100%;
@@ -9,8 +9,8 @@
 }
 
 @media (max-width: 640px) {
-  .new-wdf-view {
-    --new-wdf-view-morph-duration: 320ms;
+  .wdf-view {
+    --wdf-view-morph-duration: 320ms;
   }
 }
 
@@ -20,7 +20,7 @@
  * 查看态高度由内容撑起(上限见 __render 的 max-height);会话态几何由
  * 组件的 inline fixed rect 驱动。
  */
-.new-wdf-view__card {
+.wdf-view__card {
   position: relative;
   z-index: 1;
   box-sizing: border-box;
@@ -35,16 +35,16 @@
   box-shadow: var(--shadow-card);
 }
 
-.dark .new-wdf-view__card {
+.dark .wdf-view__card {
   border-color: var(--color-border);
 }
 
-.new-wdf-view__card--animating {
+.wdf-view__card--animating {
   transition:
-    top var(--new-wdf-view-morph-duration) ease-in-out,
-    left var(--new-wdf-view-morph-duration) ease-in-out,
-    width var(--new-wdf-view-morph-duration) ease-in-out,
-    height var(--new-wdf-view-morph-duration) ease-in-out;
+    top var(--wdf-view-morph-duration) ease-in-out,
+    left var(--wdf-view-morph-duration) ease-in-out,
+    width var(--wdf-view-morph-duration) ease-in-out,
+    height var(--wdf-view-morph-duration) ease-in-out;
   will-change: top, left, width, height;
 }
 
@@ -56,7 +56,7 @@
  * 提层:编辑层/错误条为不透明定位元素,会盖住图标向下溢出带外的
  * hover 圆底;标题栏 z-index 压其上,溢出部分不被裁切。
  */
-.new-wdf-view__header {
+.wdf-view__header {
   position: relative;
   z-index: 1;
   display: flex;
@@ -69,7 +69,7 @@
   padding: var(--space-card-pad) var(--space-card-pad) 0 var(--space-card-pad);
 }
 
-.new-wdf-view__title {
+.wdf-view__title {
   min-width: 0;
   overflow: hidden;
   color: var(--color-text-primary);
@@ -80,14 +80,14 @@
   white-space: nowrap;
 }
 
-.new-wdf-view__actions {
+.wdf-view__actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 /* 转换失败提示:保留编辑会话时显示在头部下方。 */
-.new-wdf-view__error {
+.wdf-view__error {
   box-sizing: border-box;
   flex-shrink: 0;
   margin: 0;
@@ -98,7 +98,7 @@
   line-height: 1.5;
 }
 
-.new-wdf-view__body {
+.wdf-view__body {
   position: relative;
   display: flex;
   box-sizing: border-box;
@@ -117,21 +117,21 @@
  * 标题栏→内容分区距),左右/下 = --space-card-pad(13px);与编辑层
  * 严格同值,两态替换零位移。
  */
-.new-wdf-view__render {
+.wdf-view__render {
   position: absolute;
   inset: 0;
   overflow: auto;
   padding: var(--space-card-section-gap) var(--space-card-pad) var(--space-card-pad);
 }
 
-.new-wdf-view__card[data-phase='view'] .new-wdf-view__render {
+.wdf-view__card[data-phase='view'] .wdf-view__render {
   position: static;
   inset: auto;
 }
 
 /* 编辑器层:会话期间覆盖衬底;就绪前不可见,由衬底顶住画面。
    padding 与衬底严格同值(对齐 BaseCard 体系),两态替换零位移。 */
-.new-wdf-view__editor-layer {
+.wdf-view__editor-layer {
   position: absolute;
   inset: 0;
   display: flex;
@@ -145,13 +145,13 @@
 /* 编辑层可见性由相位派生(阶段五删除 data-ready):prepare 挂载期
    隐藏(防骨架屏首帧),opening 起可见直至 settle 卸载。等价性:
    原 editorReady 的三次翻转均与相位转换同一次 React 提交。 */
-.new-wdf-view__card[data-phase='opening'] .new-wdf-view__editor-layer,
-.new-wdf-view__card[data-phase='edit'] .new-wdf-view__editor-layer,
-.new-wdf-view__card[data-phase='closing'] .new-wdf-view__editor-layer {
+.wdf-view__card[data-phase='opening'] .wdf-view__editor-layer,
+.wdf-view__card[data-phase='edit'] .wdf-view__editor-layer,
+.wdf-view__card[data-phase='closing'] .wdf-view__editor-layer {
   visibility: visible;
 }
 
-.new-wdf-view__editor-layer .rich-editor {
+.wdf-view__editor-layer .rich-editor {
   height: 100%;
   min-height: 0;
   flex: 1;
@@ -165,14 +165,14 @@
  * 飞行期由编辑层(卡底,隔自身 13px 底距)统一裁切;edit 态恢复
  * 滚动供长文档。两轴须同时 visible,单轴 visible 规范上计算为 auto。
  */
-.new-wdf-view__card[data-phase='opening'] .rich-editor__viewport,
-.new-wdf-view__card[data-phase='closing'] .rich-editor__viewport {
+.wdf-view__card[data-phase='opening'] .rich-editor__viewport,
+.wdf-view__card[data-phase='closing'] .rich-editor__viewport {
   overflow: visible;
 }
 
 /* 内置底栏:收起态高度 0 不占空间;展开(opening/edit)经高度/透明度
    过渡显出,贴底并让出安全区。 */
-.new-wdf-view__toolbar {
+.wdf-view__toolbar {
   display: flex;
   box-sizing: border-box;
   height: 0;
@@ -185,14 +185,14 @@
   opacity: 0;
   transform: translateY(12px);
   transition:
-    height var(--new-wdf-view-morph-duration) ease-in-out,
-    padding-block var(--new-wdf-view-morph-duration) ease-in-out,
-    opacity var(--new-wdf-view-morph-duration) ease-in-out,
-    transform var(--new-wdf-view-morph-duration) ease-in-out;
+    height var(--wdf-view-morph-duration) ease-in-out,
+    padding-block var(--wdf-view-morph-duration) ease-in-out,
+    opacity var(--wdf-view-morph-duration) ease-in-out,
+    transform var(--wdf-view-morph-duration) ease-in-out;
 }
 
-.new-wdf-view__card[data-phase='opening'] .new-wdf-view__toolbar,
-.new-wdf-view__card[data-phase='edit'] .new-wdf-view__toolbar {
+.wdf-view__card[data-phase='opening'] .wdf-view__toolbar,
+.wdf-view__card[data-phase='edit'] .wdf-view__toolbar {
   height: 48px;
   padding-block: 6px max(6px, env(safe-area-inset-bottom));
   opacity: 1;
@@ -200,11 +200,11 @@
 }
 
 /* 编辑态允许焦点环溢出,避免被底栏自身裁剪。 */
-.new-wdf-view__card[data-phase='edit'] .new-wdf-view__toolbar {
+.wdf-view__card[data-phase='edit'] .wdf-view__toolbar {
   overflow: visible;
 }
 
-.new-wdf-view__toolbar-group {
+.wdf-view__toolbar-group {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,7 +219,7 @@
  * 历史教训见 91b7fd3/ef20da2)。inset: 0 + width/height auto +
  * margin 0 = 拉伸铺满视口。
  */
-.new-wdf-view__backdrop {
+.wdf-view__backdrop {
   position: fixed;
   inset: 0;
   width: auto;
@@ -235,7 +235,7 @@
   transition: opacity 200ms ease;
 }
 
-.new-wdf-view__backdrop[data-visible='true'] {
+.wdf-view__backdrop[data-visible='true'] {
   opacity: 1;
   pointer-events: auto;
 }
@@ -253,17 +253,17 @@
    header 高度再于 edit 弹回(坍缩-恢复闪烁);保持 static 后,
    edit 时才发生单次 render→编辑层高度交接(同文档渲染,高度差
    仅编辑器自带 padding)。 */
-.new-wdf-view__card[data-edit-style='inline'][data-phase='prepare'] .new-wdf-view__render {
+.wdf-view__card[data-edit-style='inline'][data-phase='prepare'] .wdf-view__render {
   position: static;
   inset: auto;
 }
-.new-wdf-view__card[data-edit-style='inline'][data-phase='edit'] .new-wdf-view__render,
-.new-wdf-view__card[data-edit-style='inline'][data-phase='closing'] .new-wdf-view__render {
+.wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__render,
+.wdf-view__card[data-edit-style='inline'][data-phase='closing'] .wdf-view__render {
   display: none;
 }
 
-.new-wdf-view__card[data-edit-style='inline'][data-phase='edit'] .new-wdf-view__editor-layer,
-.new-wdf-view__card[data-edit-style='inline'][data-phase='closing'] .new-wdf-view__editor-layer {
+.wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__editor-layer,
+.wdf-view__card[data-edit-style='inline'][data-phase='closing'] .wdf-view__editor-layer {
   position: static;
   inset: auto;
 }
@@ -284,7 +284,7 @@
  *    底距已提供视觉间隙,层总高与 render 层逐位对齐——消除进入
  *    编辑时 body 的离散高度跳变(同文档渲染下 ±0)。
  */
-.new-wdf-view__card[data-edit-style='inline'] .new-wdf-view__toolbar {
+.wdf-view__card[data-edit-style='inline'] .wdf-view__toolbar {
   opacity: 1;
   transform: none;
   height: 0;
@@ -294,11 +294,11 @@
     padding-block 200ms ease;
 }
 
-.new-wdf-view__card[data-edit-style='inline'][data-toolbar-open='true'] .new-wdf-view__toolbar {
+.wdf-view__card[data-edit-style='inline'][data-toolbar-open='true'] .wdf-view__toolbar {
   height: 48px;
   padding-block: 6px max(6px, env(safe-area-inset-bottom));
 }
 
-.new-wdf-view__card[data-edit-style='inline'] .rich-editor__viewport {
+.wdf-view__card[data-edit-style='inline'] .rich-editor__viewport {
   padding-block-end: 0;
 }

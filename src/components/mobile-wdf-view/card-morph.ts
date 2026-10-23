@@ -47,7 +47,7 @@ export function useCardMorph({
   slotRef: RefObject<HTMLDivElement | null>
   phaseRef: RefObject<CardPhase>
   isCurrentSession: (session: number) => boolean
-  /** 卡壳动画类;复用方(如 NewWdfView)用自有前缀时传入,默认现值。 */
+  /** 卡壳动画类;复用方(如 WdfView 自适应流)用自有前缀时传入,默认现值。 */
   animatingClass?: string
 }): CardMorph {
   /**

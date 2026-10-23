@@ -53,13 +53,9 @@
       "types": "./dist/components/mobile-wdf-view/mobile-wdf-view.d.css.ts",
       "default": "./dist/components/mobile-wdf-view/mobile-wdf-view.css"
     },
-    "./components/new-wdf-view": {
-      "types": "./dist/components/new-wdf-view/new-wdf-view.d.ts",
-      "import": "./dist/components/new-wdf-view/new-wdf-view.js"
-    },
-    "./styles/new-wdf-view.css": {
-      "types": "./dist/components/new-wdf-view/new-wdf-view.d.css.ts",
-      "default": "./dist/components/new-wdf-view/new-wdf-view.css"
+    "./styles/wdf-view.css": {
+      "types": "./dist/components/wdf-view/wdf-view.d.css.ts",
+      "default": "./dist/components/wdf-view/wdf-view.css"
     }
   },
   "scripts": {
