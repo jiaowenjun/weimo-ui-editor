@@ -1,0 +1,42 @@
+/* === WdfView 演示页(仅 site):退出滚动修复候选切换(试验)== */
+
+.wdf-fix-lab {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wdf-fix-lab__switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wdf-fix-lab__option {
+  padding: 4px 10px;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.wdf-fix-lab__option[data-active] {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+}
+
+.wdf-fix-lab__filler {
+  display: flex;
+  height: 60vh;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  color: var(--color-text-placeholder);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
