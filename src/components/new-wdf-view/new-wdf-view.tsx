@@ -75,6 +75,61 @@ const PHASE_TRANSITIONS: Record<CardPhase, readonly CardPhase[]> = {
 }
 
 /**
+ * 滚动锚定豁免(内联流进入/退出编辑的 ±48px 高度换挡提交时使用)。
+ *
+ * ## 现象(2026-10 实机报告,已实证)
+ * 退出内联编辑回查看态时,Safari 27 实机出现「页面滚动条跳动而卡片
+ * 底边视觉不动」;期望行为(滚动条不动、卡底上移)反而不出现。卡体
+ * 收缩量恒等于底栏 48px(render 与编辑器内容高度经对齐后 ±0,实测
+ * 文档总高精确 −48)。
+ *
+ * ## 根因:CSS scroll anchoring(滚动锚定)的静默补偿
+ * 引擎在布局时于视口内选定一个「锚点」节点;当锚点上方的文档高度
+ * 变化使其文档坐标移动时,自动调整 scrollY 保持锚点视觉位置不变。
+ * 本组件的收缩发生在页面锚点(卡下方的内容,如下一组演示卡的
+ * 分组标签)上方 → 锚点文档坐标上移 48 → 引擎静默 scrollY−48 保锚点
+ * → 表现为滚动条跳、卡底(紧邻锚点上方)冻结。**组件自身无任何
+ * 滚动调用**——同滚动位给 html 置 overflow-anchor:none 后 scrollY
+ * 变化精确归零,即证补偿全部来自锚定。进入编辑(卡长高 48)在锚点
+ * 于卡下方时存在镜像跳动(scrollY+48)。引擎差异:Chrome 锚点选择
+ * 不同,浅滚动位(锚点在卡上方)不补偿;WebKit 于 STP 238(2026-02)
+ * 启用锚定、Safari 27 全面搭载,故该跳动在旧 Safari 上不存在。
+ *
+ * ## 豁免方式与恢复时机
+ * 收缩/长高提交前给页面滚动容器(html)置 overflow-anchor:'none'。
+ * 提交经 flushSync 同步布局,属性在布局时已生效 → 该次补偿被跳过。
+ * 恢复必须晚于「下一次带布局的渲染帧」:若在首个渲染帧前恢复,锚点
+ * 基线可能未在豁免布局中刷新,补偿会在恢复后的布局中迟到发生——
+ * 故用双 rAF(首帧布局仍在豁免中完成并刷新基线,第二帧前恢复);
+ * rAF 被挂起的环境(后台标签页/自动化)以定时器兜底,恢复幂等。
+ *
+ * ## 边界
+ * - 仅对滚动容器生效;在卡片子树内置 none 无效(锚点选在卡外下方)。
+ * - 对话框流无需豁免:会话期 body 滚动被锁定,页面无锚定可言。
+ * - 重入(极快开合)时第二个调用直接提交,由首个调用的恢复统一
+ *   覆盖——两次换挡布局都落在豁免窗口内。
+ */
+function suppressScrollAnchoringAround(commit: () => void): void {
+  const rootStyle = document.documentElement.style
+  if (rootStyle.overflowAnchor === 'none') {
+    commit()
+    return
+  }
+  rootStyle.overflowAnchor = 'none'
+  try {
+    commit()
+  } finally {
+    const restore = () => {
+      rootStyle.overflowAnchor = ''
+    }
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(restore)
+    })
+    window.setTimeout(restore, 150)
+  }
+}
+
+/**
  * NewWdfView:自适应编辑样式的 WDF 读写视图(基于 MobileWdfView 架构)。
  *
  * - 窄屏(≤640px)/editStyle='dialog':与 MobileWdfView 行为一致——
@@ -302,10 +357,14 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
     const settleInlineToView = useCallback(() => {
       // resolvedEditStyle 不清除:仅作样式轴(相位规则已不命中),
       // 保留可让工具栏瞬切规则在收起帧仍然生效(关闭同为瞬时)。
+      // 布局复位使卡收缩 48px(工具栏),滚动锚定豁免防止引擎静默
+      // scrollY 补偿导致「滚动条跳、卡底冻结」(机制详见助手注释)。
       if (phaseRef.current !== 'view') {
-        flushSync(() => {
-          transitionPhase('view')
-          endSession()
+        suppressScrollAnchoringAround(() => {
+          flushSync(() => {
+            transitionPhase('view')
+            endSession()
+          })
         })
       }
       finishSessionMode()
@@ -421,7 +480,14 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
           readyTimerRef.current = null
         }
 
-        transitionPhase('edit')
+        // edit 相位提交使卡长高 48px(工具栏瞬进,render→编辑器 ±0):
+        // 同退出路径一样豁免滚动锚定(镜像跳动,机制详见助手注释);
+        // flushSync 让换挡布局同步落在豁免窗口内,不赌下一帧时序。
+        suppressScrollAnchoringAround(() => {
+          flushSync(() => {
+            transitionPhase('edit')
+          })
+        })
 
         if (autoFocusRef.current) {
           viewportFocus.focusEditorWithRetries(session)
