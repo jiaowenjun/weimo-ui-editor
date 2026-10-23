@@ -157,6 +157,19 @@
   flex: 1;
 }
 
+/*
+ * 飞行期滚动裁切边让位(仅对话框流会经历 opening/closing,内联流
+ * 不经过飞行相位,规则天然不命中):起飞/收尾帧 viewport 盒被压到
+ * 恰好=文本内容高,其滚动裁切边与末行底边零余量重合,WebKit 跨组件
+ * 行高度量偏差会浅切末行墨迹(同 MobileWdfView,详见其 css 注释)。
+ * 飞行期由编辑层(卡底,隔自身 13px 底距)统一裁切;edit 态恢复
+ * 滚动供长文档。两轴须同时 visible,单轴 visible 规范上计算为 auto。
+ */
+.new-wdf-view__card[data-phase='opening'] .rich-editor__viewport,
+.new-wdf-view__card[data-phase='closing'] .rich-editor__viewport {
+  overflow: visible;
+}
+
 /* 内置底栏:收起态高度 0 不占空间;展开(opening/edit)经高度/透明度
    过渡显出,贴底并让出安全区。 */
 .new-wdf-view__toolbar {

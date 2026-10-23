@@ -157,6 +157,23 @@
   flex: 1;
 }
 
+/*
+ * 飞行期滚动裁切边让位(opening/closing):
+ * 起飞/收尾帧 body 仍≈折叠高,viewport 盒被压到恰好=文本内容高,其
+ * overflow-y:auto 的滚动裁切边与末行文字底边零余量重合——WebKit
+ * 跨组件(WdfRender↔ProseMirror)行高度量累计偏差会浅切末行墨迹
+ * (对话框编辑"底部栏盖住末行下半截"一闪的根因;Chrome 因字形距
+ * 行盒底尚有行距而不显)。飞行期放开 viewport 裁切,由编辑层
+ * (overflow:hidden,卡底,与文本间隔着自身 13px 底距)统一兜底;
+ * edit 态恢复滚动供长文档(短文档飞行期溢出≤14px 底 padding,
+ * 被编辑层裁于 padding 区,无墨迹损耗)。两轴须同时 visible:
+ * 一轴 visible 一轴非 visible 时 visible 按规范计算为 auto。
+ */
+.mobile-wdf-view__card[data-phase='opening'] .rich-editor__viewport,
+.mobile-wdf-view__card[data-phase='closing'] .rich-editor__viewport {
+  overflow: visible;
+}
+
 /* 内置底栏:收起态高度 0 不占空间;展开(opening/edit)经高度/透明度
    过渡显出,贴底并让出安全区。 */
 .mobile-wdf-view__toolbar {
