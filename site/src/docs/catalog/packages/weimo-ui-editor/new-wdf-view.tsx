@@ -7,37 +7,22 @@ import { wdfRenderSample } from '../../fixtures/wdf-sample'
 import type { ComponentDefinition } from '../../types'
 
 /*
- * NewWdfView 演示页(仅 site):内联轴工具栏过渡 A/B 对照——对话框
- * 对照卡 + 三个内联变体(instant 瞬进瞬收 / delayed 延迟带过渡 /
- * css-delay 纯 CSS 固定延迟),宽屏下逐卡进入/退出编辑实机对比。
+ * NewWdfView 演示页(仅 site):同一文档三实例——auto(视口决定:
+ * ≤640px 对话框 morph,宽屏行内)、强制对话框、强制行内。宽屏下
+ * 可同时对照对话框与行内两种编辑形态;窄视口下 auto 与强制对话框
+ * 行为一致。行内工具栏带过渡(band 配方)为内联轴默认行为。
  */
 
 function NewWdfViewDemo() {
   const sample = wdfRenderSample as WdfDocument
   return (
     <div className="nwv-demo">
-      <p className="nwv-demo__caption">对话框对照(卡片 morph,过渡不变)</p>
+      <p className="nwv-demo__caption">auto(窄屏对话框 / 宽屏行内)</p>
+      <NewWdfView defaultValue={sample} title="自适应编辑" />
+      <p className="nwv-demo__caption">强制对话框(卡片 morph)</p>
       <NewWdfView defaultValue={sample} editStyle="dialog" title="对话框编辑" />
-      <p className="nwv-demo__caption">行内 · 延迟带过渡(delayed)</p>
-      <NewWdfView
-        defaultValue={sample}
-        editStyle="inline"
-        inlineToolbarTransition="delayed"
-        title="行内·延迟带"
-      />
-      <p className="nwv-demo__caption">行内 · 纯CSS延迟(css-delay)</p>
-      <NewWdfView
-        defaultValue={sample}
-        editStyle="inline"
-        inlineToolbarTransition="css-delay"
-        title="行内·CSS延迟"
-      />
-      <p className="nwv-demo__caption">行内 · 对照(方案C 瞬进瞬收)</p>
-      <NewWdfView
-        defaultValue={sample}
-        editStyle="inline"
-        title="行内·瞬进"
-      />
+      <p className="nwv-demo__caption">强制行内(嵌入式编辑)</p>
+      <NewWdfView defaultValue={sample} editStyle="inline" title="行内编辑" />
     </div>
   )
 }
