@@ -270,15 +270,23 @@
 
 /*
  * 进入编辑的连续性(内联轴专属):
- * 1) 工具栏带过渡(band 配方,实机 A/B 择定转正,2026-10-24):
- *    展开由 data-toolbar-open 驱动——协调器在 edit 提交双帧后置位
- *    (编辑器首栅格恰落在 edit 提交帧,prepare 期 visibility:hidden
- *    不绘制;过渡若同帧起跑会被首绘延迟压缩前段=「半高工具栏」,
- *    方案C 瞬进即为此教训的旧对策),height/padding-block 200ms
- *    收展;内容常显(opacity/transform 即时——双通道滞后会出透明
- *    空白带);收起与 settle 同帧清位,对称收拢。对话框流维持基础
- *    相位耦合过渡(飞行中被运动掩蔽)不受影响;本块选择器比基础
- *    展开规则多一属性,特异性覆盖成立。
+ * 1) 工具栏带过渡(band 配方,进入侧;退出侧为方案E瞬收):
+ *    - 进入:展开由 data-toolbar-open 驱动(协调器在 edit 提交双帧后
+ *      置位,绕开首栅格延迟压缩前段=「半高工具栏」),height/
+ *      padding-block 200ms;内容常显(opacity/transform 即时——
+ *      双通道滞后会出透明空白带)。
+ *    - 退出(方案E,2026-10-24 实机判别后定案):过渡仅挂在
+ *      [data-phase='edit'] 上——settle 的 flushSync 同帧提交
+ *      「相位离 edit + 清 toolbar-open」,过渡属性与 48→0 同帧
+ *      生效,收拢瞬完。历史依据(3e85ce2 实机验证的最后已知良好
+ *      配置):整段 −48 落在豁免内的单次提交布局中,恢复时引擎
+ *      重选锚点/重立基线;动画收拢(1d29075 起)把高度变化散到
+ *      多帧,恢复时刻无论多晚都不刷新基线,WebKit 以旧基线一次性
+ *      补偿=「滚动条闪跳」(anchor-end/refcount/preclamp/blur 四
+ *      候选皆因保留动画收拢而全部无效)。非对称(进动画/收瞬收)
+ *      为定案形态。
+ *    对话框流维持基础相位耦合过渡(飞行中被运动掩蔽)不受影响;
+ *    本块选择器比基础展开规则多一属性,特异性覆盖成立。
  * 2) 编辑器滚动容器 .rich-editor__viewport 自带 padding-block-end
  *    14px(为对话框滚动留光标空间);内联态归零——编辑层自身 13px
  *    底距已提供视觉间隙,层总高与 render 层逐位对齐——消除进入
@@ -289,6 +297,10 @@
   transform: none;
   height: 0;
   padding-block: 0;
+  transition: none;
+}
+
+.wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__toolbar {
   transition:
     height 200ms ease,
     padding-block 200ms ease;

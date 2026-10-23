@@ -55,20 +55,6 @@ export type WdfViewConversionSource = 'change' | 'save'
 /** 编辑样式:auto 按视口宽度(≤640px 对话框,否则内联);会话开始时
  * 解析并冻结(resolvedEditStyle),会话中途视口跨越断点不切换。 */
 export type WdfViewEditStyle = 'auto' | 'dialog' | 'inline'
-/** 退出编辑的滚动条自调修复候选(实机 A/B 试验 API,判别病因后收敛):
- * - none(默认/对照):现行行为——450ms 定长豁免窗;
- * - anchor-end:豁免恢复改挂收拢 transitionend+双 rAF(A:重启用
- *   旧基线迟到补偿假设);
- * - refcount:豁免单槽化,最新窗口接管恢复(B:重入竞态);
- * - preclamp:settle 后同步钳制 scrollY 至新 maxScroll(C:文档底部
- *   逐帧钳制滑移);
- * - blur:settle 前 blur 编辑器内焦点(D:焦点丢失滚动假设)。 */
-export type WdfViewExitScrollFix =
-  | 'none'
-  | 'anchor-end'
-  | 'refcount'
-  | 'preclamp'
-  | 'blur'
 
 const CARD_CLASS_PREFIX = 'wdf-view'
 const ANIMATING_CLASS = `${CARD_CLASS_PREFIX}__card--animating`
@@ -119,6 +105,14 @@ const PHASE_TRANSITIONS: Record<CardPhase, readonly CardPhase[]> = {
  * 故用双 rAF(首帧布局仍在豁免中完成并刷新基线,第二帧前恢复);
  * rAF 被挂起的环境(后台标签页/自动化)以定时器兜底,恢复幂等。
  *
+ * ## 退出侧必须瞬收(2026-10-24 实机判别定案)
+ * 高度变化必须**整段落在本提交布局内**。动画收拢(band 过渡)把 Δ
+ * 散到豁免窗内多帧,WebKit 在恢复时刻以旧基线一次性补偿——恢复时机
+ * 无论多晚(定长/transitionend 后)都不刷新基线,实测四类候选
+ * (延迟恢复/单槽重入/预钳制/预失焦)全部无效,唯退出瞬收(过渡仅挂
+ * edit 相位,与清位同帧)回到豁免单提交形态后实机消除。进入侧长高
+ * 为动画且多轮实机无恙,维持。
+ *
  * ## 边界
  * - 仅对滚动容器生效;在卡片子树内置 none 无效(锚点选在卡外下方)。
  * - 对话框流无需豁免:会话期 body 滚动被锁定,页面无锚定可言。
@@ -166,71 +160,6 @@ function scheduleAfterPaint(callback: () => void): void {
   window.setTimeout(run, 80)
 }
 
-/*
- * ==== 退出编辑「滚动条自调」候选修复(实机 A/B 试验,判别病因)====
- *
- * 病因假设(分析详见 2026-10-24 记录):A=WebKit 在豁免重启用时以旧
- * 基线一次性迟到补偿;B=开带 450ms 窗内快速退出的重入竞态(旧恢复
- * 定时器提前复活锚定);C=文档底部钳制(maxScroll 随收拢缩小,引擎
- * 逐帧钳制 scrollY,豁免对钳制无效);D=退出卸载聚焦编辑器的焦点
- * 丢失滚动。四个修复各自独立可证伪,实机按「位置/时序/节奏/幅度」
- * 四步判别后择定收敛。
- */
-
-/** B 候选(refcount):豁免窗口单槽化——新窗口接管恢复权,修复
- * 旧定时器按旧窗尾提前恢复的竞态(现行早退实现的缺陷)。 */
-let anchorRestoreTimer: number | null = null
-
-function suppressScrollAnchoringWindowed(
-  commit: () => void,
-  restoreAfterMs: number,
-): void {
-  if (anchorRestoreTimer !== null) {
-    window.clearTimeout(anchorRestoreTimer)
-    anchorRestoreTimer = null
-  }
-  const rootStyle = document.documentElement.style
-  rootStyle.overflowAnchor = 'none'
-  try {
-    commit()
-  } finally {
-    anchorRestoreTimer = window.setTimeout(() => {
-      anchorRestoreTimer = null
-      rootStyle.overflowAnchor = ''
-    }, restoreAfterMs)
-  }
-}
-
-/** A 候选(anchor-end):豁免持续到工具栏收拢的 height transitionend
- * 之后双 rAF(一切布局变化静止、锚定基线刷新完才恢复),兜底 900ms。
- * 若 WebKit 的补偿与恢复时机无关,本方案无效——实机可证伪。 */
-function suppressScrollAnchoringUntilHeightSettled(
-  commit: () => void,
-  element: HTMLElement | null,
-): void {
-  const rootStyle = document.documentElement.style
-  let restored = false
-  const restore = () => {
-    if (restored) return
-    restored = true
-    element?.removeEventListener('transitionend', onHeightEnd)
-    rootStyle.overflowAnchor = ''
-  }
-  const onHeightEnd = (event: TransitionEvent) => {
-    if (event.propertyName !== 'height') return
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(restore)
-    })
-    window.setTimeout(restore, 120)
-  }
-  rootStyle.overflowAnchor = 'none'
-  try {
-    commit()
-  } finally {
-    element?.addEventListener('transitionend', onHeightEnd)
-    window.setTimeout(restore, 900)
-  }
-}
 
 /**
  * WdfView:自适应编辑样式的 WDF 读写视图(基于 MobileWdfView 架构)。
@@ -273,8 +202,6 @@ export type WdfViewProps = Omit<
   autoFocusPosition?: RichEditorFocusPosition
   /** 编辑样式,默认 auto(视口 ≤640px 对话框,否则内联);会话内冻结。 */
   editStyle?: WdfViewEditStyle
-  /** 退出编辑的滚动条自调修复候选;试验 API,默认 none(现行行为)。 */
-  exitScrollFix?: WdfViewExitScrollFix
   /** 卡片标题(对话框态作为可访问名称)。 */
   title?: ReactNode
   /** 透传 WdfRender(查看态与衬底)。 */
@@ -321,7 +248,6 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       defaultValue,
       editStyle = 'auto',
       editorProps,
-      exitScrollFix = 'none',
       mode,
       onChange,
       onConversionError,
@@ -346,8 +272,6 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
     >(null)
     // 内联轴工具栏带开合(CSS 经 data-toolbar-open 分形,相位机不感知)。
     const [inlineToolbarOpen, setInlineToolbarOpen] = useState(false)
-    const exitScrollFixRef = useRef(exitScrollFix)
-    exitScrollFixRef.current = exitScrollFix
 
     // Editor Session:文档/草稿/提交/错误的数据面,两流共用。
     const {
@@ -467,51 +391,18 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
      */
     const settleInlineToView = useCallback(() => {
       // resolvedEditStyle 不清除:仅作样式轴(相位规则已不命中)。
-      // 布局复位使卡收缩 48px(工具栏),滚动锚定豁免防止引擎静默
-      // scrollY 补偿导致「滚动条跳、卡底冻结」(机制详见助手注释)。
-      // 工具栏收拢走 200ms 过渡(与清位同帧起跑,退出侧无首绘问题,
-      // 实机 A/B 双向验证)。退出侧「滚动条自调」修复候选按
-      // exitScrollFix 分形(病因假设与判别法见助手区注释)。
+      // 布局复位使卡收缩 48px(工具栏,方案E瞬收——整段 Δ 落在本
+      // 提交布局内),滚动锚定豁免防止引擎静默 scrollY 补偿导致
+      // 「滚动条跳、卡底冻结」(机制与退出必须瞬收的定案依据详见
+      // 助手注释)。
       if (phaseRef.current !== 'view') {
-        const fix = exitScrollFixRef.current
-        const commit = () => {
+        suppressScrollAnchoringAround(() => {
           flushSync(() => {
-            if (fix === 'blur') {
-              // D 候选:编辑器仍挂载时主动让出焦点,规避 WebKit
-              // 卸载聚焦元素时的焦点丢失滚动。
-              const active = document.activeElement
-              if (
-                active instanceof HTMLElement &&
-                shellRef.current?.contains(active)
-              ) {
-                active.blur()
-              }
-            }
             transitionPhase('view')
             endSession()
             setInlineToolbarOpen(false)
           })
-        }
-        if (fix === 'anchor-end') {
-          const toolbar =
-            shellRef.current?.querySelector<HTMLElement>(
-              `.${CARD_CLASS_PREFIX}__toolbar`,
-            ) ?? null
-          suppressScrollAnchoringUntilHeightSettled(commit, toolbar)
-        } else if (fix === 'refcount') {
-          suppressScrollAnchoringWindowed(commit, 450)
-        } else {
-          suppressScrollAnchoringAround(commit, 450)
-          if (fix === 'preclamp') {
-            // C 候选:提交后布局已收缩,同步钳制到新 maxScroll——
-            // 把逐帧滑移变成点击瞬间一次到位(钳制非锚定,豁免无效)。
-            const maxScroll =
-              document.documentElement.scrollHeight - window.innerHeight
-            if (window.scrollY > maxScroll) {
-              window.scrollTo(0, maxScroll)
-            }
-          }
-        }
+        })
       }
       finishSessionMode()
     }, [endSession, finishSessionMode, transitionPhase])
@@ -629,20 +520,11 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         // edit 相位提交使卡长高 48px(工具栏瞬进,render→编辑器 ±0):
         // 同退出路径一样豁免滚动锚定(镜像跳动,机制详见助手注释);
         // flushSync 让换挡布局同步落在豁免窗口内,不赌下一帧时序。
-        // refcount 候选:三个豁免点统一走单槽窗口(新窗口接管恢复)。
-        if (exitScrollFixRef.current === 'refcount') {
-          suppressScrollAnchoringWindowed(() => {
-            flushSync(() => {
-              transitionPhase('edit')
-            })
-          }, 450)
-        } else {
-          suppressScrollAnchoringAround(() => {
-            flushSync(() => {
-              transitionPhase('edit')
-            })
+        suppressScrollAnchoringAround(() => {
+          flushSync(() => {
+            transitionPhase('edit')
           })
-        }
+        })
 
         // 工具栏带不在本帧展开——编辑器首栅格恰落在 edit 提交帧
         // (prepare 期 visibility:hidden 不绘制),过渡若同帧起跑会被
@@ -655,15 +537,9 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
             if (!isCurrentSession(session) || phaseRef.current !== 'edit') {
               return
             }
-            if (exitScrollFixRef.current === 'refcount') {
-              suppressScrollAnchoringWindowed(() => {
-                setInlineToolbarOpen(true)
-              }, 450)
-            } else {
-              suppressScrollAnchoringAround(() => {
-                setInlineToolbarOpen(true)
-              }, 450)
-            }
+            suppressScrollAnchoringAround(() => {
+              setInlineToolbarOpen(true)
+            }, 450)
           })
         })
 
