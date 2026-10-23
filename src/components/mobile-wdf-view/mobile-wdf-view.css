@@ -193,10 +193,21 @@
   gap: 4px;
 }
 
-/* 遮罩:未提升/关闭时透明不可点。 */
+/*
+ * 遮罩:未提升/关闭时透明不可点。须显式覆盖 UA [popover] 默认几何
+ * (width/height: fit-content、margin: auto、border: solid、padding:
+ * 0.25em)——空 div 的 fit-content 解析为 0×0,不覆盖则遮罩零尺寸、
+ * 不可见不可点(卡壳由 openCard 的内联 width/height/margin 逃过此劫)。
+ * inset: 0 + width/height auto + margin 0 = 拉伸铺满视口。
+ */
 .mobile-wdf-view__backdrop {
   position: fixed;
   inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  border: none;
+  padding: 0;
   z-index: 100;
   background: var(--color-bg-backdrop, rgb(0 0 0 / 0.32));
   backdrop-filter: blur(var(--backdrop-blur, 8px));
