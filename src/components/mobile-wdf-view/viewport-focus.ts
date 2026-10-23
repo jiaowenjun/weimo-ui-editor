@@ -15,8 +15,7 @@ import {
   MORPH_PAD,
 } from './card-shell'
 
-import { ANIMATING_CLASS } from './card-morph'
-import type { CardPhase } from './mobile-wdf-view'
+import type { CardPhase } from './card-shell'
 
 const AUTO_FOCUS_RETRIES = 3
 const AUTO_FOCUS_RETRY_DELAY = 50
@@ -56,7 +55,7 @@ export function useViewportAndFocus({
   isCurrentSession,
   requestCancelClose,
   enableDialogChrome = true,
-  animatingClass = ANIMATING_CLASS,
+  animatingClass,
 }: {
   shellRef: RefObject<HTMLDivElement | null>
   phase: CardPhase
@@ -68,8 +67,8 @@ export function useViewportAndFocus({
   requestCancelClose: () => void
   /** 对话框模态挂件(vv 几何跟随 + 焦点陷阱)开关;内联编辑流关闭。 */
   enableDialogChrome?: boolean
-  /** 卡壳动画类;复用方用自有前缀时传入,默认现值。 */
-  animatingClass?: string
+  /** 卡壳动画类;调用方类前缀派生传入。 */
+  animatingClass: string
 }): ViewportAndFocus {
   const savedScrollYRef = useRef(0)
   const bodyOverflowRef = useRef('')

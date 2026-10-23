@@ -9,7 +9,8 @@ import {
 import type { RichEditorHandle } from '../rich-editor/rich-editor'
 import { toWdfEditorContent } from '../wdf-view/wdf-editor-content'
 
-import type { MobileWdfViewConversionSource } from './mobile-wdf-view'
+/** 提交触发方:change=收起提交,save=Cmd+S 保存(MobileWdfView 退役后本地定义)。 */
+type ConversionSource = 'change' | 'save'
 
 const CONVERSION_ERROR_RESET = 3000
 
@@ -38,7 +39,7 @@ export type EditorSession = {
   /** settle 时结束会话(须在 flushSync 内调用,保持复位次序)。 */
   endSession: () => void
   /** 提交草稿:fromTiptap 成功才提交;失败上报并返回 false。 */
-  commitDraft: (source: MobileWdfViewConversionSource) => boolean
+  commitDraft: (source: ConversionSource) => boolean
   /** Cmd/Ctrl+S:转换成功 onSave,失败上报(不退出编辑)。 */
   handleEditorSave: (content: Parameters<typeof fromTiptap>[0]) => void
   /** 收起路径转换失败(用户请求):显示保留会话提示并定时复位。 */
@@ -57,7 +58,7 @@ export function useEditorSession({
   onChange?: (document: WdfDocument) => void
   onConversionError?: (
     diagnostics: Diagnostic[],
-    source: MobileWdfViewConversionSource,
+    source: ConversionSource,
   ) => void
   onSave?: (document: WdfDocument) => void
 }): EditorSession {
@@ -101,7 +102,7 @@ export function useEditorSession({
   }, [])
 
   const commitDraft = useCallback(
-    (source: MobileWdfViewConversionSource) => {
+    (source: ConversionSource) => {
       const draft = editorRef.current?.getContent()
       if (!draft) return true
 

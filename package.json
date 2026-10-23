@@ -33,10 +33,6 @@
       "types": "./dist/components/wdf-view/wdf-view.d.ts",
       "import": "./dist/components/wdf-view/wdf-view.js"
     },
-    "./components/mobile-wdf-view": {
-      "types": "./dist/components/mobile-wdf-view/mobile-wdf-view.d.ts",
-      "import": "./dist/components/mobile-wdf-view/mobile-wdf-view.js"
-    },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
       "default": "./dist/styles/tokens.css"
@@ -48,10 +44,6 @@
     "./styles/rich-editor.css": {
       "types": "./dist/components/rich-editor/rich-editor.d.css.ts",
       "default": "./dist/components/rich-editor/rich-editor.css"
-    },
-    "./styles/mobile-wdf-view.css": {
-      "types": "./dist/components/mobile-wdf-view/mobile-wdf-view.d.css.ts",
-      "default": "./dist/components/mobile-wdf-view/mobile-wdf-view.css"
     },
     "./styles/wdf-view.css": {
       "types": "./dist/components/wdf-view/wdf-view.d.css.ts",

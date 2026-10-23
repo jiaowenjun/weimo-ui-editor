@@ -28,6 +28,10 @@ export type ShellRect = {
   width: number
 }
 
+/** 卡片相位机生命周期(MobileWdfView 退役后由 card-shell 承载定义,
+ *  WdfView 的协调器与 card-morph/viewport-focus 共用)。 */
+export type CardPhase = 'view' | 'prepare' | 'opening' | 'edit' | 'closing'
+
 export function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }

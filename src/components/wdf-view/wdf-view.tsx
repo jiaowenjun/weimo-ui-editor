@@ -29,8 +29,9 @@ import { WdfRender, type WdfRenderProps } from '../wdf-render/wdf-render'
 import { useEditorSession } from '../mobile-wdf-view/editor-session'
 import { useCardMorph } from '../mobile-wdf-view/card-morph'
 import { useViewportAndFocus } from '../mobile-wdf-view/viewport-focus'
-import type { CardPhase } from '../mobile-wdf-view/mobile-wdf-view'
+
 import {
+  type CardPhase,
   clearShellGeometry,
   hideFromTopLayer,
   inertSiblingsOf,
@@ -55,7 +56,8 @@ export type WdfViewConversionSource = 'change' | 'save'
  * 解析并冻结(resolvedEditStyle),会话中途视口跨越断点不切换。 */
 export type WdfViewEditStyle = 'auto' | 'dialog' | 'inline'
 
-const ANIMATING_CLASS = 'wdf-view__card--animating'
+const CARD_CLASS_PREFIX = 'wdf-view'
+const ANIMATING_CLASS = `${CARD_CLASS_PREFIX}__card--animating`
 const EDITOR_READY_TIMEOUT = 800
 
 type CloseSource = 'user' | 'external'
@@ -329,13 +331,14 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       [],
     )
 
-    // Card Morph(对话框流):飞行与测量;内联流不调用。
+    // Card Morph(对话框流):飞行与测量;内联流不调用。类前缀派生
+    // 动画类与衬底/标题栏选择器(DOM 契约见 card-morph 头注)。
     const morph = useCardMorph({
       shellRef,
       slotRef,
       phaseRef,
       isCurrentSession,
-      animatingClass: ANIMATING_CLASS,
+      classPrefix: CARD_CLASS_PREFIX,
     })
 
     // Viewport & Focus:对话框流全量;内联流关闭模态挂件

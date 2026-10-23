@@ -25,12 +25,5 @@ export const editorCatalog = {
       registryName: 'rich-editor',
       packageExport: './components/rich-editor',
     },
-    {
-      id: 'mobile-wdf-view',
-      name: '移动卡片式视图',
-      exportName: 'WdfView',
-      registryName: 'wdf-view',
-      packageExport: './components/wdf-view',
-    },
   ],
 } as const satisfies PackageCatalog

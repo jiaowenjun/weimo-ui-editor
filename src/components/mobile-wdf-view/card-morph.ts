@@ -8,9 +8,7 @@ import {
   type ShellRect,
 } from './card-shell'
 
-import type { CardPhase } from './mobile-wdf-view'
-
-export const ANIMATING_CLASS = 'mobile-wdf-view__card--animating'
+import type { CardPhase } from './card-shell'
 
 /**
  * Card Morph(内部简化阶段三):卡片几何动画面。
@@ -22,6 +20,12 @@ export const ANIMATING_CLASS = 'mobile-wdf-view__card--animating'
  *
  * 行为与拆分前逐行等价:飞行的 rAF/定时器守卫(session + phase)与
  * 完成次序(先移除动画类,再通知到达)保持不变。
+ *
+ * DOM 契约:动画类与衬底/标题栏选择器均由调用方类前缀派生
+ * (`${classPrefix}__card--animating`/`__render`/`__header`)——
+ * 消费方须以同一前缀命名这三类元素(历史教训:前缀不一致时
+ * measureNextViewHeight 静默 null,收起飞行回退钉旧高,编辑加长
+ * 后落位跳变)。
  */
 export type CardMorph = {
   /** 捕获折叠矩形并钉住 slot 高度(openCard 步骤 5-6 几何面)。 */
@@ -41,15 +45,17 @@ export function useCardMorph({
   slotRef,
   phaseRef,
   isCurrentSession,
-  animatingClass = ANIMATING_CLASS,
+  classPrefix,
 }: {
   shellRef: RefObject<HTMLDivElement | null>
   slotRef: RefObject<HTMLDivElement | null>
   phaseRef: RefObject<CardPhase>
   isCurrentSession: (session: number) => boolean
-  /** 卡壳动画类;复用方(如 WdfView 自适应流)用自有前缀时传入,默认现值。 */
-  animatingClass?: string
+  /** 调用方卡片的类前缀(派生动画类与衬底/标题栏选择器)。 */
+  classPrefix: string
 }): CardMorph {
+  const animatingClass = `${classPrefix}__card--animating`
+
   /**
    * 测量「收起后的 view 态卡片高度」:克隆衬底 DOM 到脱离会话布局的
    * 隐藏探针(定宽、高自动)读内容高度。不能直接读 render.scrollHeight
@@ -59,8 +65,8 @@ export function useCardMorph({
   const measureNextViewHeight = useCallback((): number | null => {
     const shell = shellRef.current
     const slot = slotRef.current
-    const render = shell?.querySelector<HTMLElement>('.mobile-wdf-view__render')
-    const header = shell?.querySelector<HTMLElement>('.mobile-wdf-view__header')
+    const render = shell?.querySelector<HTMLElement>(`.${classPrefix}__render`)
+    const header = shell?.querySelector<HTMLElement>(`.${classPrefix}__header`)
     if (!shell || !slot || !render || !header) return null
 
     const shellStyle = getComputedStyle(shell)
@@ -85,7 +91,7 @@ export function useCardMorph({
     const nextHeight = header.offsetHeight + contentHeight + borderWidth
 
     return nextHeight > 0 ? nextHeight : null
-  }, [shellRef, slotRef])
+  }, [classPrefix, shellRef, slotRef])
 
   const captureFoldedRect = useCallback((): ShellRect | null => {
     const shell = shellRef.current
@@ -100,7 +106,7 @@ export function useCardMorph({
       width: first.width,
       height: first.height,
     }
-  }, [shellRef, slotRef])
+  }, [classPrefix, shellRef, slotRef])
 
   const fixShellAtFolded = useCallback(
     (rect: ShellRect) => {
