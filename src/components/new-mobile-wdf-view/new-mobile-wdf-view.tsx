@@ -59,8 +59,9 @@ export type NewMobileWdfViewConversionSource = 'change' | 'save'
  * - 打开/关闭编排以具名操作组织(顺序注释对齐基线 §2/§4 编号);
  * - 「草稿已提交且衬底可测量」显式协作点
  *   scheduleCloseFlightAfterBackingCommit(基线 §2.1);
- * - data-ready 保留:prepare 仅表示已发起挂载,RichEditor onReady 是
- *   独立异步事实(基线 §3 判定)。
+ * - data-ready 已删除(阶段五):编辑层可见性由相位派生(opening 起
+ *   可见至 settle),等价性证明见 CSS 注释与基线 §3——原 editorReady
+ *   的三次翻转均与相位转换同一次 React 提交。
  *
  * 旧 MobileWdfView 保持不变,作为行为对照与回归基线。
  */
@@ -173,7 +174,6 @@ export const NewMobileWdfView = forwardRef<
   const [phase, setPhase] = useState<CardPhase>('view')
   const [internalMode, setInternalMode] =
     useState<NewMobileWdfViewMode>(defaultMode)
-  const [editorReady, setEditorReady] = useState(false)
   const [selectionFormat, setSelectionFormat] =
     useState<RichEditorSelectionFormat | null>(null)
 
@@ -296,7 +296,6 @@ export const NewMobileWdfView = forwardRef<
       if (phaseRef.current !== 'view') {
         flushSync(() => {
           transitionPhase('view')
-          setEditorReady(false)
           endSession()
         })
       }
@@ -385,7 +384,6 @@ export const NewMobileWdfView = forwardRef<
         readyTimerRef.current = null
       }
 
-      setEditorReady(true)
       transitionPhase('opening')
 
       morph.flyToDialog(session, () => {
@@ -449,8 +447,8 @@ export const NewMobileWdfView = forwardRef<
     // 步骤 9-10:清动画类;内联 fixed 几何,钉在原视口矩形(morph)。
     morph.fixShellAtFolded(first)
 
-    // 步骤 11:挂载编辑器(隐藏)、衬底转会话布局;DOM 属性随提交。
-    setEditorReady(false)
+    // 步骤 11:挂载编辑器(隐藏,prepare 态 CSS 控制不可见)、衬底
+    // 转会话布局;DOM 属性随提交。
     beginSession(currentDocumentRef.current)
 
     // 步骤 12:看门狗——编辑器就绪超时则直接展开(按会话隔离)。
@@ -697,10 +695,7 @@ export const NewMobileWdfView = forwardRef<
             <WdfRender {...renderProps} content={currentDocument} />
           </div>
           {sessionContent && (
-            <div
-              className="new-mobile-wdf-view__editor-layer"
-              data-ready={editorReady ? 'true' : undefined}
-            >
+            <div className="new-mobile-wdf-view__editor-layer">
               <RichEditor
                 {...editorProps}
                 autoFocus={false}

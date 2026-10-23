@@ -142,7 +142,12 @@
   visibility: hidden;
 }
 
-.new-mobile-wdf-view__editor-layer[data-ready='true'] {
+/* 编辑层可见性由相位派生(阶段五删除 data-ready):prepare 挂载期
+   隐藏(防骨架屏首帧),opening 起可见直至 settle 卸载。等价性:
+   原 editorReady 的三次翻转均与相位转换同一次 React 提交。 */
+.new-mobile-wdf-view__card[data-phase='opening'] .new-mobile-wdf-view__editor-layer,
+.new-mobile-wdf-view__card[data-phase='edit'] .new-mobile-wdf-view__editor-layer,
+.new-mobile-wdf-view__card[data-phase='closing'] .new-mobile-wdf-view__editor-layer {
   visibility: visible;
 }
 
