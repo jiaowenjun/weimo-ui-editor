@@ -54,6 +54,21 @@ export type NewWdfViewConversionSource = 'change' | 'save'
 /** 编辑样式:auto 按视口宽度(≤640px 对话框,否则内联);会话开始时
  * 解析并冻结(resolvedEditStyle),会话中途视口跨越断点不切换。 */
 export type NewWdfViewEditStyle = 'auto' | 'dialog' | 'inline'
+/**
+ * 内联轴底部工具栏过渡变体(实机 A/B 试验 API,择定后收敛):
+ * - instant(默认/对照):方案C 瞬进瞬收——与内容交接同帧完成,无
+ *   中间态(半高工具栏教训的既定结论);
+ * - delayed:band 配方移植——展开由协调器在 edit 提交双帧后置
+ *   data-toolbar-open 驱动(绕开首栅格延迟压缩前段),height/
+ *   padding 200ms 收展,收起与 settle 同帧清位、对称收拢;
+ * - css-delay:零 JS 状态——edit 相位上 animation-delay 固定延迟
+ *   起跑,退出瞬时回 0。
+ * 仅作用于内联轴;对话框流工具栏过渡(飞行掩蔽)不受影响。
+ */
+export type NewWdfViewInlineToolbarTransition =
+  | 'instant'
+  | 'delayed'
+  | 'css-delay'
 
 const ANIMATING_CLASS = 'new-wdf-view__card--animating'
 const EDITOR_READY_TIMEOUT = 800
@@ -109,7 +124,10 @@ const PHASE_TRANSITIONS: Record<CardPhase, readonly CardPhase[]> = {
  * - 重入(极快开合)时第二个调用直接提交,由首个调用的恢复统一
  *   覆盖——两次换挡布局都落在豁免窗口内。
  */
-function suppressScrollAnchoringAround(commit: () => void): void {
+function suppressScrollAnchoringAround(
+  commit: () => void,
+  restoreAfterMs?: number,
+): void {
   const rootStyle = document.documentElement.style
   if (rootStyle.overflowAnchor === 'none') {
     commit()
@@ -122,11 +140,29 @@ function suppressScrollAnchoringAround(commit: () => void): void {
     const restore = () => {
       rootStyle.overflowAnchor = ''
     }
+    if (restoreAfterMs !== undefined) {
+      // 定长窗口:高度过渡在提交后仍持续数百毫秒,恢复必须晚于
+      // 过渡全程(双 rAF 路径会在过渡中途恢复,尾段补偿滑移)。
+      window.setTimeout(restore, restoreAfterMs)
+      return
+    }
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(restore)
     })
     window.setTimeout(restore, 150)
   }
+}
+
+/** rAF + 定时器竞速(rAF 在后台标签页/自动化下可能挂起,幂等)。 */
+function scheduleAfterPaint(callback: () => void): void {
+  let called = false
+  const run = () => {
+    if (called) return
+    called = true
+    callback()
+  }
+  window.requestAnimationFrame(run)
+  window.setTimeout(run, 80)
 }
 
 /**
@@ -170,6 +206,8 @@ export type NewWdfViewProps = Omit<
   autoFocusPosition?: RichEditorFocusPosition
   /** 编辑样式,默认 auto(视口 ≤640px 对话框,否则内联);会话内冻结。 */
   editStyle?: NewWdfViewEditStyle
+  /** 内联轴工具栏过渡变体,默认 instant(方案C 瞬进瞬收);试验 API。 */
+  inlineToolbarTransition?: NewWdfViewInlineToolbarTransition
   /** 卡片标题(对话框态作为可访问名称)。 */
   title?: ReactNode
   /** 透传 WdfRender(查看态与衬底)。 */
@@ -216,6 +254,7 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
       defaultValue,
       editStyle = 'auto',
       editorProps,
+      inlineToolbarTransition = 'instant',
       mode,
       onChange,
       onConversionError,
@@ -238,6 +277,11 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
     const [resolvedEditStyle, setResolvedEditStyle] = useState<
       'dialog' | 'inline' | null
     >(null)
+    // 内联轴工具栏带开合(delayed 变体专用;CSS 经 data-toolbar-open
+    // 分形,相位机不感知)。
+    const [inlineToolbarOpen, setInlineToolbarOpen] = useState(false)
+    const inlineToolbarRef = useRef(inlineToolbarTransition)
+    inlineToolbarRef.current = inlineToolbarTransition
 
     // Editor Session:文档/草稿/提交/错误的数据面,两流共用。
     const {
@@ -359,13 +403,19 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
       // 保留可让工具栏瞬切规则在收起帧仍然生效(关闭同为瞬时)。
       // 布局复位使卡收缩 48px(工具栏),滚动锚定豁免防止引擎静默
       // scrollY 补偿导致「滚动条跳、卡底冻结」(机制详见助手注释)。
+      // delayed 变体的收拢走 200ms 过渡(与清位同帧起跑,退出侧无
+      // 首绘问题),豁免用 450ms 定长窗覆盖过渡全程。
       if (phaseRef.current !== 'view') {
-        suppressScrollAnchoringAround(() => {
-          flushSync(() => {
-            transitionPhase('view')
-            endSession()
-          })
-        })
+        suppressScrollAnchoringAround(
+          () => {
+            flushSync(() => {
+              transitionPhase('view')
+              endSession()
+              setInlineToolbarOpen(false)
+            })
+          },
+          inlineToolbarRef.current === 'delayed' ? 450 : undefined,
+        )
       }
       finishSessionMode()
     }, [endSession, finishSessionMode, transitionPhase])
@@ -488,6 +538,24 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
             transitionPhase('edit')
           })
         })
+
+        // delayed 变体:工具栏带不在本帧展开——编辑器首栅格恰落在
+        // edit 提交帧(prepare 期 visibility:hidden 不绘制),过渡若
+        // 同帧起跑会被首绘延迟压缩前段(半高工具栏教训);双帧确认
+        // 内容已上屏后再置位展开(相位/会话双守卫防迟到链,开带本身
+        // 的 +48 增量同样需锚定豁免,450ms 定长窗覆盖 200ms 过渡)。
+        if (inlineToolbarRef.current === 'delayed') {
+          scheduleAfterPaint(() => {
+            scheduleAfterPaint(() => {
+              if (!isCurrentSession(session) || phaseRef.current !== 'edit') {
+                return
+              }
+              suppressScrollAnchoringAround(() => {
+                setInlineToolbarOpen(true)
+              }, 450)
+            })
+          })
+        }
 
         if (autoFocusRef.current) {
           viewportFocus.focusEditorWithRetries(session)
@@ -805,7 +873,9 @@ export const NewWdfView = forwardRef<NewWdfViewHandle, NewWdfViewProps>(
           aria-modal={dialogEditing ? true : undefined}
           className="new-wdf-view__card"
           data-edit-style={resolvedEditStyle ?? undefined}
+          data-inline-toolbar={inlineToolbarTransition}
           data-phase={phase}
+          data-toolbar-open={inlineToolbarOpen ? 'true' : 'false'}
           ref={shellRef}
           role={dialogEditing ? 'dialog' : undefined}
           tabIndex={-1}

@@ -270,21 +270,70 @@
 
 /*
  * 进入编辑的连续性(内联轴专属):
- * 1) 工具栏取消高度/透明度过渡(方案C,实机 A/B 择定):height 过渡
- *    的时钟自样式变更起跑,而进入编辑的首帧被编辑内容首次栅格化
- *    推迟,前段增长会被压缩进首个可见帧(「半高工具栏突现」);
- *    内联卡静止无运动掩蔽,故取消过渡,0→48 与内容交接同帧完成,
- *    无中间态可被截半(对齐 WdfView footer 的出现形态;关闭同经
- *    flushSync 瞬时收起)。对话框流在飞行中被运动掩蔽,维持原过渡。
+ * 1) 工具栏过渡按 data-inline-toolbar 分形(实机 A/B 试验 API):
+ *    - instant(默认/对照,方案C):transition:none——height 过渡的
+ *      时钟自样式变更起跑,而进入编辑的首帧被编辑内容首次栅格化
+ *      推迟,前段增长会被压缩进首个可见帧(「半高工具栏突现」);
+ *      内联卡静止无运动掩蔽,故取消过渡,0→48 与内容交接同帧完成,
+ *      无中间态可被截半;关闭同经 flushSync 瞬时收起。
+ *    - delayed(band 配方移植,wdf-view 演示页实机验证的同款机制):
+ *      展开改由 data-toolbar-open 驱动(协调器在 edit 提交双帧后
+ *      置位,内容已上屏才起跑,绕开首绘压缩),height/padding-block
+ *      200ms 收展;内容常显(opacity/transform 即时——双通道滞后
+ *      会出透明空白带);收起与 settle 同帧清位,对称收拢。
+ *    - css-delay(零 JS 状态):edit 相位上以 animation-delay 固定
+ *      90ms 起跑(赌首栅格在延迟窗内完成;动画时钟同样自样式变更
+ *      起跑,此为对照赌注),退出相位离开 edit 即瞬时回 0。
+ *    对话框流维持基础相位耦合过渡(飞行中被运动掩蔽)不受影响;
+ *    本块选择器均比基础展开规则多一属性,特异性覆盖成立。
  * 2) 编辑器滚动容器 .rich-editor__viewport 自带 padding-block-end
  *    14px(为对话框滚动留光标空间);内联态归零——编辑层自身 13px
  *    底距已提供视觉间隙,层总高与 render 层逐位对齐——消除进入
  *    编辑时 body 的离散高度跳变(同文档渲染下 ±0)。
  */
-.new-wdf-view__card[data-edit-style='inline'] .new-wdf-view__toolbar {
+.new-wdf-view__card[data-edit-style='inline'][data-inline-toolbar='instant'] .new-wdf-view__toolbar {
   opacity: 1;
   transform: none;
   transition: none;
+}
+
+.new-wdf-view__card[data-edit-style='inline'][data-inline-toolbar='delayed'] .new-wdf-view__toolbar {
+  opacity: 1;
+  transform: none;
+  height: 0;
+  padding-block: 0;
+  transition:
+    height 200ms ease,
+    padding-block 200ms ease;
+}
+
+.new-wdf-view__card[data-edit-style='inline'][data-inline-toolbar='delayed'][data-toolbar-open='true'] .new-wdf-view__toolbar {
+  height: 48px;
+  padding-block: 6px max(6px, env(safe-area-inset-bottom));
+}
+
+.new-wdf-view__card[data-edit-style='inline'][data-inline-toolbar='css-delay'] .new-wdf-view__toolbar {
+  opacity: 1;
+  transform: none;
+  height: 0;
+  padding-block: 0;
+  transition: none;
+}
+
+.new-wdf-view__card[data-edit-style='inline'][data-inline-toolbar='css-delay'][data-phase='edit'] .new-wdf-view__toolbar {
+  animation: new-wdf-view-toolbar-grow 200ms ease 90ms both;
+}
+
+@keyframes new-wdf-view-toolbar-grow {
+  from {
+    height: 0;
+    padding-block: 0;
+  }
+
+  to {
+    height: 48px;
+    padding-block: 6px max(6px, env(safe-area-inset-bottom));
+  }
 }
 
 .new-wdf-view__card[data-edit-style='inline'] .rich-editor__viewport {
