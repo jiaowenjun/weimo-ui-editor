@@ -27,6 +27,10 @@ import { WdfRender, type WdfRenderProps } from '../wdf-render/wdf-render'
 // 复用已验证的 shell 原语层(基线 §6:不改其语义,旧组件同源)。
 import { useEditorSession } from './editor-session'
 import {
+  ANIMATING_CLASS,
+  useCardMorph,
+} from './card-morph'
+import {
   applyRect,
   clearShellGeometry,
   getDialogRect,
@@ -129,12 +133,11 @@ export type NewMobileWdfViewHandle = {
   ) => boolean
 }
 
-const ANIMATING_CLASS = 'new-mobile-wdf-view__card--animating'
 const EDITOR_READY_TIMEOUT = 800
 const AUTO_FOCUS_RETRIES = 3
 const AUTO_FOCUS_RETRY_DELAY = 50
 
-type CardPhase = 'view' | 'prepare' | 'opening' | 'edit' | 'closing'
+export type CardPhase = 'view' | 'prepare' | 'opening' | 'edit' | 'closing'
 type CloseSource = 'user' | 'external'
 
 /**
@@ -265,6 +268,15 @@ export const NewMobileWdfView = forwardRef<
     [],
   )
 
+  // Card Morph(阶段三):几何动画面;相位转换与资源清理留在协调器,
+  // 经 onArrive 回调交还。
+  const morph = useCardMorph({
+    shellRef,
+    slotRef,
+    phaseRef,
+    isCurrentSession,
+  })
+
   const lockBody = useCallback(() => {
     if (lockedRef.current) return
 
@@ -384,8 +396,9 @@ export const NewMobileWdfView = forwardRef<
   )
 
   /**
-   * 展开 FLIP(基线 §4 就绪→展开步骤 2-5)。入参为会话号:FLIP rAF、
-   * 展开完成定时器与 autoFocus 重试链均按会话隔离。
+   * 展开(基线 §4 就绪→展开步骤 2-5):就绪信号置位与相位转换在协调
+   * 器,几何飞行交 Card Morph;到达后做 edit 转换与自动聚焦(卡片自有
+   * 时机,handle 时序偶发偏晚,带「已聚焦即停」守卫的重试兜底)。
    */
   const startOpening = useCallback(
     (session: number) => {
@@ -402,31 +415,9 @@ export const NewMobileWdfView = forwardRef<
       setEditorReady(true)
       transitionPhase('opening')
 
-      void shell.getBoundingClientRect()
-      const duration = getMorphDuration()
-      window.requestAnimationFrame(() => {
-        if (!isCurrentSession(session) || phaseRef.current !== 'opening') {
-          return
-        }
-        if (duration > 0) {
-          shell.classList.add(ANIMATING_CLASS)
-        }
-        applyRect(shell, getDialogRect())
-      })
-      timerRef.current = window.setTimeout(() => {
-        if (
-          !isCurrentSession(session) ||
-          phaseRef.current !== 'opening' ||
-          !shell.isConnected
-        ) {
-          return
-        }
-
-        shell.classList.remove(ANIMATING_CLASS)
+      morph.flyToDialog(session, () => {
         transitionPhase('edit')
 
-        // 自动聚焦(卡片自有时机):handle 就绪时序偶发偏晚,带
-        // 「已聚焦即停」守卫的重试兜底。
         if (autoFocusRef.current) {
           const tryFocusEditor = (attempts: number) => {
             if (!isCurrentSession(session)) return
@@ -441,9 +432,9 @@ export const NewMobileWdfView = forwardRef<
           }
           tryFocusEditor(AUTO_FOCUS_RETRIES)
         }
-      }, duration + MORPH_PAD)
+      })
     },
-    [isCurrentSession, transitionPhase],
+    [isCurrentSession, morph, transitionPhase],
   )
 
   /** 编辑器就绪:等一拍让首帧内容真正上屏,再起飞(避免拍到骨架屏)。 */
@@ -479,10 +470,10 @@ export const NewMobileWdfView = forwardRef<
     savedScrollYRef.current = window.scrollY
     lockBody()
 
-    // 步骤 5-7:测折叠矩形 → slot 钉高(防页面塌陷)→ 惰性化祖先链
-    // 兄弟(会话期外部交互隔离)。
-    const first = shell.getBoundingClientRect()
-    slot.style.height = `${slot.getBoundingClientRect().height}px`
+    // 步骤 5-7:捕获折叠矩形 + slot 钉高(morph)→ 惰性化祖先链兄弟
+    // (会话期外部交互隔离)。
+    const first = morph.captureFoldedRect()
+    if (!first) return
     if (inertedRef.current.length === 0) {
       inertedRef.current = inertSiblingsOf(shell)
     }
@@ -493,19 +484,8 @@ export const NewMobileWdfView = forwardRef<
       console.warn('[new-mobile-wdf-view] Popover API 不可用,降级为 fixed 覆盖层')
     }
 
-    // 步骤 9-10:清动画类;内联 fixed 几何,钉在原视口矩形。
-    shell.classList.remove(ANIMATING_CLASS)
-    shell.style.position = 'fixed'
-    shell.style.zIndex = '101'
-    shell.style.margin = '0'
-    shell.style.right = 'auto'
-    shell.style.bottom = 'auto'
-    applyRect(shell, {
-      top: first.top,
-      left: first.left,
-      width: first.width,
-      height: first.height,
-    })
+    // 步骤 9-10:清动画类;内联 fixed 几何,钉在原视口矩形(morph)。
+    morph.fixShellAtFolded(first)
 
     // 步骤 11:挂载编辑器(隐藏)、衬底转会话布局;DOM 属性随提交。
     setEditorReady(false)
@@ -518,87 +498,7 @@ export const NewMobileWdfView = forwardRef<
         startOpening(session)
       }
     }, EDITOR_READY_TIMEOUT)
-  }, [beginSession, isCurrentSession, lockBody, startOpening, transitionPhase])
-
-  /**
-   * 测量「收起后的 view 态卡片高度」:克隆衬底 DOM 到脱离会话布局的
-   * 隐藏探针(定宽、高自动)读内容高度。不能直接读 render.scrollHeight
-   * ——会话态衬底是 absolute inset:0,scrollHeight 下限是盒高(对话框
-   * body 高),短内容会被抬高。测量失败返回 null,回退钉住矩形。
-   */
-  const measureNextViewHeight = useCallback((): number | null => {
-    const shell = shellRef.current
-    const slot = slotRef.current
-    const render = shell?.querySelector<HTMLElement>('.new-mobile-wdf-view__render')
-    const header = shell?.querySelector<HTMLElement>('.new-mobile-wdf-view__header')
-    if (!shell || !slot || !render || !header) return null
-
-    const shellStyle = getComputedStyle(shell)
-    const borderWidth =
-      parseFloat(shellStyle.borderTopWidth || '0') +
-      parseFloat(shellStyle.borderBottomWidth || '0')
-
-    // 真实内容高度:克隆衬底 DOM,脱离 inset 布局,与 view 态同宽。
-    const contentProbe = render.cloneNode(true) as HTMLElement
-    contentProbe.style.position = 'absolute'
-    contentProbe.style.visibility = 'hidden'
-    contentProbe.style.pointerEvents = 'none'
-    contentProbe.style.inset = 'auto'
-    contentProbe.style.width = `${slot.clientWidth - borderWidth}px`
-    contentProbe.style.maxHeight = 'none'
-    contentProbe.style.overflow = 'visible'
-    slot.appendChild(contentProbe)
-    const contentHeight = contentProbe.scrollHeight
-    contentProbe.remove()
-    if (!(contentHeight > 0)) return null
-
-    const nextHeight = header.offsetHeight + contentHeight + borderWidth
-
-    return nextHeight > 0 ? nextHeight : null
-  }, [])
-
-  /** 收起飞行:目标=新内容下的 view 态高度(基线 §2.1 步骤 4-5)。 */
-  const runCloseAnimation = useCallback(
-    (session: number) => {
-      const shell = shellRef.current
-      const slot = slotRef.current
-      if (!shell || !slot) return
-
-      const duration = getMorphDuration()
-      const target = slot.getBoundingClientRect()
-
-      // 动画目标高度与槽位钉高都对齐「新内容下的 view 态高度」:页面
-      // 下方唯一一次位移发生在动画期间(被飞行卡片掩盖),settle 释放
-      // 钉高时 Δ=0,落位即终态。取消路径文档未变,测量值=旧钉高,两
-      // 赋值皆 no-op。
-      const nextHeight = measureNextViewHeight()
-      if (nextHeight != null) {
-        slot.style.height = `${nextHeight}px`
-      }
-
-      if (duration > 0) {
-        shell.classList.add(ANIMATING_CLASS)
-      }
-      applyRect(shell, {
-        top: target.top,
-        left: target.left,
-        width: target.width,
-        height: nextHeight ?? target.height,
-      })
-
-      timerRef.current = window.setTimeout(() => {
-        if (
-          !isCurrentSession(session) ||
-          phaseRef.current !== 'closing' ||
-          !shell.isConnected
-        ) {
-          return
-        }
-        settleToView()
-      }, duration + MORPH_PAD)
-    },
-    [isCurrentSession, measureNextViewHeight, settleToView],
-  )
+  }, [beginSession, isCurrentSession, lockBody, morph, startOpening, transitionPhase])
 
   /**
    * 收起编辑器(基线 §2.3):
@@ -630,26 +530,26 @@ export const NewMobileWdfView = forwardRef<
         !!viewport && window.innerHeight - viewport.height > 120
 
       const session = sessionRef.current
+      const flyHome = () => morph.flyToFolded(session, settleToView)
       if (keyboardOpen) {
         timerRef.current = window.setTimeout(() => {
           if (isCurrentSession(session)) {
-            runCloseAnimation(session)
+            flyHome()
           }
         }, KEYBOARD_CLOSE_WAIT)
         return
       }
 
       // 经显式协作点起飞:衬底新内容先提交,测量后执行(§2.1)。
-      scheduleCloseFlightAfterBackingCommit(session, () =>
-        runCloseAnimation(session),
-      )
+      scheduleCloseFlightAfterBackingCommit(session, flyHome)
     },
     [
       commitDraft,
       flagConversionError,
       isCurrentSession,
-      runCloseAnimation,
+      morph,
       scheduleCloseFlightAfterBackingCommit,
+      settleToView,
       transitionPhase,
     ],
   )
