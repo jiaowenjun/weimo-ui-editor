@@ -147,8 +147,12 @@ export function getFocusableElements(root: HTMLElement) {
   )
 }
 
-/** 批量 inert 锚点祖先链的兄弟节点;返回待还原节点列表。 */
-export function inertSiblingsOf(anchor: HTMLElement) {
+/** 批量 inert 锚点祖先链的兄弟节点(可豁免一个元素,如可点击遮罩);
+ * 返回待还原节点列表。 */
+export function inertSiblingsOf(
+  anchor: HTMLElement,
+  skip?: HTMLElement | null,
+) {
   const inerted: HTMLElement[] = []
   let node: HTMLElement | null = anchor
 
@@ -157,7 +161,7 @@ export function inertSiblingsOf(anchor: HTMLElement) {
     if (!parentElement) break
 
     for (const sibling of Array.from(parentElement.children)) {
-      if (sibling === node) continue
+      if (sibling === node || sibling === skip) continue
       if (sibling instanceof HTMLElement && !sibling.hasAttribute('inert')) {
         sibling.setAttribute('inert', '')
         inerted.push(sibling)
