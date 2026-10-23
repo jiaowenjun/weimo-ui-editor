@@ -26,20 +26,13 @@ import {
 import { WdfRender, type WdfRenderProps } from '../wdf-render/wdf-render'
 // 复用已验证的 shell 原语层(基线 §6:不改其语义,旧组件同源)。
 import { useEditorSession } from './editor-session'
+import { ANIMATING_CLASS, useCardMorph } from './card-morph'
+import { useViewportAndFocus } from './viewport-focus'
 import {
-  ANIMATING_CLASS,
-  useCardMorph,
-} from './card-morph'
-import {
-  applyRect,
   clearShellGeometry,
-  getDialogRect,
-  getFocusableElements,
-  getMorphDuration,
   hideFromTopLayer,
   inertSiblingsOf,
   KEYBOARD_CLOSE_WAIT,
-  MORPH_PAD,
   showInTopLayer,
   stageVisibilityHandoff,
 } from '../mobile-wdf-view/card-shell'
@@ -134,8 +127,6 @@ export type NewMobileWdfViewHandle = {
 }
 
 const EDITOR_READY_TIMEOUT = 800
-const AUTO_FOCUS_RETRIES = 3
-const AUTO_FOCUS_RETRY_DELAY = 50
 
 export type CardPhase = 'view' | 'prepare' | 'opening' | 'edit' | 'closing'
 type CloseSource = 'user' | 'external'
@@ -212,11 +203,7 @@ export const NewMobileWdfView = forwardRef<
   const phaseRef = useRef<CardPhase>('view')
   const timerRef = useRef<number | null>(null)
   const readyTimerRef = useRef<number | null>(null)
-  const savedScrollYRef = useRef(0)
-  const bodyOverflowRef = useRef('')
-  const bodyPaddingRightRef = useRef('')
   const inertedRef = useRef<HTMLElement[]>([])
-  const lockedRef = useRef(false)
   const closeSourceRef = useRef<CloseSource>('user')
   const sessionRef = useRef(0)
 
@@ -277,28 +264,18 @@ export const NewMobileWdfView = forwardRef<
     isCurrentSession,
   })
 
-  const lockBody = useCallback(() => {
-    if (lockedRef.current) return
-
-    lockedRef.current = true
-    bodyOverflowRef.current = document.body.style.overflow
-    bodyPaddingRightRef.current = document.body.style.paddingRight
-    const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth
-    document.body.style.overflow = 'hidden'
-    if (scrollbarWidth > 0) {
-      const currentPadding = bodyPaddingRightRef.current || '0px'
-      document.body.style.paddingRight = `calc(${currentPadding} + ${scrollbarWidth}px)`
-    }
-  }, [])
-
-  const unlockBody = useCallback(() => {
-    if (!lockedRef.current) return
-
-    lockedRef.current = false
-    document.body.style.overflow = bodyOverflowRef.current
-    document.body.style.paddingRight = bodyPaddingRightRef.current
-  }, [])
+  // Viewport & Focus(阶段四):滚动锁/滚动位置/键盘判定/几何跟随/
+  // 焦点陷阱;Esc 经回调交还协调器。
+  const viewportFocus = useViewportAndFocus({
+    shellRef,
+    phase,
+    phaseRef,
+    sessionRef,
+    editorRef,
+    autoFocusPositionRef,
+    isCurrentSession,
+    requestCancelClose: () => closeEditorRef.current('cancel', 'user'),
+  })
 
   /**
    * settle-to-view(fix-v3 收起清理)。步骤编号对应基线 §2.2,顺序不可变:
@@ -329,14 +306,12 @@ export const NewMobileWdfView = forwardRef<
       hideFromTopLayer(shell)
       clearShellGeometry(shell, ANIMATING_CLASS)
       slot.style.height = ''
-      unlockBody()
+      viewportFocus.unlockBody()
       for (const element of inertedRef.current) {
         element.removeAttribute('inert')
       }
       inertedRef.current = []
-      if (window.scrollY !== savedScrollYRef.current) {
-        window.scrollTo(0, savedScrollYRef.current)
-      }
+      viewportFocus.restoreScrollPosition()
 
       // 步骤 6-8:Ghost 替身 + 一帧隐藏,唤回状态栏重采样,像素连续
       // 消除落位闪烁。恢复回调不加会话守卫(见 isCurrentSession 注释):
@@ -354,7 +329,7 @@ export const NewMobileWdfView = forwardRef<
         }
       }
     },
-    [endSession, transitionPhase, unlockBody],
+    [endSession, transitionPhase, viewportFocus],
   )
 
   // 卸载兜底:清定时器、退 top layer、解锁、去 inert。
@@ -367,8 +342,6 @@ export const NewMobileWdfView = forwardRef<
         window.clearTimeout(readyTimerRef.current)
       }
       hideFromTopLayer(shellRef.current)
-      document.body.style.overflow = bodyOverflowRef.current
-      document.body.style.paddingRight = bodyPaddingRightRef.current
       for (const element of inertedRef.current) {
         element.removeAttribute('inert')
       }
@@ -419,22 +392,11 @@ export const NewMobileWdfView = forwardRef<
         transitionPhase('edit')
 
         if (autoFocusRef.current) {
-          const tryFocusEditor = (attempts: number) => {
-            if (!isCurrentSession(session)) return
-            const content = shell.querySelector<HTMLElement>(
-              '.rich-editor__content',
-            )
-            if (content?.contains(document.activeElement)) return
-            if (attempts <= 0) return
-
-            editorRef.current?.focus(autoFocusPositionRef.current)
-            window.setTimeout(() => tryFocusEditor(attempts - 1), AUTO_FOCUS_RETRY_DELAY)
-          }
-          tryFocusEditor(AUTO_FOCUS_RETRIES)
+          viewportFocus.focusEditorWithRetries(session)
         }
       })
     },
-    [isCurrentSession, morph, transitionPhase],
+    [isCurrentSession, morph, transitionPhase, viewportFocus],
   )
 
   /** 编辑器就绪:等一拍让首帧内容真正上屏,再起飞(避免拍到骨架屏)。 */
@@ -467,8 +429,8 @@ export const NewMobileWdfView = forwardRef<
     const session = ++sessionRef.current
     closeSourceRef.current = 'user'
     transitionPhase('prepare')
-    savedScrollYRef.current = window.scrollY
-    lockBody()
+    viewportFocus.saveScrollPosition()
+    viewportFocus.lockBody()
 
     // 步骤 5-7:捕获折叠矩形 + slot 钉高(morph)→ 惰性化祖先链兄弟
     // (会话期外部交互隔离)。
@@ -498,7 +460,7 @@ export const NewMobileWdfView = forwardRef<
         startOpening(session)
       }
     }, EDITOR_READY_TIMEOUT)
-  }, [beginSession, isCurrentSession, lockBody, morph, startOpening, transitionPhase])
+  }, [beginSession, isCurrentSession, morph, startOpening, transitionPhase, viewportFocus])
 
   /**
    * 收起编辑器(基线 §2.3):
@@ -525,13 +487,10 @@ export const NewMobileWdfView = forwardRef<
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur()
       }
-      const viewport = window.visualViewport
-      const keyboardOpen =
-        !!viewport && window.innerHeight - viewport.height > 120
 
       const session = sessionRef.current
       const flyHome = () => morph.flyToFolded(session, settleToView)
-      if (keyboardOpen) {
+      if (viewportFocus.isKeyboardOpen()) {
         timerRef.current = window.setTimeout(() => {
           if (isCurrentSession(session)) {
             flyHome()
@@ -593,109 +552,6 @@ export const NewMobileWdfView = forwardRef<
       setInternalMode(next)
     }
   }, [])
-
-  // 键盘避让:opening/edit 期间跟随 visualViewport 调整几何。
-  useEffect(() => {
-    if (phase !== 'opening' && phase !== 'edit') return
-
-    const session = sessionRef.current
-
-    const updateGeometry = () => {
-      const shell = shellRef.current
-      const currentPhase = phaseRef.current
-      if (
-        !shell ||
-        !isCurrentSession(session) ||
-        (currentPhase !== 'opening' && currentPhase !== 'edit')
-      ) {
-        return
-      }
-
-      if (currentPhase === 'opening') {
-        applyRect(shell, getDialogRect())
-        return
-      }
-
-      shell.classList.add(ANIMATING_CLASS)
-      applyRect(shell, getDialogRect())
-      window.setTimeout(() => {
-        if (isCurrentSession(session) && phaseRef.current === 'edit') {
-          shell.classList.remove(ANIMATING_CLASS)
-        }
-      }, getMorphDuration() + MORPH_PAD)
-    }
-
-    const viewport = window.visualViewport
-    viewport?.addEventListener('resize', updateGeometry)
-    window.addEventListener('resize', updateGeometry)
-
-    return () => {
-      viewport?.removeEventListener('resize', updateGeometry)
-      window.removeEventListener('resize', updateGeometry)
-    }
-  }, [isCurrentSession, phase])
-
-  // Esc 收起 + Tab 焦点陷阱 + focusin 拉回。
-  useEffect(() => {
-    if (phase !== 'edit') return
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        event.stopPropagation()
-        closeEditorRef.current('cancel', 'user')
-        return
-      }
-
-      if (event.key !== 'Tab') return
-
-      const shell = shellRef.current
-      if (!shell) return
-
-      const focusables = getFocusableElements(shell)
-      if (focusables.length === 0) {
-        event.preventDefault()
-        shell.focus()
-        return
-      }
-
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      const active = document.activeElement
-
-      if (event.shiftKey) {
-        if (active === first || !shell.contains(active)) {
-          event.preventDefault()
-          last.focus()
-        }
-        return
-      }
-
-      if (active === last || !shell.contains(active)) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-
-    const handleFocusIn = (event: FocusEvent) => {
-      if (phaseRef.current !== 'edit') return
-
-      const shell = shellRef.current
-      if (!shell) return
-
-      if (event.target instanceof Node && !shell.contains(event.target)) {
-        shell.focus({ preventScroll: true })
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown, true)
-    document.addEventListener('focusin', handleFocusIn, true)
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown, true)
-      document.removeEventListener('focusin', handleFocusIn, true)
-    }
-  }, [phase])
 
   const handleSelectionFormatChange = useCallback(
     (format: RichEditorSelectionFormat | null) => {

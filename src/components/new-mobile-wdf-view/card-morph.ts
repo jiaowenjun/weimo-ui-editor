@@ -1,4 +1,4 @@
-import { useCallback, type RefObject } from 'react'
+import { useCallback, useMemo, type RefObject } from 'react'
 
 import {
   applyRect,
@@ -190,11 +190,15 @@ export function useCardMorph({
     [isCurrentSession, measureNextViewHeight, phaseRef, shellRef, slotRef],
   )
 
-  return {
-    captureFoldedRect,
-    fixShellAtFolded,
-    flyToDialog,
-    flyToFolded,
-    measureNextViewHeight,
-  }
+  // 容器记忆化:保持引用稳定,避免协调器回调身份逐渲染漂移。
+  return useMemo(
+    () => ({
+      captureFoldedRect,
+      fixShellAtFolded,
+      flyToDialog,
+      flyToFolded,
+      measureNextViewHeight,
+    }),
+    [captureFoldedRect, fixShellAtFolded, flyToDialog, flyToFolded, measureNextViewHeight],
+  )
 }
