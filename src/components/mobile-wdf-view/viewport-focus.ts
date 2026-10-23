@@ -55,6 +55,8 @@ export function useViewportAndFocus({
   autoFocusPositionRef,
   isCurrentSession,
   requestCancelClose,
+  enableDialogChrome = true,
+  animatingClass = ANIMATING_CLASS,
 }: {
   shellRef: RefObject<HTMLDivElement | null>
   phase: CardPhase
@@ -64,6 +66,10 @@ export function useViewportAndFocus({
   autoFocusPositionRef: RefObject<RichEditorFocusPosition>
   isCurrentSession: (session: number) => boolean
   requestCancelClose: () => void
+  /** 对话框模态挂件(vv 几何跟随 + 焦点陷阱)开关;内联编辑流关闭。 */
+  enableDialogChrome?: boolean
+  /** 卡壳动画类;复用方用自有前缀时传入,默认现值。 */
+  animatingClass?: string
 }): ViewportAndFocus {
   const savedScrollYRef = useRef(0)
   const bodyOverflowRef = useRef('')
@@ -132,8 +138,10 @@ export function useViewportAndFocus({
     [autoFocusPositionRef, editorRef, isCurrentSession, shellRef],
   )
 
-  // 键盘避让:opening/edit 期间跟随 visualViewport 调整几何。
+  // 键盘避让:opening/edit 期间跟随 visualViewport 调整几何
+  // (仅对话框流;内联流不脱离文档流,禁用)。
   useEffect(() => {
+    if (!enableDialogChrome) return
     if (phase !== 'opening' && phase !== 'edit') return
 
     const session = sessionRef.current
@@ -154,11 +162,11 @@ export function useViewportAndFocus({
         return
       }
 
-      shell.classList.add(ANIMATING_CLASS)
+      shell.classList.add(animatingClass)
       applyRect(shell, getDialogRect())
       window.setTimeout(() => {
         if (isCurrentSession(session) && phaseRef.current === 'edit') {
-          shell.classList.remove(ANIMATING_CLASS)
+          shell.classList.remove(animatingClass)
         }
       }, getMorphDuration() + MORPH_PAD)
     }
@@ -171,10 +179,12 @@ export function useViewportAndFocus({
       viewport?.removeEventListener('resize', updateGeometry)
       window.removeEventListener('resize', updateGeometry)
     }
-  }, [isCurrentSession, phase, phaseRef, sessionRef, shellRef])
+  }, [animatingClass, enableDialogChrome, isCurrentSession, phase, phaseRef, sessionRef, shellRef])
 
-  // Esc 收起 + Tab 焦点陷阱 + focusin 拉回。
+  // Esc 收起 + Tab 焦点陷阱 + focusin 拉回(仅对话框模态;内联流
+  // 非模态,由协调器提供轻量 Esc)。
   useEffect(() => {
+    if (!enableDialogChrome) return
     if (phase !== 'edit') return
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -233,7 +243,7 @@ export function useViewportAndFocus({
       document.removeEventListener('keydown', handleKeyDown, true)
       document.removeEventListener('focusin', handleFocusIn, true)
     }
-  }, [phase, phaseRef, requestCancelClose, shellRef])
+  }, [enableDialogChrome, phase, phaseRef, requestCancelClose, shellRef])
 
   // 卸载兜底:还原 body 滚动样式(锁体残留防护)。
   useEffect(() => {

@@ -41,11 +41,14 @@ export function useCardMorph({
   slotRef,
   phaseRef,
   isCurrentSession,
+  animatingClass = ANIMATING_CLASS,
 }: {
   shellRef: RefObject<HTMLDivElement | null>
   slotRef: RefObject<HTMLDivElement | null>
   phaseRef: RefObject<CardPhase>
   isCurrentSession: (session: number) => boolean
+  /** 卡壳动画类;复用方(如 NewWdfView)用自有前缀时传入,默认现值。 */
+  animatingClass?: string
 }): CardMorph {
   /**
    * 测量「收起后的 view 态卡片高度」:克隆衬底 DOM 到脱离会话布局的
@@ -104,7 +107,7 @@ export function useCardMorph({
       const shell = shellRef.current
       if (!shell) return
 
-      shell.classList.remove(ANIMATING_CLASS)
+      shell.classList.remove(animatingClass)
       shell.style.position = 'fixed'
       shell.style.zIndex = '101'
       shell.style.margin = '0'
@@ -112,7 +115,7 @@ export function useCardMorph({
       shell.style.bottom = 'auto'
       applyRect(shell, rect)
     },
-    [shellRef],
+    [animatingClass, shellRef],
   )
 
   const flyToDialog = useCallback(
@@ -128,7 +131,7 @@ export function useCardMorph({
           return
         }
         if (duration > 0) {
-          shell.classList.add(ANIMATING_CLASS)
+          shell.classList.add(animatingClass)
         }
         applyRect(shell, getDialogRect())
       })
@@ -141,11 +144,11 @@ export function useCardMorph({
           return
         }
 
-        shell.classList.remove(ANIMATING_CLASS)
+        shell.classList.remove(animatingClass)
         onArrive()
       }, duration + MORPH_PAD)
     },
-    [isCurrentSession, phaseRef, shellRef],
+    [animatingClass, isCurrentSession, phaseRef, shellRef],
   )
 
   const flyToFolded = useCallback(
@@ -167,7 +170,7 @@ export function useCardMorph({
       }
 
       if (duration > 0) {
-        shell.classList.add(ANIMATING_CLASS)
+        shell.classList.add(animatingClass)
       }
       applyRect(shell, {
         top: target.top,
@@ -187,7 +190,7 @@ export function useCardMorph({
         onArrive()
       }, duration + MORPH_PAD)
     },
-    [isCurrentSession, measureNextViewHeight, phaseRef, shellRef, slotRef],
+    [animatingClass, isCurrentSession, measureNextViewHeight, phaseRef, shellRef, slotRef],
   )
 
   // 容器记忆化:保持引用稳定,避免协调器回调身份逐渲染漂移。
