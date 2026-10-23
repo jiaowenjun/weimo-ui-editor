@@ -6,11 +6,11 @@ import {
   getMorphDuration,
   MORPH_PAD,
   type ShellRect,
-} from '../mobile-wdf-view/card-shell'
+} from './card-shell'
 
-import type { CardPhase } from './new-mobile-wdf-view'
+import type { CardPhase } from './mobile-wdf-view'
 
-export const ANIMATING_CLASS = 'new-mobile-wdf-view__card--animating'
+export const ANIMATING_CLASS = 'mobile-wdf-view__card--animating'
 
 /**
  * Card Morph(内部简化阶段三):卡片几何动画面。
@@ -56,8 +56,8 @@ export function useCardMorph({
   const measureNextViewHeight = useCallback((): number | null => {
     const shell = shellRef.current
     const slot = slotRef.current
-    const render = shell?.querySelector<HTMLElement>('.new-mobile-wdf-view__render')
-    const header = shell?.querySelector<HTMLElement>('.new-mobile-wdf-view__header')
+    const render = shell?.querySelector<HTMLElement>('.mobile-wdf-view__render')
+    const header = shell?.querySelector<HTMLElement>('.mobile-wdf-view__header')
     if (!shell || !slot || !render || !header) return null
 
     const shellStyle = getComputedStyle(shell)

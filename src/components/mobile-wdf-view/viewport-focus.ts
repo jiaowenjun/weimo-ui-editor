@@ -13,10 +13,10 @@ import {
   getFocusableElements,
   getMorphDuration,
   MORPH_PAD,
-} from '../mobile-wdf-view/card-shell'
+} from './card-shell'
 
 import { ANIMATING_CLASS } from './card-morph'
-import type { CardPhase } from './new-mobile-wdf-view'
+import type { CardPhase } from './mobile-wdf-view'
 
 const AUTO_FOCUS_RETRIES = 3
 const AUTO_FOCUS_RETRY_DELAY = 50

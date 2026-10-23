@@ -1,7 +1,7 @@
-/* === MobileWdfView === */
+/* === MobileWdfView(专属前缀,基线 docs/new-mobile-wdf-view-baseline.md §6)*/
 
 .mobile-wdf-view {
-  --mobile-wdf-morph-duration: 320ms;
+  --new-mobile-wdf-morph-duration: 320ms;
 
   position: relative;
   width: 100%;
@@ -10,7 +10,7 @@
 
 @media (max-width: 640px) {
   .mobile-wdf-view {
-    --mobile-wdf-morph-duration: 320ms;
+    --new-mobile-wdf-morph-duration: 320ms;
   }
 }
 
@@ -41,10 +41,10 @@
 
 .mobile-wdf-view__card--animating {
   transition:
-    top var(--mobile-wdf-morph-duration) ease-in-out,
-    left var(--mobile-wdf-morph-duration) ease-in-out,
-    width var(--mobile-wdf-morph-duration) ease-in-out,
-    height var(--mobile-wdf-morph-duration) ease-in-out;
+    top var(--new-mobile-wdf-morph-duration) ease-in-out,
+    left var(--new-mobile-wdf-morph-duration) ease-in-out,
+    width var(--new-mobile-wdf-morph-duration) ease-in-out,
+    height var(--new-mobile-wdf-morph-duration) ease-in-out;
   will-change: top, left, width, height;
 }
 
@@ -142,7 +142,12 @@
   visibility: hidden;
 }
 
-.mobile-wdf-view__editor-layer[data-ready='true'] {
+/* 编辑层可见性由相位派生(阶段五删除 data-ready):prepare 挂载期
+   隐藏(防骨架屏首帧),opening 起可见直至 settle 卸载。等价性:
+   原 editorReady 的三次翻转均与相位转换同一次 React 提交。 */
+.mobile-wdf-view__card[data-phase='opening'] .mobile-wdf-view__editor-layer,
+.mobile-wdf-view__card[data-phase='edit'] .mobile-wdf-view__editor-layer,
+.mobile-wdf-view__card[data-phase='closing'] .mobile-wdf-view__editor-layer {
   visibility: visible;
 }
 
@@ -167,10 +172,10 @@
   opacity: 0;
   transform: translateY(12px);
   transition:
-    height var(--mobile-wdf-morph-duration) ease-in-out,
-    padding-block var(--mobile-wdf-morph-duration) ease-in-out,
-    opacity var(--mobile-wdf-morph-duration) ease-in-out,
-    transform var(--mobile-wdf-morph-duration) ease-in-out;
+    height var(--new-mobile-wdf-morph-duration) ease-in-out,
+    padding-block var(--new-mobile-wdf-morph-duration) ease-in-out,
+    opacity var(--new-mobile-wdf-morph-duration) ease-in-out,
+    transform var(--new-mobile-wdf-morph-duration) ease-in-out;
 }
 
 .mobile-wdf-view__card[data-phase='opening'] .mobile-wdf-view__toolbar,
@@ -197,8 +202,9 @@
  * 遮罩:未提升/关闭时透明不可点。须显式覆盖 UA [popover] 默认几何
  * (width/height: fit-content、margin: auto、border: solid、padding:
  * 0.25em)——空 div 的 fit-content 解析为 0×0,不覆盖则遮罩零尺寸、
- * 不可见不可点(卡壳由 openCard 的内联 width/height/margin 逃过)。
- * inset: 0 + width/height auto + margin 0 = 拉伸铺满视口。
+ * 不可见不可点(卡壳由 openCard 的内联 width/height/margin 逃过;
+ * 历史教训见 91b7fd3/ef20da2)。inset: 0 + width/height auto +
+ * margin 0 = 拉伸铺满视口。
  */
 .mobile-wdf-view__backdrop {
   position: fixed;

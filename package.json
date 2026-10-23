@@ -37,10 +37,6 @@
       "types": "./dist/components/mobile-wdf-view/mobile-wdf-view.d.ts",
       "import": "./dist/components/mobile-wdf-view/mobile-wdf-view.js"
     },
-    "./components/new-mobile-wdf-view": {
-      "types": "./dist/components/new-mobile-wdf-view/new-mobile-wdf-view.d.ts",
-      "import": "./dist/components/new-mobile-wdf-view/new-mobile-wdf-view.js"
-    },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
       "default": "./dist/styles/tokens.css"
@@ -56,10 +52,6 @@
     "./styles/mobile-wdf-view.css": {
       "types": "./dist/components/mobile-wdf-view/mobile-wdf-view.d.css.ts",
       "default": "./dist/components/mobile-wdf-view/mobile-wdf-view.css"
-    },
-    "./styles/new-mobile-wdf-view.css": {
-      "types": "./dist/components/new-mobile-wdf-view/new-mobile-wdf-view.d.css.ts",
-      "default": "./dist/components/new-mobile-wdf-view/new-mobile-wdf-view.css"
     }
   },
   "scripts": {

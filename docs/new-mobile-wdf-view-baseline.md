@@ -1,6 +1,10 @@
 # NewMobileWdfView 设计基线:时序契约与回归清单
 
 > 状态:基于当前设计记录整理,供重构前冻结行为契约。
+> **2026-10-23 替换生效**:NewMobileWdfView 已顶替旧实现并恢复
+> `MobileWdfView` 命名与 `mobile-wdf-view` 前缀(旧实现已删除,git
+> 历史可考);本文中 NewMobileWdfView/new-mobile-wdf-view 前缀字样
+> 均指现组件。
 > 实施策略:新增 `NewMobileWdfView`,不修改、不替换、不重命名现有
 > `MobileWdfView`。旧组件作为可运行的行为基线;新组件独立实现并行
 > 验证。首阶段不改变既有交互语义、动画参数或 fix-v3 时序。
