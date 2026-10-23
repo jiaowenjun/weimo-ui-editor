@@ -1,0 +1,15 @@
+/* === NewMobileWdfView 并排对照页(仅 site):页面布局,卡片样式随包走 === */
+
+.nmwv-compare {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nmwv-compare__caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
