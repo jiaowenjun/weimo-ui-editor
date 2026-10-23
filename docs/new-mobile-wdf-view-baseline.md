@@ -139,16 +139,43 @@ L341-386):
 ## 7. 实施清单
 
 1. [x] 对照源码记录 openCard/提交测量/settle 真实顺序(本文 §2/§4)。
-2. [ ] 冻结旧组件真机基线(设备/iOS 版本/演示页)。
+2. [x] 冻结旧组件真机基线(设备/iOS 版本/演示页)。
 3. [x] 创建最小可运行 NewMobileWdfView(复制行为协议,无新状态机库)。
 4. [x] mode/phase 区分;显式「已提交且可测量」协作点
     (`scheduleCloseFlightAfterBackingCommit`)。
 5. [x] 复用 card-shell 原语;打开/关闭编排在具名操作内,关闭顺序遵守
     §2。
 6. [x] data-ready 判定:prepare≠就绪,保留独立 ready 信号(§3)。
-7. [ ] 新旧并排真机对照;全基线通过后才考虑内部简化。
+7. [x] 新旧并排真机对照;全基线通过后才考虑内部简化。
+
+> 验收记录:2026-10-23 并排页新旧组件真机对照通过(用户确认),
+> §8 门槛解锁,可启动新组件内部简化(会话标识/集中式转换/模块拆分,
+> 每步独立提交并保留旧组件为对照)。
 
 ## 8. 下一阶段门槛
 
 新组件独立运行 + 与旧组件逐项行为对照 + 真机回归通过,方可扩大重构
 范围。旧 `MobileWdfView` 在此之前保持不变;是否替换是后续独立决策。
+
+## 附录 A:相位转换盘点(内部简化阶段一)
+
+事件 → 相位变更 → 附带副作用(以 NewMobileWdfView 首版为准):
+
+| # | 事件 | 转换 | 附带副作用 |
+|---|---|---|---|
+| 1 | openCard(铅笔/受控 edit) | view→prepare | 会话开始;存 scrollY;锁滚动;测折叠矩形;slot 钉高;inert 兄弟;提升 top layer;内联 fixed 几何;挂编辑器;衬底转会话布局;800ms 看门狗 |
+| 2 | onReady + 50ms | prepare(不变) | 等首帧上屏(定时器) |
+| 3 | startOpening | prepare→opening | editorReady=true;FLIP:rAF 加动画类+applyRect(dialog rect);320+24ms 完成定时器 |
+| 4 | 展开完成定时器 | opening→edit | 移除动画类;autoFocus 重试×3(50ms) |
+| 5 | closeEditor(save/cancel) | edit→closing | 提交草稿(save);失焦收键盘;按键盘态 180ms/协作点 setTimeout(0) 起飞 |
+| 6 | runCloseAnimation 定时器 | closing(不变) | 测新内容高度;钉高对齐;飞行;320+24ms |
+| 7 | settleToView | closing→view(flushSync);prepare/opening→view(外部取消) | flushSync 三态复位;退 top layer;清几何;释放钉高;解锁;去 inert;恢复 scrollY;Ghost+一帧隐藏;双 rAF/64ms 幂等恢复;onModeChange('view')(用户路径) |
+
+异步回调清单(须会话隔离):onReady 50ms 定时器、看门狗、FLIP rAF、
+展开完成定时器、autoFocus 重试链、键盘等待/协作点定时器、收起飞行
+settle 定时器、键盘避让定时器。例外:Ghost 恢复回调**不加**会话守卫
+——幂等且恒向正确终态(visibility 复位),跳过可能把壳搁置在 hidden。
+
+合法转换表(view→prepare;prepare→opening|view;opening→edit|view;
+edit→closing;closing→view)由集中式 `transitionPhase` 执行,非法组合
+告警拒绝;纯 reducer 不承载副作用(基线约束)。

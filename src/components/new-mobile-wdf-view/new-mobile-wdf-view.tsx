@@ -139,6 +139,20 @@ const CONVERSION_ERROR_RESET = 3000
 type CardPhase = 'view' | 'prepare' | 'opening' | 'edit' | 'closing'
 type CloseSource = 'user' | 'external'
 
+/**
+ * 合法相位转换表(生命周期契约,基线附录 A):view→prepare(打开)、
+ * prepare→opening(就绪/看门狗)、opening→edit(展开完成)、
+ * edit→closing(收起)、closing→view(settle)、prepare/opening→view
+ * (外部取消经 settle)。由集中式 transitionPhase 执行。
+ */
+const PHASE_TRANSITIONS: Record<CardPhase, readonly CardPhase[]> = {
+  view: ['prepare'],
+  prepare: ['opening', 'view'],
+  opening: ['edit', 'view'],
+  edit: ['closing'],
+  closing: ['view'],
+}
+
 export const NewMobileWdfView = forwardRef<
   NewMobileWdfViewHandle,
   NewMobileWdfViewProps
@@ -191,6 +205,7 @@ export const NewMobileWdfView = forwardRef<
   const inertedRef = useRef<HTMLElement[]>([])
   const lockedRef = useRef(false)
   const closeSourceRef = useRef<CloseSource>('user')
+  const sessionRef = useRef(0)
 
   const isModeControlled = mode !== undefined
   const isDocControlled = value !== undefined
@@ -216,6 +231,37 @@ export const NewMobileWdfView = forwardRef<
   autoFocusPositionRef.current = autoFocusPosition
   isModeControlledRef.current = isModeControlled
   currentDocumentRef.current = currentDocument
+
+  /*
+   * 集中式相位转换(阶段一):合法转换表校验 + 告警拒绝,ref 与 state
+   * 同步推进。命令函数而非纯 reducer——依赖 ref 先行、React 批量提交
+   * 与 settle 处 flushSync 的既有次序(冻结基线 §2/§4),不为形式统一
+   * 而推迟到 effect。settle 的 view 转换在 flushSync 内调用本函数。
+   */
+  const transitionPhase = useCallback((next: CardPhase): boolean => {
+    const current = phaseRef.current
+    if (current === next) return false
+    if (!PHASE_TRANSITIONS[current].includes(next)) {
+      console.warn(
+        `[new-mobile-wdf-view] 忽略非法相位转换 ${current} → ${next}`,
+      )
+      return false
+    }
+    phaseRef.current = next
+    setPhase(next)
+    return true
+  }, [])
+
+  /**
+   * 会话隔离(阶段一):openCard 递增会话号,异步回调捕获创建时的
+   * 号码、执行前校验;与 phase 守卫配合(前者判会话归属,后者判阶段
+   * 许可),不互相替代。例外:Ghost 可见性恢复不加会话守卫——幂等且
+   * 恒向正确终态(visibility 复位),跳过反而可能把壳搁置在 hidden。
+   */
+  const isCurrentSession = useCallback(
+    (session: number) => session === sessionRef.current,
+    [],
+  )
 
   const lockBody = useCallback(() => {
     if (lockedRef.current) return
@@ -247,53 +293,55 @@ export const NewMobileWdfView = forwardRef<
    * 8 双 rAF 恢复 + 64ms 兜底(幂等)。
    */
   const settleToView = useCallback(() => {
-    const shell = shellRef.current
-    const slot = slotRef.current
-    if (!shell || !slot) return
+      const shell = shellRef.current
+      const slot = slotRef.current
+      if (!shell || !slot) return
 
-    // 步骤 1:先同步切回 view 布局再退 top layer——内容撑高模型下,
-    // closing 态 render 仍是 absolute(不贡献高度),若清几何/释放钉高
-    // 先于 view 重渲染被绘制,卡片塌到 header 高度再弹回(落位闪烁)。
-    // flushSync 保证本 tick 完成:render 转 static、编辑层卸载、slot
-    // 回内容高度——塌陷窗口不存在,Ghost 克隆的即 view 态 DOM。
-    if (phaseRef.current !== 'view') {
-      phaseRef.current = 'view'
-      flushSync(() => {
-        setPhase('view')
-        setEditorReady(false)
-        setSessionContent(null)
-      })
-    }
-
-    // 步骤 2-5:退 top layer → 清几何 → 释放钉高/解锁/去 inert →
-    // 恢复滚动(hidePopover 之后需经历一次不可见绘制,见步骤 7)。
-    hideFromTopLayer(shell)
-    clearShellGeometry(shell, ANIMATING_CLASS)
-    slot.style.height = ''
-    unlockBody()
-    for (const element of inertedRef.current) {
-      element.removeAttribute('inert')
-    }
-    inertedRef.current = []
-    if (window.scrollY !== savedScrollYRef.current) {
-      window.scrollTo(0, savedScrollYRef.current)
-    }
-
-    // 步骤 6-8:Ghost 替身 + 一帧隐藏,唤回状态栏重采样,像素连续
-    // 消除落位闪烁;恢复函数幂等,rAF 挂起环境由 setTimeout 兜底。
-    const restoreHandoff = stageVisibilityHandoff(shell, slot)
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(restoreHandoff)
-    })
-    window.setTimeout(restoreHandoff, 64)
-
-    if (closeSourceRef.current === 'user') {
-      onModeChangeRef.current?.('view')
-      if (!isModeControlledRef.current) {
-        setInternalMode('view')
+      // 步骤 1:先同步切回 view 布局再退 top layer——内容撑高模型下,
+      // closing 态 render 仍是 absolute(不贡献高度),若清几何/释放钉高
+      // 先于 view 重渲染被绘制,卡片塌到 header 高度再弹回(落位闪烁)。
+      // flushSync 保证本 tick 完成:render 转 static、编辑层卸载、slot
+      // 回内容高度——塌陷窗口不存在,Ghost 克隆的即 view 态 DOM。
+      if (phaseRef.current !== 'view') {
+        flushSync(() => {
+          transitionPhase('view')
+          setEditorReady(false)
+          setSessionContent(null)
+        })
       }
-    }
-  }, [unlockBody])
+
+      // 步骤 2-5:退 top layer → 清几何 → 释放钉高/解锁/去 inert →
+      // 恢复滚动(hidePopover 之后需经历一次不可见绘制,见步骤 7)。
+      hideFromTopLayer(shell)
+      clearShellGeometry(shell, ANIMATING_CLASS)
+      slot.style.height = ''
+      unlockBody()
+      for (const element of inertedRef.current) {
+        element.removeAttribute('inert')
+      }
+      inertedRef.current = []
+      if (window.scrollY !== savedScrollYRef.current) {
+        window.scrollTo(0, savedScrollYRef.current)
+      }
+
+      // 步骤 6-8:Ghost 替身 + 一帧隐藏,唤回状态栏重采样,像素连续
+      // 消除落位闪烁。恢复回调不加会话守卫(见 isCurrentSession 注释):
+      // 幂等且恒向 visibility 复位的正确终态;rAF 挂起由 setTimeout 兜底。
+      const restoreHandoff = stageVisibilityHandoff(shell, slot)
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(restoreHandoff)
+      })
+      window.setTimeout(restoreHandoff, 64)
+
+      if (closeSourceRef.current === 'user') {
+        onModeChangeRef.current?.('view')
+        if (!isModeControlledRef.current) {
+          setInternalMode('view')
+        }
+      }
+    },
+    [transitionPhase, unlockBody],
+  )
 
   // 卸载兜底:清定时器、退 top layer、解锁、去 inert。
   useEffect(() => {
@@ -343,72 +391,100 @@ export const NewMobileWdfView = forwardRef<
    * (新内容)必须先完成 React/DOM 提交,收起飞行的克隆探针测量才能
    * 读到新高度。React 调度(MessageChannel)先于定时器执行,
    * setTimeout(0) 即满足「已提交且可测量」。这是防落位跳闪的时序契约
-   * (7429551/14ba6c0),不是可随意替换的实现细节。
+   * (7429551/14ba6c0),不是可随意替换的实现细节。会话隔离:起飞前
+   * 校验会话号。
    */
   const scheduleCloseFlightAfterBackingCommit = useCallback(
-    (fly: () => void) => {
-      timerRef.current = window.setTimeout(fly, 0)
+    (session: number, fly: () => void) => {
+      timerRef.current = window.setTimeout(() => {
+        if (isCurrentSession(session)) {
+          fly()
+        }
+      }, 0)
     },
-    [],
+    [isCurrentSession],
   )
 
-  /** 展开 FLIP(基线 §4 就绪→展开步骤 2-5)。 */
-  const startOpening = useCallback(() => {
-    const shell = shellRef.current
-    if (!shell || phaseRef.current !== 'prepare') return
-
-    if (readyTimerRef.current !== null) {
-      window.clearTimeout(readyTimerRef.current)
-      readyTimerRef.current = null
-    }
-
-    setEditorReady(true)
-    phaseRef.current = 'opening'
-    setPhase('opening')
-
-    void shell.getBoundingClientRect()
-    const duration = getMorphDuration()
-    window.requestAnimationFrame(() => {
-      if (phaseRef.current !== 'opening') return
-      if (duration > 0) {
-        shell.classList.add(ANIMATING_CLASS)
+  /**
+   * 展开 FLIP(基线 §4 就绪→展开步骤 2-5)。入参为会话号:FLIP rAF、
+   * 展开完成定时器与 autoFocus 重试链均按会话隔离。
+   */
+  const startOpening = useCallback(
+    (session: number) => {
+      const shell = shellRef.current
+      if (!shell || !isCurrentSession(session) || phaseRef.current !== 'prepare') {
+        return
       }
-      applyRect(shell, getDialogRect())
-    })
-    timerRef.current = window.setTimeout(() => {
-      if (phaseRef.current !== 'opening' || !shell.isConnected) return
 
-      shell.classList.remove(ANIMATING_CLASS)
-      phaseRef.current = 'edit'
-      setPhase('edit')
+      if (readyTimerRef.current !== null) {
+        window.clearTimeout(readyTimerRef.current)
+        readyTimerRef.current = null
+      }
 
-      // 自动聚焦(卡片自有时机):handle 就绪时序偶发偏晚,带
-      // 「已聚焦即停」守卫的重试兜底。
-      if (autoFocusRef.current) {
-        const tryFocusEditor = (attempts: number) => {
-          const content = shell.querySelector<HTMLElement>(
-            '.rich-editor__content',
-          )
-          if (content?.contains(document.activeElement)) return
-          if (attempts <= 0) return
+      setEditorReady(true)
+      transitionPhase('opening')
 
-          editorRef.current?.focus(autoFocusPositionRef.current)
-          window.setTimeout(() => tryFocusEditor(attempts - 1), AUTO_FOCUS_RETRY_DELAY)
+      void shell.getBoundingClientRect()
+      const duration = getMorphDuration()
+      window.requestAnimationFrame(() => {
+        if (!isCurrentSession(session) || phaseRef.current !== 'opening') {
+          return
         }
-        tryFocusEditor(AUTO_FOCUS_RETRIES)
-      }
-    }, duration + MORPH_PAD)
-  }, [])
+        if (duration > 0) {
+          shell.classList.add(ANIMATING_CLASS)
+        }
+        applyRect(shell, getDialogRect())
+      })
+      timerRef.current = window.setTimeout(() => {
+        if (
+          !isCurrentSession(session) ||
+          phaseRef.current !== 'opening' ||
+          !shell.isConnected
+        ) {
+          return
+        }
+
+        shell.classList.remove(ANIMATING_CLASS)
+        transitionPhase('edit')
+
+        // 自动聚焦(卡片自有时机):handle 就绪时序偶发偏晚,带
+        // 「已聚焦即停」守卫的重试兜底。
+        if (autoFocusRef.current) {
+          const tryFocusEditor = (attempts: number) => {
+            if (!isCurrentSession(session)) return
+            const content = shell.querySelector<HTMLElement>(
+              '.rich-editor__content',
+            )
+            if (content?.contains(document.activeElement)) return
+            if (attempts <= 0) return
+
+            editorRef.current?.focus(autoFocusPositionRef.current)
+            window.setTimeout(() => tryFocusEditor(attempts - 1), AUTO_FOCUS_RETRY_DELAY)
+          }
+          tryFocusEditor(AUTO_FOCUS_RETRIES)
+        }
+      }, duration + MORPH_PAD)
+    },
+    [isCurrentSession, transitionPhase],
+  )
 
   /** 编辑器就绪:等一拍让首帧内容真正上屏,再起飞(避免拍到骨架屏)。 */
   const handleEditorReady = useCallback(() => {
     if (phaseRef.current !== 'prepare') return
 
-    readyTimerRef.current = window.setTimeout(startOpening, 50)
-  }, [startOpening])
+    const session = sessionRef.current
+    readyTimerRef.current = window.setTimeout(() => {
+      if (isCurrentSession(session)) {
+        startOpening(session)
+      }
+    }, 50)
+  }, [isCurrentSession, startOpening])
 
   /**
-   * openCard(基线 §4 步骤 1-12,顺序对齐旧组件 openCard)。
+   * openCard(基线 §4 步骤 1-12,顺序对齐旧组件 openCard)。步骤 1 起
+   * 增会话号(旧会话异步回调自此全部失效);view→prepare 经统一转换
+   * 入口,ref 先行 + React 批量提交,与旧版「ref 早置/state 后置」
+   * 提交时机等价。
    */
   const openCard = useCallback(() => {
     if (phaseRef.current !== 'view') return
@@ -417,10 +493,11 @@ export const NewMobileWdfView = forwardRef<
     const slot = slotRef.current
     if (!shell || !slot) return
 
-    // 步骤 1-4:守卫已过;关源=用户;ref 先行置 prepare;存 scrollY;
-    // 锁滚动(overflow hidden + 滚动条补偿)。
+    // 步骤 1-4:守卫已过;新会话;关源=用户;转换 prepare;存
+    // scrollY;锁滚动(overflow hidden + 滚动条补偿)。
+    const session = ++sessionRef.current
     closeSourceRef.current = 'user'
-    phaseRef.current = 'prepare'
+    transitionPhase('prepare')
     savedScrollYRef.current = window.scrollY
     lockBody()
 
@@ -455,16 +532,15 @@ export const NewMobileWdfView = forwardRef<
     // 步骤 11:挂载编辑器(隐藏)、衬底转会话布局;DOM 属性随提交。
     setEditorReady(false)
     setSessionContent(toWdfEditorContent(currentDocumentRef.current))
-    setPhase('prepare')
 
-    // 步骤 12:看门狗——编辑器就绪超时则直接展开。
+    // 步骤 12:看门狗——编辑器就绪超时则直接展开(按会话隔离)。
     readyTimerRef.current = window.setTimeout(() => {
-      if (phaseRef.current === 'prepare') {
+      if (isCurrentSession(session) && phaseRef.current === 'prepare') {
         console.warn('[new-mobile-wdf-view] editor ready 超时,直接展开')
-        startOpening()
+        startOpening(session)
       }
     }, EDITOR_READY_TIMEOUT)
-  }, [lockBody, startOpening])
+  }, [isCurrentSession, lockBody, startOpening, transitionPhase])
 
   /**
    * 测量「收起后的 view 态卡片高度」:克隆衬底 DOM 到脱离会话布局的
@@ -504,38 +580,47 @@ export const NewMobileWdfView = forwardRef<
   }, [])
 
   /** 收起飞行:目标=新内容下的 view 态高度(基线 §2.1 步骤 4-5)。 */
-  const runCloseAnimation = useCallback(() => {
-    const shell = shellRef.current
-    const slot = slotRef.current
-    if (!shell || !slot) return
+  const runCloseAnimation = useCallback(
+    (session: number) => {
+      const shell = shellRef.current
+      const slot = slotRef.current
+      if (!shell || !slot) return
 
-    const duration = getMorphDuration()
-    const target = slot.getBoundingClientRect()
+      const duration = getMorphDuration()
+      const target = slot.getBoundingClientRect()
 
-    // 动画目标高度与槽位钉高都对齐「新内容下的 view 态高度」:页面
-    // 下方唯一一次位移发生在动画期间(被飞行卡片掩盖),settle 释放
-    // 钉高时 Δ=0,落位即终态。取消路径文档未变,测量值=旧钉高,两
-    // 赋值皆 no-op。
-    const nextHeight = measureNextViewHeight()
-    if (nextHeight != null) {
-      slot.style.height = `${nextHeight}px`
-    }
+      // 动画目标高度与槽位钉高都对齐「新内容下的 view 态高度」:页面
+      // 下方唯一一次位移发生在动画期间(被飞行卡片掩盖),settle 释放
+      // 钉高时 Δ=0,落位即终态。取消路径文档未变,测量值=旧钉高,两
+      // 赋值皆 no-op。
+      const nextHeight = measureNextViewHeight()
+      if (nextHeight != null) {
+        slot.style.height = `${nextHeight}px`
+      }
 
-    if (duration > 0) {
-      shell.classList.add(ANIMATING_CLASS)
-    }
-    applyRect(shell, {
-      top: target.top,
-      left: target.left,
-      width: target.width,
-      height: nextHeight ?? target.height,
-    })
+      if (duration > 0) {
+        shell.classList.add(ANIMATING_CLASS)
+      }
+      applyRect(shell, {
+        top: target.top,
+        left: target.left,
+        width: target.width,
+        height: nextHeight ?? target.height,
+      })
 
-    timerRef.current = window.setTimeout(() => {
-      if (phaseRef.current !== 'closing' || !shell.isConnected) return
-      settleToView()
-    }, duration + MORPH_PAD)
-  }, [measureNextViewHeight, settleToView])
+      timerRef.current = window.setTimeout(() => {
+        if (
+          !isCurrentSession(session) ||
+          phaseRef.current !== 'closing' ||
+          !shell.isConnected
+        ) {
+          return
+        }
+        settleToView()
+      }, duration + MORPH_PAD)
+    },
+    [isCurrentSession, measureNextViewHeight, settleToView],
+  )
 
   /**
    * 收起编辑器(基线 §2.3):
@@ -563,8 +648,7 @@ export const NewMobileWdfView = forwardRef<
       }
 
       closeSourceRef.current = source
-      phaseRef.current = 'closing'
-      setPhase('closing')
+      transitionPhase('closing')
 
       // 先失焦收键盘;键盘收起改变 visualViewport,等一拍再测几何。
       if (document.activeElement instanceof HTMLElement) {
@@ -574,18 +658,28 @@ export const NewMobileWdfView = forwardRef<
       const keyboardOpen =
         !!viewport && window.innerHeight - viewport.height > 120
 
+      const session = sessionRef.current
       if (keyboardOpen) {
-        timerRef.current = window.setTimeout(
-          runCloseAnimation,
-          KEYBOARD_CLOSE_WAIT,
-        )
+        timerRef.current = window.setTimeout(() => {
+          if (isCurrentSession(session)) {
+            runCloseAnimation(session)
+          }
+        }, KEYBOARD_CLOSE_WAIT)
         return
       }
 
       // 经显式协作点起飞:衬底新内容先提交,测量后执行(§2.1)。
-      scheduleCloseFlightAfterBackingCommit(runCloseAnimation)
+      scheduleCloseFlightAfterBackingCommit(session, () =>
+        runCloseAnimation(session),
+      )
     },
-    [commitDraft, runCloseAnimation, scheduleCloseFlightAfterBackingCommit],
+    [
+      commitDraft,
+      isCurrentSession,
+      runCloseAnimation,
+      scheduleCloseFlightAfterBackingCommit,
+      transitionPhase,
+    ],
   )
   const closeEditorRef = useRef(closeEditor)
   closeEditorRef.current = closeEditor
@@ -632,10 +726,16 @@ export const NewMobileWdfView = forwardRef<
   useEffect(() => {
     if (phase !== 'opening' && phase !== 'edit') return
 
+    const session = sessionRef.current
+
     const updateGeometry = () => {
       const shell = shellRef.current
       const currentPhase = phaseRef.current
-      if (!shell || (currentPhase !== 'opening' && currentPhase !== 'edit')) {
+      if (
+        !shell ||
+        !isCurrentSession(session) ||
+        (currentPhase !== 'opening' && currentPhase !== 'edit')
+      ) {
         return
       }
 
@@ -647,7 +747,7 @@ export const NewMobileWdfView = forwardRef<
       shell.classList.add(ANIMATING_CLASS)
       applyRect(shell, getDialogRect())
       window.setTimeout(() => {
-        if (phaseRef.current === 'edit') {
+        if (isCurrentSession(session) && phaseRef.current === 'edit') {
           shell.classList.remove(ANIMATING_CLASS)
         }
       }, getMorphDuration() + MORPH_PAD)
@@ -661,7 +761,7 @@ export const NewMobileWdfView = forwardRef<
       viewport?.removeEventListener('resize', updateGeometry)
       window.removeEventListener('resize', updateGeometry)
     }
-  }, [phase])
+  }, [isCurrentSession, phase])
 
   // Esc 收起 + Tab 焦点陷阱 + focusin 拉回。
   useEffect(() => {
