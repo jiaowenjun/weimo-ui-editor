@@ -11,7 +11,7 @@ import { WdfDocument, toTiptap } from 'weimo-wdf'
 import { WdfRender } from '../wdf-render/wdf-render'
 import { createRichEditorExtensions } from '../rich-editor/rich-editor-extensions'
 import { createMdfDraft, freshMdfEditorState } from './new-mdf-document'
-import { lockMdfPage, waitMdfKeyboard, watchMdfViewport } from './new-mdf-dialog'
+import { lockMdfPage, showMdfDialog, waitMdfKeyboard, watchMdfViewport } from './new-mdf-dialog'
 import {
   morphMdfDialog, snapshotMdfTransition, type NewMdfMotion,
 } from './new-mdf-motion'
@@ -69,6 +69,7 @@ function MdfEditor({
   const editor = useEditor({
     content,
     editable: false,
+    autofocus: false,
     immediatelyRender: typeof window !== 'undefined',
     shouldRerenderOnTransaction: false,
     extensions: createRichEditorExtensions({ getInteraction: () => ({ disabled: true }) }),
@@ -107,6 +108,7 @@ export const NewMdfView = forwardRef<NewMdfViewHandle, NewMdfViewProps>(
     const slotRef = useRef<HTMLDivElement>(null)
     const destinationRef = useRef<HTMLDivElement>(null)
     const toolbarRef = useRef<HTMLDivElement>(null)
+    const headingRef = useRef<HTMLDivElement>(null)
     const triggerRef = useRef<HTMLButtonElement>(null)
     const editorRef = useRef<Editor | null>(null)
     const draftRef = useRef<ReturnType<typeof createMdfDraft> | null>(null)
@@ -148,13 +150,6 @@ export const NewMdfView = forwardRef<NewMdfViewHandle, NewMdfViewProps>(
       setStatus(next)
     }
 
-    function focusEditor() {
-      const editor = editorRef.current
-      if (!editor || editor.isDestroyed) return
-      editor.commands.setTextSelection(1)
-      editor.view.dom.focus({ preventScroll: true })
-    }
-
     async function completeOpen(editor: Editor) {
       if (!alive.current || statusRef.current !== 'preparing' || opening.current) return
       const card = cardRef.current
@@ -184,22 +179,23 @@ export const NewMdfView = forwardRef<NewMdfViewHandle, NewMdfViewProps>(
         card.removeAttribute('data-returning')
         flushSync(() => setModal(true))
         show()
-        card.showModal()
-        unwatch.current = watchMdfViewport(card)
-        // Focus before awaiting animation, keeping the native input gesture when preloaded.
-        focusEditor()
+        showMdfDialog(card, headingRef.current!)
+        unwatch.current = watchMdfViewport(card, () => {
+          stopMotion.current?.()
+          stopMotion.current = null
+        })
         await morphMdfDialog(card, origin, true, (cancel) => { stopMotion.current = cancel })
       } else {
-        // Make the editor focusable within the click, before an asynchronous capture.
+        // Entering edit mode does not summon the keyboard. Input starts with an explicit tap.
         editor.setEditable(true)
         flushSync(() => setReady(true))
-        focusEditor()
         const transition = snapshotMdfTransition(
           { card, toolbar }, show, false, latest.current.motion === 'snapshot',
         )
         stopMotion.current = transition.cancel
         await transition.finished
       }
+      stopMotion.current = null
       if (alive.current) busy.current = false
     }
 
@@ -248,10 +244,13 @@ export const NewMdfView = forwardRef<NewMdfViewHandle, NewMdfViewProps>(
         if (!alive.current) return
         // Measure the final reading card at its actual page width, including edits.
         slotRef.current!.style.height = `${destinationRef.current!.getBoundingClientRect().height}px`
+        const from = card.getBoundingClientRect()
+        // Keyboard tracking is finished. Only the return morph owns geometry from here.
+        unwatch.current?.()
+        unwatch.current = null
         unlock.current?.()
         unlock.current = null
         const destination = destinationRef.current!.getBoundingClientRect()
-        const from = card.getBoundingClientRect()
         const toolbarHeight = toolbar.getBoundingClientRect().height
         update()
         // The return shows committed content, not a scrolled/cancelled draft.
@@ -260,8 +259,6 @@ export const NewMdfView = forwardRef<NewMdfViewHandle, NewMdfViewProps>(
         await morphMdfDialog(card, destination, false, (cancel) => { stopMotion.current = cancel }, { from, toolbar, toolbarHeight })
         if (!alive.current) return
         card.close()
-        unwatch.current?.()
-        unwatch.current = null
         flushSync(() => { setModal(false); setReturnDocument(null) })
         card.show()
         slotRef.current!.style.removeProperty('height')
@@ -273,6 +270,7 @@ export const NewMdfView = forwardRef<NewMdfViewHandle, NewMdfViewProps>(
         await transition.finished
       }
       if (!alive.current) return
+      stopMotion.current = null
       modalRef.current = false
       busy.current = false
       draftRef.current = null
@@ -370,7 +368,7 @@ export const NewMdfView = forwardRef<NewMdfViewHandle, NewMdfViewProps>(
             onCancel={(event) => { event.preventDefault(); if (!editorRef.current?.view.composing) cancel() }}
           >
             <header className="new-mdf-view__header">
-              <div className="new-mdf-view__heading">{heading ?? label}</div>
+              <div ref={headingRef} tabIndex={-1} className="new-mdf-view__heading">{heading ?? label}</div>
               <button type="button" className="new-mdf-view__button" aria-label="编辑内容" title="编辑内容"
                 ref={triggerRef} onClick={begin} disabled={readOnly || status !== 'view'} hidden={expanded}>
                 <Pencil aria-hidden="true" />

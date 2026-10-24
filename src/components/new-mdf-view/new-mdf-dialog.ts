@@ -4,37 +4,62 @@ export function lockMdfPage() {
   const scrollX = window.scrollX
   const scrollY = window.scrollY
   const previous = {
-    position: body.style.position, top: body.style.top,
-    left: body.style.left, width: body.style.width,
+    overflow: body.style.overflow, paddingRight: body.style.paddingRight,
   }
-  Object.assign(body.style, {
-    position: 'fixed', top: `${-scrollY}px`, left: `${-scrollX}px`, width: '100%',
-  })
+  // Keep the document in its original coordinate space during Safari keyboard panning.
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+  const paddingRight = window.getComputedStyle(body).paddingRight
+  body.style.overflow = 'hidden'
+  if (scrollbarWidth > 0) body.style.paddingRight = `calc(${paddingRight} + ${scrollbarWidth}px)`
   let locked = true
   return () => {
     if (!locked) return
     locked = false
     Object.assign(body.style, previous)
-    window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' })
+    if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
+      window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' })
+    }
   }
 }
 
-export function watchMdfViewport(dialog: HTMLElement) {
+/** Give native showModal an explicit non-editable focus target before it opens. */
+export function showMdfDialog(dialog: HTMLDialogElement, heading: HTMLElement) {
+  const autofocus = heading.autofocus
+  heading.autofocus = true
+  try { dialog.showModal() } finally { heading.autofocus = autofocus }
+}
+
+export function watchMdfViewport(dialog: HTMLElement, beforeChange: () => void) {
   const viewport = window.visualViewport
+  const properties = ['height', 'top', 'width', 'left'] as const
+  let previous: number[] = []
+  let frame: number | null = null
   const update = () => {
-    dialog.style.setProperty('--new-mdf-viewport-height', `${viewport?.height ?? window.innerHeight}px`)
-    dialog.style.setProperty('--new-mdf-viewport-top', `${viewport?.offsetTop ?? 0}px`)
+    frame = null
+    const values = [
+      viewport?.height ?? window.innerHeight, viewport?.offsetTop ?? 0,
+      viewport?.width ?? window.innerWidth, viewport?.offsetLeft ?? 0,
+    ]
+    if (values.every((value, index) => value === previous[index])) return
+    // A running morph has a captured endpoint. Release it before applying live geometry.
+    if (previous.length) beforeChange()
+    properties.forEach((property, index) => {
+      dialog.style.setProperty(`--new-mdf-viewport-${property}`, `${values[index]}px`)
+    })
+    previous = values
+  }
+  const schedule = () => {
+    if (frame === null) frame = window.requestAnimationFrame(update)
   }
   update()
-  viewport?.addEventListener('resize', update)
-  viewport?.addEventListener('scroll', update)
-  window.addEventListener('resize', update)
+  // Like WdfView, resize owns keyboard geometry; scroll must not recenter the focused editor.
+  viewport?.addEventListener('resize', schedule)
+  window.addEventListener('resize', schedule)
   return () => {
-    viewport?.removeEventListener('resize', update)
-    viewport?.removeEventListener('scroll', update)
-    window.removeEventListener('resize', update)
-    dialog.style.removeProperty('--new-mdf-viewport-height')
-    dialog.style.removeProperty('--new-mdf-viewport-top')
+    viewport?.removeEventListener('resize', schedule)
+    window.removeEventListener('resize', schedule)
+    if (frame !== null) window.cancelAnimationFrame(frame)
+    properties.forEach((property) => dialog.style.removeProperty(`--new-mdf-viewport-${property}`))
   }
 }
 

@@ -35,13 +35,21 @@
 .new-mdf-view__card:modal {
   position: fixed;
   top: calc(var(--new-mdf-viewport-top, 0px) + var(--new-mdf-viewport-height, 100dvh) / 2);
-  left: 50%;
+  left: calc(var(--new-mdf-viewport-left, 0px) + var(--new-mdf-viewport-width, 100vw) / 2);
   right: auto;
   bottom: auto;
   translate: -50% -50%;
-  width: min(680px, calc(100% - 32px));
+  width: min(680px, calc(var(--new-mdf-viewport-width, 100vw) - 32px));
   max-height: calc(var(--new-mdf-viewport-height, 100dvh) - 32px);
   box-shadow: 0 18px 72px hsl(0 0% 0% / 0.24);
+}
+
+/* Keep the heading still when the keyboard changes the available height. */
+@media (max-width: 640px) {
+  .new-mdf-view__card:modal {
+    top: calc(var(--new-mdf-viewport-top, 0px) + 16px);
+    translate: -50% 0;
+  }
 }
 
 .new-mdf-view__header {
@@ -56,6 +64,7 @@
 }
 
 .new-mdf-view__heading { min-width: 0; font-size: var(--font-size-sm, 14px); font-weight: 600; }
+.new-mdf-view__heading:focus { outline: none; }
 .new-mdf-view__body {
   position: relative;
   flex: 1 1 auto;

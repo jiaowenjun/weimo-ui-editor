@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { Editor } from '@tiptap/core'
 import { WdfDocument } from 'weimo-wdf'
@@ -6,7 +7,8 @@ import { history, undoDepth } from '@tiptap/pm/history'
 import { EditorState } from '@tiptap/pm/state'
 import { createRichEditorExtensions } from '../dist/components/rich-editor/rich-editor-extensions.js'
 import { createMdfDraft, freshMdfEditorState, readMdfDraft } from '../dist/components/new-mdf-view/new-mdf-document.js'
-import { flowMdfTransition, snapshotMdfTransition } from '../dist/components/new-mdf-view/new-mdf-motion.js'
+import { flowMdfTransition, morphMdfDialog, snapshotMdfTransition } from '../dist/components/new-mdf-view/new-mdf-motion.js'
+import { lockMdfPage, showMdfDialog, watchMdfViewport } from '../dist/components/new-mdf-view/new-mdf-dialog.js'
 
 const sample = {
   schema: 'weimo.document', version: 1,
@@ -155,4 +157,132 @@ test('reduced motion commits once without snapshots or height animations', async
     await snapshotMdfTransition({ card: element, toolbar: element }, () => updates++, true, true).finished
     assert.equal(updates, 1)
   } finally { globalThis.window = previous }
+})
+
+test('entering either edit mode never requests editor focus or a text selection', () => {
+  const source = readFileSync(new URL('../src/components/new-mdf-view/new-mdf-view.tsx', import.meta.url), 'utf8')
+  assert.match(source, /autofocus: false/)
+  const opening = source.slice(source.indexOf('async function completeOpen'), source.indexOf('function begin()'))
+  assert.doesNotMatch(opening, /\.focus\(|focusEditor|setTextSelection/)
+  assert.match(opening, /showMdfDialog\(card, headingRef\.current!\)/)
+  assert.match(source, /ref=\{headingRef\} tabIndex=\{-1\}/)
+})
+
+test('native dialog receives a non-editable autofocus target before opening', () => {
+  for (const autofocus of [false, true]) {
+    const heading = { autofocus }
+    const dialog = {
+      showModal() { assert.equal(heading.autofocus, true) },
+    }
+    showMdfDialog(dialog, heading)
+    assert.equal(heading.autofocus, autofocus, 'the native focusing hint must not leak')
+  }
+  const heading = { autofocus: false }
+  const dialog = { showModal() { throw new Error('detached') } }
+  assert.throws(() => showMdfDialog(dialog, heading), /detached/)
+  assert.equal(heading.autofocus, false)
+})
+
+test('return morph takes over only after keyboard recovery and viewport tracking stops', () => {
+  const source = readFileSync(new URL('../src/components/new-mdf-view/new-mdf-view.tsx', import.meta.url), 'utf8')
+  const closing = source.slice(source.indexOf('async function finish'), source.indexOf('async function save()'))
+  const steps = ['await waitMdfKeyboard', 'const from = card.getBoundingClientRect()', 'unwatch.current?.()', 'unlock.current?.()', 'const destination =', 'await morphMdfDialog']
+  const indices = steps.map((step) => closing.indexOf(step))
+  assert.ok(indices.every((index, position) => index >= 0 && (position === 0 || index > indices[position - 1])), 'live viewport writes must stop before the return animation and page unlock')
+})
+
+test('page lock preserves the document position and restores only its own styles once', () => {
+  const previousWindow = globalThis.window, previousDocument = globalThis.document
+  const style = { position: 'relative', top: '7px', left: '3px', width: '90%', overflow: 'auto', paddingRight: '' }
+  const original = { ...style }
+  const scrolls = []
+  globalThis.document = { body: { style }, documentElement: { clientWidth: 390 } }
+  globalThis.window = {
+    scrollX: 0, scrollY: 460, innerWidth: 405,
+    getComputedStyle: () => ({ paddingRight: '12px' }),
+    scrollTo: (position) => scrolls.push(position),
+  }
+  try {
+    const unlock = lockMdfPage()
+    assert.deepEqual(style, { ...original, overflow: 'hidden', paddingRight: 'calc(12px + 15px)' })
+    window.scrollY = 500
+    unlock()
+    unlock()
+    assert.deepEqual(style, original)
+    assert.deepEqual(scrolls, [{ left: 0, top: 460, behavior: 'instant' }])
+    scrolls.length = 0
+    window.innerWidth = 390
+    const unlockUnmoved = lockMdfPage()
+    assert.equal(style.paddingRight, '')
+    unlockUnmoved()
+    assert.equal(scrolls.length, 0, 'unchanged page position needs no programmatic scroll')
+  } finally { globalThis.window = previousWindow; globalThis.document = previousDocument }
+})
+
+test('keyboard resize cancels a captured morph before live geometry, coalesces, and cleans up', async () => {
+  const previousWindow = globalThis.window
+  const viewport = Object.assign(new EventTarget(), { height: 844, width: 390, offsetTop: 0, offsetLeft: 0 })
+  const frames = new Map(), styles = new Map(), order = []
+  let frameId = 0, cancellations = 0, cancelMorph
+  globalThis.window = Object.assign(new EventTarget(), {
+    visualViewport: viewport, innerHeight: 844, innerWidth: 390,
+    matchMedia: () => ({ matches: false }),
+    requestAnimationFrame: (callback) => { frames.set(++frameId, callback); return frameId },
+    cancelAnimationFrame: (id) => frames.delete(id),
+  })
+  const flushFrame = () => {
+    const batch = [...frames.values()]
+    frames.clear()
+    batch.forEach((callback) => callback())
+  }
+  const done = deferred()
+  const dialog = {
+    style: {
+      setProperty: (key, value) => { styles.set(key, value); order.push('geometry') },
+      removeProperty: (key) => styles.delete(key),
+    },
+    getBoundingClientRect: () => ({ top: 16, left: 16, width: 358, height: 300 }),
+    animate: () => ({ finished: done.promise, cancel: () => { cancellations++; done.reject(new Error('cancelled')) } }),
+  }
+  let unwatch
+  try {
+    unwatch = watchMdfViewport(dialog, () => { order.push('cancel'); cancelMorph?.() })
+    assert.equal(styles.get('--new-mdf-viewport-height'), '844px')
+    assert.equal(cancellations, 0, 'initial measurement must not interrupt a transition')
+    const morph = morphMdfDialog(dialog, { top: 400, left: 16, width: 358, height: 250 }, true, (cancel) => { cancelMorph = cancel })
+    order.length = 0
+    viewport.height = 460
+    viewport.offsetTop = 8
+    viewport.dispatchEvent(new Event('resize'))
+    window.dispatchEvent(new Event('resize'))
+    assert.equal(frames.size, 1)
+    assert.equal(cancellations, 0)
+    flushFrame()
+    assert.equal(order[0], 'cancel')
+    assert.equal(cancellations, 1)
+    assert.equal(styles.get('--new-mdf-viewport-height'), '460px')
+    assert.equal(styles.get('--new-mdf-viewport-top'), '8px')
+    await morph
+    cancelMorph = null
+    order.length = 0
+    viewport.dispatchEvent(new Event('resize'))
+    flushFrame()
+    assert.deepEqual(order, [], 'duplicate sizes must not rewrite geometry')
+    viewport.offsetTop = 24
+    viewport.dispatchEvent(new Event('scroll'))
+    assert.equal(frames.size, 0, 'Safari focus panning must not trigger a recenter loop')
+    viewport.height = 844
+    viewport.width = 844
+    viewport.offsetTop = 0
+    viewport.dispatchEvent(new Event('resize'))
+    flushFrame()
+    assert.equal(styles.get('--new-mdf-viewport-width'), '844px', 'rotation updates the available width')
+    viewport.dispatchEvent(new Event('resize'))
+    unwatch()
+    assert.equal(frames.size, 0)
+    assert.equal(styles.size, 0)
+    viewport.dispatchEvent(new Event('resize'))
+    window.dispatchEvent(new Event('resize'))
+    assert.equal(frames.size, 0, 'unmount removes every listener')
+  } finally { unwatch?.(); globalThis.window = previousWindow }
 })

@@ -200,6 +200,8 @@ import { NewMdfView } from 'weimo-ui-editor/components/new-mdf-view'
 `following` 也会自然推动后续布局;方案 B 需要将希望连续移动的后续内容放入
 `following`,其他页面内容由浏览器默认转场处理。
 通过 ref 的 `edit()`、`save()`、`cancel()` 也可以从外部操作。
+进入编辑不会自动聚焦正文或唤起软件键盘;点击正文或使用键盘导航后开始输入。
+窄屏面板顶部对齐,键盘出现时调整可用高度,不反复上下居中。
 
 对比页位于 `/components/new-mdf-view`,支持普通内容、长文、空内容、
 原位/面板编辑和保存等待/失败。最终方案尚待实机选择。
