@@ -17,6 +17,7 @@
 .wdf-view-exit-comparison__item { display: flex; min-width: 0; flex-direction: column; gap: 10px; }
 .wdf-view-exit-comparison__intro { display: flex; min-height: 54px; flex-direction: column; gap: 4px; color: var(--color-text-primary); font-size: var(--font-size-sm); line-height: 1.45; }
 .wdf-view-exit-comparison__intro span { color: var(--color-text-secondary); font-size: var(--font-size-xs); }
+.wdf-view-exit-comparison__following { display: flow-root; }
 .wdf-view-exit-comparison__reference { margin-top: 10px; padding: 8px; border: 1px dashed var(--color-border); border-radius: var(--radius-sm); color: var(--color-text-secondary); font-size: var(--font-size-xs); }
-.wdf-view-exit-comparison__measurement { display: block; height: 5em; margin-top: 8px; color: var(--color-text-secondary); font-size: var(--font-size-xs); line-height: 1.5; }
+.wdf-view-exit-comparison__measurement { display: block; height: 8em; margin-top: 8px; color: var(--color-text-secondary); font-size: var(--font-size-xs); line-height: 1.5; }
 @media (max-width: 900px) { .wdf-view-exit-comparison { grid-template-columns: minmax(0, 1fr); } }

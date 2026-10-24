@@ -19,20 +19,28 @@ function ComparisonCard({
   animation: 'visual' | 'overlay'
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
+  const followingRef = useRef<HTMLDivElement>(null)
   const [measurement, setMeasurement] = useState('退出高度采样：等待退出编辑。')
 
   useEffect(() => {
     const card = hostRef.current?.querySelector<HTMLElement>('.wdf-view__card')
     const toolbar = card?.querySelector<HTMLElement>('.wdf-view__toolbar')
-    if (!card || !toolbar) return
+    const reference = followingRef.current?.querySelector<HTMLElement>(
+      '.wdf-view-exit-comparison__reference',
+    )
+    if (!card || !toolbar || !reference) return
 
     let frame = 0
     let recording = false
-    let samples: { card: number; toolbar: number }[] = []
-    const read = () => samples.push({
-      card: card.getBoundingClientRect().height,
-      toolbar: toolbar.getBoundingClientRect().height,
-    })
+    let samples: { card: number; toolbar: number; gap: number }[] = []
+    const read = () => {
+      const rect = card.getBoundingClientRect()
+      samples.push({
+        card: rect.height,
+        toolbar: toolbar.getBoundingClientRect().height,
+        gap: reference.getBoundingClientRect().top - rect.bottom,
+      })
+    }
     const sample = () => {
       if (!recording) return
       read()
@@ -58,7 +66,8 @@ function ComparisonCard({
           ).length
           return `${label} ${first[key].toFixed(1)} → ${last[key].toFixed(1)}px，中间高度采样 ${intermediate} 次`
         }
-        setMeasurement(`${describe('card', '卡片')}；${describe('toolbar', '工具栏')}。`)
+        const gapDrift = Math.max(...samples.map((value) => Math.abs(value.gap - first.gap)))
+        setMeasurement(`${describe('card', '卡片')}；${describe('toolbar', '工具栏')}。参照间距 ${first.gap.toFixed(1)} → ${last.gap.toFixed(1)}px，最大偏差 ${gapDrift.toFixed(1)}px。`)
       }
     })
     observer.observe(card, { attributes: true, attributeFilter: ['data-phase'] })
@@ -74,12 +83,15 @@ function ComparisonCard({
       <WdfView
         defaultValue={wdfRenderSample as WdfDocument}
         editStyle="inline"
+        inlineExitFollowRef={followingRef}
         inlineToolbarExitAnimation={animation}
         ref={editorRef}
         title={animation === 'visual' ? '原占位内收拢' : '浮层卡片收拢'}
       />
-      <div className="wdf-view-exit-comparison__reference">下方内容参照条</div>
-      <output className="wdf-view-exit-comparison__measurement">{measurement}</output>
+      <div className="wdf-view-exit-comparison__following" ref={followingRef}>
+        <div className="wdf-view-exit-comparison__reference">下方内容参照条</div>
+        <output className="wdf-view-exit-comparison__measurement">{measurement}</output>
+      </div>
     </div>
   )
 }
@@ -98,19 +110,19 @@ function WdfViewDemo() {
           visualRef.current?.close()
           overlayRef.current?.close()
         }} type="button">同时保存退出</button>
-        <span>观察卡片底边、参照条，以及退出后的中间高度采样次数。</span>
+        <span>观察卡片与参照条是否同步移动，以及退出后的间距偏差。</span>
       </div>
       <section className="wdf-view-exit-comparison__item">
         <div className="wdf-view-exit-comparison__intro">
           <strong>方案一 · 原占位内收拢</strong>
-          <span>卡片和工具栏同步收高，结束后下方内容再上移。</span>
+          <span>卡片在原位置收拢，下方内容同步上移，图标提前淡出。</span>
         </div>
         <ComparisonCard animation="visual" editorRef={visualRef} />
       </section>
       <section className="wdf-view-exit-comparison__item">
         <div className="wdf-view-exit-comparison__intro">
-          <strong>方案二 · 先释放占位再收拢</strong>
-          <span>下方内容先上移，整张浮层卡片收高，期间会短暂覆盖参照条。</span>
+          <strong>方案二 · 浮层卡片收拢</strong>
+          <span>浮层卡片与下方内容同步收拢，结束后回到原位置。</span>
         </div>
         <ComparisonCard animation="overlay" editorRef={overlayRef} />
       </section>
@@ -121,7 +133,7 @@ function WdfViewDemo() {
 export const wdfViewDefinition = {
   id: 'wdf-view',
   summary:
-    'WdfView 内联退出高度动画对比：原占位内收拢与先释放占位再收拢',
+    'WdfView 内联退出动画对比：卡片与下方内容同步收拢',
   status: 'Preview',
   frame: 'plain',
   preview: () => <WdfViewDemo />,

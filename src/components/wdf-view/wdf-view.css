@@ -317,8 +317,10 @@
 
 /* 两种实验方案都过渡真实卡片高度,与工具栏使用相同的时长/曲线。
    ready 通过内联 style 固定退出瞬间的实测几何;running 才归零 footer。
-   页面占位由外层单独钉住,不能用它的定高替代卡片高度动画。 */
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='ready'] {
+   页面占位由外层单独钉住,后续容器用等量向上位移跟随卡底,结束时
+   一次释放占位并撤销位移,不能用外层定高替代卡片高度动画。 */
+.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='ready'],
+.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='fading'] {
   transition: none;
 }
 
@@ -332,6 +334,19 @@
   transition:
     height 200ms ease,
     padding-block 200ms ease;
+}
+
+/* 先完整淡出图标,再开始收高,避免末段露出被裁掉的半个图标。
+   只淡出内容组,工具栏与真实卡片仍完成整个高度过渡。 */
+.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='ready'] .wdf-view__toolbar-group {
+  opacity: 1;
+  transition: none;
+}
+
+.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='fading'] .wdf-view__toolbar-group,
+.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar-group {
+  opacity: 0;
+  transition: opacity 60ms ease-out;
 }
 
 /* overlay 让真实卡片临时脱离文档流。top layer 避免祖先 transform
@@ -359,7 +374,9 @@
 @media (prefers-reduced-motion: reduce) {
   .wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__toolbar,
   .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'],
-  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar {
+  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar,
+  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='fading'] .wdf-view__toolbar-group,
+  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar-group {
     transition: none;
   }
 }

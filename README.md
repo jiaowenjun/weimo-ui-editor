@@ -83,6 +83,37 @@ export function Description() {
 WDF 并调用一次 `onChange`。`mode` 由业务层控制;你也可以用 `defaultValue`
 让组件自己保存提交后的内容。
 
+内联编辑默认退出时立即收起工具栏。可通过
+`inlineToolbarExitAnimation="visual"` 启用卡片高度过渡,
+或用 `"overlay"` 对比浮层收拢效果;系统开启减少动态效果时立即收起。
+若下方还有内容需要同步上移,将它们放入一个紧邻 `WdfView`、处于同一
+纵向文档流的容器,并传入 `inlineExitFollowRef`。例如:
+
+```tsx
+import { useRef } from 'react'
+import { WdfView, type WdfDocument } from 'weimo-ui-editor/components/wdf-view'
+
+export function EditableCard({ content }: { content: WdfDocument }) {
+  const followingRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <div>
+      <WdfView
+        defaultValue={content}
+        editStyle="inline"
+        inlineToolbarExitAnimation="visual"
+        inlineExitFollowRef={followingRef}
+      />
+      <div ref={followingRef} style={{ display: 'flow-root' }}>
+        <p>这部分内容会跟随卡片平滑上移。</p>
+      </div>
+    </div>
+  )
+}
+```
+
+只有指定容器会参与跟随动画,未指定容器时下方内容在动画结束后更新位置。
+
 ### 渲染一份 WDF 文档
 
 ```tsx

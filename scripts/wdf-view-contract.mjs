@@ -101,7 +101,7 @@ assert.match(
 )
 assert.match(
   wdfViewSource,
-  /height: inlineExit\.stage === 'ready'\s*\? inlineExit\.fromHeight\s*: inlineExit\.toHeight/,
+  /height: inlineExit\.stage === 'running'\s*\? inlineExit\.toHeight\s*: inlineExit\.fromHeight/,
   'the real card must interpolate between measured start and end heights',
 )
 assert.match(
@@ -120,6 +120,16 @@ assert.match(
   'overlay must detach the whole real card to avoid its overflow changing page scrollHeight',
 )
 assert.match(
+  inlineExitStart,
+  /following === slot\.nextElementSibling/,
+  'following animation must only affect the explicitly designated adjacent container',
+)
+assert.match(
+  wdfViewSource,
+  /height: Math\.max\(inlineExit\.fromHeight, inlineExit\.toHeight\)/,
+  'both layouts must hold the larger endpoint until settling to avoid early overlap',
+)
+assert.match(
   wdfViewSource,
   /event\.propertyName !== 'height'[\s\S]*inlineExitRef\.current\?\.stage === 'running'[\s\S]*settleInlineToView\(\)/,
   'only the card height endpoint may finish the close, never an earlier icon opacity event',
@@ -136,7 +146,7 @@ assert.match(
 )
 assert.match(
   wdfViewDemoSource,
-  /card\.getBoundingClientRect\(\)\.height[\s\S]*toolbar\.getBoundingClientRect\(\)\.height/,
+  /const rect = card\.getBoundingClientRect\(\)[\s\S]*toolbar\.getBoundingClientRect\(\)\.height[\s\S]*gap: reference\.getBoundingClientRect\(\)\.top - rect\.bottom/,
   'the demo must sample real card and toolbar geometry so a zero-height snap is observable',
 )
 
