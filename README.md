@@ -18,6 +18,10 @@ weimo-ui-editor 把这三个必要部分组合起来:
 - **WdfRender** — WDF 文档对象进,直接生成排版舒适的 React 内容;
 - **RichEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
 
+另提供实验组件 **NewMdfView**,以新的交互接口重做 WDF 阅读与编辑。
+它支持保存等待和失败重试,提供两种过渡供实机对比。
+[体验规格](./docs/new-mdf-view-design.md)只描述功能、动画和外观。
+
 ## 为什么选它
 
 - 🎯 **聚焦 WDF v0.1** — 段落、1–6 级标题、加粗、引用和有序/无序列表在阅读与编辑两侧保持一致。
@@ -164,8 +168,41 @@ export function DescriptionEditor() {
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
 | `WdfView` | `weimo-ui-editor/components/wdf-view` | WDF 文档 ↔ WDF 文档 | 同一份内容的阅读/编辑切换 |
+| `NewMdfView` | `weimo-ui-editor/components/new-mdf-view` | WDF 文档 ↔ WDF 文档 | 新版阅读/编辑与两种动画方案对比,实验阶段 |
 | `WdfRender` | `weimo-ui-editor/components/wdf-render` | WDF 文档 → React 节点 | 直接展示规范化的 WDF 内容 |
 | `RichEditor` | `weimo-ui-editor/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
+
+### NewMdfView 实验接口
+
+```tsx
+import { NewMdfView } from 'weimo-ui-editor/components/new-mdf-view'
+
+<NewMdfView
+  defaultDocument={content}
+  heading="内容"
+  presentation="auto"
+  motion="flow"
+  onCommit={async (document) => { await saveDocument(document) }}
+  following={<p>需要跟随卡片移动的后续内容。</p>}
+/>
+```
+
+`document` 是受控的已保存内容,`defaultDocument` 用于非受控场景。
+`onCommit` 仅在保存时调用;返回的 Promise 完成后退出,失败则显示错误并保留草稿。
+等待保存时暂时禁止输入和重复操作。取消不调用 `onCommit`。
+编辑中的外部内容更新不会覆盖草稿,取消时回到最新外部内容。
+
+`presentation` 可选 `auto`、`inline`、`dialog`;`auto` 在宽度不超过
+640px 时使用面板编辑。`motion="flow"` 连续改变真实布局;
+`motion="snapshot"` 使用浏览器转场,不支持时回退 `flow`。
+两种方式都遵守系统减少动态效果设置。`following` 接收需要同步跟随的普通内容。
+两方案比较的是原位切换;面板编辑共用一套原生面板动画。方案 A 不依赖
+`following` 也会自然推动后续布局;方案 B 需要将希望连续移动的后续内容放入
+`following`,其他页面内容由浏览器默认转场处理。
+通过 ref 的 `edit()`、`save()`、`cancel()` 也可以从外部操作。
+
+对比页位于 `/components/new-mdf-view`,支持普通内容、长文、空内容、
+原位/面板编辑和保存等待/失败。最终方案尚待实机选择。
 
 ## 刻意不做的
 

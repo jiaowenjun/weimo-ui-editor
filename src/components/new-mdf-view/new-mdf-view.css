@@ -1,0 +1,131 @@
+@import "weimo-ui-editor/styles/markdown-content.css";
+
+.new-mdf-view {
+  min-width: 0;
+  width: 100%;
+  color: var(--color-text-primary);
+}
+
+.new-mdf-view__slot { position: relative; min-width: 0; overflow-anchor: none; }
+
+.new-mdf-view__card {
+  box-sizing: border-box;
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: clip;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card, 16px);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  font: inherit;
+  transform-origin: top left;
+}
+
+.new-mdf-view__card[open] { display: flex; flex-direction: column; }
+.new-mdf-view__card:focus { outline: none; }
+.new-mdf-view__card::backdrop { background: hsl(0 0% 0% / 0.32); opacity: 1; transition: opacity 240ms ease; }
+.new-mdf-view__card[data-returning='true']::backdrop { opacity: 0; }
+@starting-style { .new-mdf-view__card:modal::backdrop { opacity: 0; } }
+.new-mdf-view__destination { position: absolute; top: 0; left: 0; visibility: hidden; pointer-events: none; }
+
+.new-mdf-view__card:modal {
+  position: fixed;
+  top: calc(var(--new-mdf-viewport-top, 0px) + var(--new-mdf-viewport-height, 100dvh) / 2);
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  translate: -50% -50%;
+  width: min(680px, calc(100% - 32px));
+  max-height: calc(var(--new-mdf-viewport-height, 100dvh) - 32px);
+  box-shadow: 0 18px 72px hsl(0 0% 0% / 0.24);
+}
+
+.new-mdf-view__header {
+  display: flex;
+  min-height: 56px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+}
+
+.new-mdf-view__heading { min-width: 0; font-size: var(--font-size-sm, 14px); font-weight: 600; }
+.new-mdf-view__body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 1.6em;
+  min-width: 0;
+  padding: 0 16px 16px;
+}
+.new-mdf-view__card:modal .new-mdf-view__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.new-mdf-view__body[data-ready='false'] .new-mdf-view__editor { position: absolute; inset: 0 16px; visibility: hidden; }
+.new-mdf-view__text { min-height: 1.6em; outline: none; cursor: text; }
+.new-mdf-view__text[contenteditable='false'] { cursor: auto; }
+.new-mdf-view__text:focus-visible { outline: none; }
+.new-mdf-view__body :is(p, h1, h2, h3, h4, h5, h6):empty { min-height: 1lh; }
+.new-mdf-view__text ::selection { background: var(--md-selection-bg); }
+.new-mdf-view__placeholder { position: absolute; inset: 0 16px auto; color: var(--color-text-placeholder); pointer-events: none; line-height: var(--md-line-height, 1.6); }
+
+.new-mdf-view__toolbar {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  height: 0;
+  overflow: clip;
+}
+.new-mdf-view__card[data-expanded='true'] .new-mdf-view__toolbar { height: auto; }
+.new-mdf-view__controls {
+  display: flex;
+  min-height: 48px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px max(7px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+}
+.new-mdf-view__formats, .new-mdf-view__actions { display: flex; align-items: center; gap: 4px; }
+.new-mdf-view__actions { flex-shrink: 0; }
+.new-mdf-view__button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border: 0;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.new-mdf-view__button[hidden] { display: none; }
+.new-mdf-view__button svg { width: 18px; height: 18px; }
+.new-mdf-view__button:hover, .new-mdf-view__button[aria-pressed='true'] { background: var(--color-bg-raised); color: var(--color-text-primary); }
+.new-mdf-view__button:disabled { opacity: 0.45; cursor: default; }
+.new-mdf-view__button:focus-visible, .new-mdf-view__select:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.new-mdf-view__select { max-width: 104px; height: 32px; border: 0; border-radius: var(--radius-sm, 8px); background: var(--color-bg-card); color: inherit; font: inherit; font-size: var(--font-size-xs, 12px); }
+.new-mdf-view__saving { color: var(--color-text-secondary); font-size: var(--font-size-xs, 12px); }
+.new-mdf-view__error { margin: 0; padding: 8px 16px 12px; color: var(--color-danger, hsl(0 70% 48%)); font-size: var(--font-size-sm, 14px); }
+.new-mdf-view__following { display: flow-root; }
+
+@media (max-width: 480px) {
+  .new-mdf-view__optional { display: none; }
+  .new-mdf-view__controls { gap: 4px; padding-inline: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-mdf-view__card::backdrop { transition: none; }
+}
