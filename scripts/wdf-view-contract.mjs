@@ -65,15 +65,10 @@ assert.match(
   'WdfView must expose separate cancel and save actions while editing',
 )
 
-assert.match(
+assert.doesNotMatch(
   wdfViewSource,
-  /inlineToolbarExitAnimation = 'instant'/,
-  'the public default must retain the Safari-stable instant exit',
-)
-assert.match(
-  wdfViewSource,
-  /export type WdfViewInlineToolbarExitAnimation =[\s\S]*'instant'[\s\S]*'visual'[\s\S]*'overlay'/,
-  'WdfView must publish both comparison variants without removing instant',
+  /WdfViewInlineToolbarExitAnimation|inlineToolbarExitAnimation|data-inline-exit-layout/,
+  'the fixed inline exit must not expose experimental strategy switches',
 )
 const inlineExitStart = wdfViewSource.slice(
   wdfViewSource.indexOf('const startInlineExitAnimation'),
@@ -82,12 +77,12 @@ const inlineExitStart = wdfViewSource.slice(
 assert.match(
   wdfViewStyles,
   /data-edit-style='inline'[^\{]*\.wdf-view__toolbar\s*\{[^}]*transition:\s*none;/,
-  'the default inline exit must preserve the instant baseline',
+  'the inline toolbar must only animate during its explicit entry and exit stages',
 )
 assert.match(
   wdfViewSource,
-  /!prefersReducedMotion\(\) && exitAnimation !== 'instant'[\s\S]*startInlineExitAnimation\(exitAnimation\)/,
-  'both experiments must use geometry animation and respect reduced motion',
+  /if \(!prefersReducedMotion\(\)\) \{\s*startInlineExitAnimation\(\)/,
+  'inline exit must animate by default while respecting reduced motion',
 )
 assert.doesNotMatch(
   inlineExitStart,
@@ -107,17 +102,17 @@ assert.match(
 assert.match(
   wdfViewStyles,
   /\.wdf-view__card\[data-edit-style='inline'\]\[data-inline-exit-stage='running'\]\s*\{\s*transition: height 200ms ease;/,
-  'both experiments must animate the actual card border rather than only fading icons',
+  'inline exit must animate the actual card border rather than only fading icons',
 )
 assert.match(
   wdfViewStyles,
   /data-inline-exit-stage='running'\] \.wdf-view__toolbar\s*\{[^}]*height: 0;[^}]*height 200ms ease,[^}]*padding-block 200ms ease;/,
   'the closing toolbar must transition its height and padding on the same timeline as the card',
 )
-assert.match(
+assert.doesNotMatch(
   inlineExitStart,
-  /layout === 'overlay' && showInTopLayer\(shell\)/,
-  'overlay must detach the whole real card to avoid its overflow changing page scrollHeight',
+  /showInTopLayer|hideFromTopLayer/,
+  'inline exit must keep the card in document flow without promoting it to the top layer',
 )
 assert.match(
   inlineExitStart,
@@ -127,27 +122,22 @@ assert.match(
 assert.match(
   wdfViewSource,
   /height: Math\.max\(inlineExit\.fromHeight, inlineExit\.toHeight\)/,
-  'both layouts must hold the larger endpoint until settling to avoid early overlap',
+  'inline exit must hold the larger endpoint until settling to avoid early overlap',
 )
 assert.match(
   wdfViewSource,
   /event\.propertyName !== 'height'[\s\S]*inlineExitRef\.current\?\.stage === 'running'[\s\S]*settleInlineToView\(\)/,
   'only the card height endpoint may finish the close, never an earlier icon opacity event',
 )
-assert.match(
-  wdfViewDemoSource,
-  /<ComparisonCard animation="visual"[\s\S]*<ComparisonCard animation="overlay"/,
-  'the docs demo must render both exit strategies for direct comparison',
+assert.equal(
+  [...wdfViewDemoSource.matchAll(/<WdfView\s/g)].length,
+  1,
+  'the docs demo must return to a single adaptive editing card',
 )
-assert.match(
+assert.doesNotMatch(
   wdfViewDemoSource,
-  /editStyle="inline"[\s\S]*inlineToolbarExitAnimation=\{animation\}/,
-  'the shared comparison card must force the inline path at every viewport width',
-)
-assert.match(
-  wdfViewDemoSource,
-  /const rect = card\.getBoundingClientRect\(\)[\s\S]*toolbar\.getBoundingClientRect\(\)\.height[\s\S]*gap: reference\.getBoundingClientRect\(\)\.top - rect\.bottom/,
-  'the demo must sample real card and toolbar geometry so a zero-height snap is observable',
+  /editStyle=|ComparisonCard|MutationObserver|requestAnimationFrame/,
+  'the docs demo must use adaptive editing without comparison controls or sampling',
 )
 
 const document = {

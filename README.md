@@ -83,9 +83,8 @@ export function Description() {
 WDF 并调用一次 `onChange`。`mode` 由业务层控制;你也可以用 `defaultValue`
 让组件自己保存提交后的内容。
 
-内联编辑默认退出时立即收起工具栏。可通过
-`inlineToolbarExitAnimation="visual"` 启用卡片高度过渡,
-或用 `"overlay"` 对比浮层收拢效果;系统开启减少动态效果时立即收起。
+内联编辑退出时,工具栏图标先淡出,卡片与工具栏再同步收高。
+卡片始终留在文档流内;系统开启减少动态效果时立即收起。
 若下方还有内容需要同步上移,将它们放入一个紧邻 `WdfView`、处于同一
 纵向文档流的容器,并传入 `inlineExitFollowRef`。例如:
 
@@ -101,7 +100,6 @@ export function EditableCard({ content }: { content: WdfDocument }) {
       <WdfView
         defaultValue={content}
         editStyle="inline"
-        inlineToolbarExitAnimation="visual"
         inlineExitFollowRef={followingRef}
       />
       <div ref={followingRef} style={{ display: 'flow-root' }}>
