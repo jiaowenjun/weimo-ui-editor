@@ -4,10 +4,12 @@ import {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
   type ComponentPropsWithoutRef,
   type ReactNode,
+  type TransitionEvent as ReactTransitionEvent,
 } from 'react'
 import { flushSync } from 'react-dom'
 import { Bold, Check, Heading1, List, Pencil, Quote, X } from 'lucide-react'
@@ -55,18 +57,38 @@ export type WdfViewConversionSource = 'change' | 'save'
 /** 编辑样式:auto 按视口宽度(≤640px 对话框,否则内联);会话开始时
  * 解析并冻结(resolvedEditStyle),会话中途视口跨越断点不切换。 */
 export type WdfViewEditStyle = 'auto' | 'dialog' | 'inline'
+/** 内联退出动画。instant 瞬收;visual 钉住原占位并收拢真实卡片,
+ * 动画后释放占位;overlay 先释放占位,真实卡片在 top layer 收拢。
+ * 两个动画方案都同时过渡卡片与工具栏高度,仅影响 inline 轴。 */
+export type WdfViewInlineToolbarExitAnimation =
+  | 'instant'
+  | 'visual'
+  | 'overlay'
 
 const CARD_CLASS_PREFIX = 'wdf-view'
 const ANIMATING_CLASS = `${CARD_CLASS_PREFIX}__card--animating`
 const EDITOR_READY_TIMEOUT = 800
+const INLINE_TOOLBAR_EXIT_FALLBACK = 320
 
 type CloseSource = 'user' | 'external'
+type InlineExitGeometry = {
+  stage: 'ready' | 'running'
+  layout: 'visual' | 'overlay'
+  fromHeight: number
+  toHeight: number
+  toolbarHeight: number
+  toolbarPaddingTop: string
+  toolbarPaddingBottom: string
+  top: number
+  left: number
+  width: number
+}
 
 /**
  * 合法相位转换表:对话框路径 = MobileWdfView 原表(view→prepare→
  * opening→edit→closing→view);内联路径仅新增 prepare→edit(编辑器
- * 就绪后直达,无飞行阶段),closing 为内联的同 tick 拆卸过站(无可见
- * 动画)。仅按需加边,不伪造动画相位。
+ * 就绪后直达,无飞行阶段)。两个动画方案在 closing 保留真实编辑卡片,
+ * 卡片与工具栏高度到达终点后再结束会话。
  */
 const PHASE_TRANSITIONS: Record<CardPhase, readonly CardPhase[]> = {
   view: ['prepare'],
@@ -105,13 +127,15 @@ const PHASE_TRANSITIONS: Record<CardPhase, readonly CardPhase[]> = {
  * 故用双 rAF(首帧布局仍在豁免中完成并刷新基线,第二帧前恢复);
  * rAF 被挂起的环境(后台标签页/自动化)以定时器兜底,恢复幂等。
  *
- * ## 退出侧必须瞬收(2026-10-24 实机判别定案)
- * 高度变化必须**整段落在本提交布局内**。动画收拢(band 过渡)把 Δ
+ * ## 默认退出侧瞬收(2026-10-24 实机判别)
+ * 页面占位的高度变化必须**整段落在单次提交布局内**。动画收拢把 Δ
  * 散到豁免窗内多帧,WebKit 在恢复时刻以旧基线一次性补偿——恢复时机
  * 无论多晚(定长/transitionend 后)都不刷新基线,实测四类候选
  * (延迟恢复/单槽重入/预钳制/预失焦)全部无效,唯退出瞬收(过渡仅挂
- * edit 相位,与清位同帧)回到豁免单提交形态后实机消除。进入侧长高
- * 为动画且多轮实机无恙,维持。
+ * edit 相位,与清位同帧)回到豁免单提交形态后实机消除。实验方案将
+ * 页面占位与真实卡片高度解耦:visual 在动画后释放原占位;overlay
+ * 在动画前切换最终占位,真实卡片临时提升 top layer,避免溢出卡片
+ * 继续撑高页面的 scrollable overflow。Safari 实机效果仍需复测。
  *
  * ## 边界
  * - 仅对滚动容器生效;在卡片子树内置 none 无效(锚点选在卡外下方)。
@@ -160,15 +184,18 @@ function scheduleAfterPaint(callback: () => void): void {
   window.setTimeout(run, 80)
 }
 
+function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
 /**
  * WdfView:自适应编辑样式的 WDF 读写视图(基于 MobileWdfView 架构)。
  *
  * - 窄屏(≤640px)/editStyle='dialog':与 MobileWdfView 行为一致——
  *   popover 对话框 + 卡片 morph + 焦点陷阱 + fix-3,完整复用既有编排。
- * - 宽屏/editStyle='inline':WdfView 式行内编辑——卡不脱离文档流,
- *   不提升 top layer、不 FLIP、不锁页、无遮罩/模态语义;编辑器就绪后
- *   接管内容区,保存/取消后 flushSync 回渲染态。
+ * - 宽屏/editStyle='inline':行内编辑,不锁页、无遮罩/模态语义。
+ *   默认卡片常驻文档流;实验退出动画钉住页面占位,overlay 仅在退出
+ *   的 200ms 内临时提升真实卡片。编辑器在动画完成后才卸载。
  *
  * 两流共享 Editor Session 数据面与相位机;样式在会话开始时解析冻结
  * (resolvedEditStyle),中途视口跨越不切换,收起后下次打开重判。
@@ -202,6 +229,8 @@ export type WdfViewProps = Omit<
   autoFocusPosition?: RichEditorFocusPosition
   /** 编辑样式,默认 auto(视口 ≤640px 对话框,否则内联);会话内冻结。 */
   editStyle?: WdfViewEditStyle
+  /** 内联工具栏退出动画,默认 instant(Safari 稳定基线)。 */
+  inlineToolbarExitAnimation?: WdfViewInlineToolbarExitAnimation
   /** 卡片标题(对话框态作为可访问名称)。 */
   title?: ReactNode
   /** 透传 WdfRender(查看态与衬底)。 */
@@ -248,6 +277,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       defaultValue,
       editStyle = 'auto',
       editorProps,
+      inlineToolbarExitAnimation = 'instant',
       mode,
       onChange,
       onConversionError,
@@ -272,6 +302,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
     >(null)
     // 内联轴工具栏带开合(CSS 经 data-toolbar-open 分形,相位机不感知)。
     const [inlineToolbarOpen, setInlineToolbarOpen] = useState(false)
+    const [inlineExit, setInlineExit] = useState<InlineExitGeometry | null>(null)
 
     // Editor Session:文档/草稿/提交/错误的数据面,两流共用。
     const {
@@ -294,10 +325,14 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
 
     const slotRef = useRef<HTMLDivElement | null>(null)
     const shellRef = useRef<HTMLDivElement | null>(null)
+    const toolbarRef = useRef<HTMLElement | null>(null)
     const backdropRef = useRef<HTMLDivElement | null>(null)
     const phaseRef = useRef<CardPhase>('view')
     const timerRef = useRef<number | null>(null)
     const readyTimerRef = useRef<number | null>(null)
+    const inlineExitTimerRef = useRef<number | null>(null)
+    const inlineExitTokenRef = useRef(0)
+    const inlineExitRef = useRef<InlineExitGeometry | null>(null)
     const inertedRef = useRef<HTMLElement[]>([])
     const closeSourceRef = useRef<CloseSource>('user')
     const sessionRef = useRef(0)
@@ -312,6 +347,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
     const autoFocusPositionRef = useRef(autoFocusPosition)
     const isModeControlledRef = useRef(isModeControlled)
     const currentDocumentRef = useRef(currentDocument)
+    const inlineToolbarExitAnimationRef = useRef(inlineToolbarExitAnimation)
 
     phaseRef.current = phase
     onModeChangeRef.current = onModeChange
@@ -319,6 +355,8 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
     autoFocusPositionRef.current = autoFocusPosition
     isModeControlledRef.current = isModeControlled
     currentDocumentRef.current = currentDocument
+    inlineExitRef.current = inlineExit
+    inlineToolbarExitAnimationRef.current = inlineToolbarExitAnimation
 
     // 集中式相位转换:表校验 + 告警拒绝,ref 与 state 同步推进。
     const transitionPhase = useCallback((next: CardPhase): boolean => {
@@ -383,29 +421,132 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       }
     }, [])
 
+    const resetInlineExitAnimation = useCallback(() => {
+      inlineExitTokenRef.current += 1
+      if (inlineExitTimerRef.current !== null) {
+        window.clearTimeout(inlineExitTimerRef.current)
+        inlineExitTimerRef.current = null
+      }
+      inlineExitRef.current = null
+      setInlineExit(null)
+    }, [])
+
     /**
-     * 内联收起(独立路径,不复用对话框 settle):无飞行/无 top layer/
-     * 无 Ghost/无解锁——仅布局复位。保存路径的提交已在 closeEditor
-     * 完成;取消路径直接丢弃(endSession 卸载编辑器)。closing 为
-     * 同 tick 过站相位,flushSync 保证无中间绘制。
+     * 内联收起(独立路径,不复用对话框 settle):不解锁页面、不使用
+     * 工具栏替身。保存路径的提交已在 closeEditor
+     * 完成;取消路径直接丢弃(endSession 卸载编辑器)。最终布局复位
+     * 始终由 flushSync 一次性提交;动画方案到达真实卡片高度终点后
+     * 才进入此处,卸载编辑器与清除几何不会提前截断工具栏过渡。
      */
     const settleInlineToView = useCallback(() => {
+      if (phaseRef.current === 'view') return
+      const overlay = inlineExitRef.current?.layout === 'overlay'
+      resetInlineExitAnimation()
+
       // resolvedEditStyle 不清除:仅作样式轴(相位规则已不命中)。
-      // 布局复位使卡收缩 48px(工具栏,方案E瞬收——整段 Δ 落在本
-      // 提交布局内),滚动锚定豁免防止引擎静默 scrollY 补偿导致
-      // 「滚动条跳、卡底冻结」(机制与退出必须瞬收的定案依据详见
-      // 助手注释)。
-      if (phaseRef.current !== 'view') {
-        suppressScrollAnchoringAround(() => {
-          flushSync(() => {
-            transitionPhase('view')
-            endSession()
-            setInlineToolbarOpen(false)
-          })
+      // instant 在此瞬收;visual 在此释放原占位;overlay 占位已经是
+      // 终态,仅把真实卡片从 top layer 放回。页面占位只变更一次。
+      suppressScrollAnchoringAround(() => {
+        flushSync(() => {
+          transitionPhase('view')
+          endSession()
+          setInlineToolbarOpen(false)
         })
-      }
+        if (overlay) hideFromTopLayer(shellRef.current)
+        // 在豁免内完成布局,不要把恢复普通文档流的布局推迟到窗口外。
+        void slotRef.current?.getBoundingClientRect()
+      })
       finishSessionMode()
-    }, [endSession, finishSessionMode, transitionPhase])
+    }, [
+      endSession,
+      finishSessionMode,
+      resetInlineExitAnimation,
+      transitionPhase,
+    ])
+
+    /** 两种方案都动画真实卡片。只冻结页面占位,不冻结卡片底边。
+     * overlay 临时使用非模态 top layer,不锁页、不 inert 页面兄弟。
+     * 不支持 Popover API 时回退 visual,避免绝对定位溢出撑高页面。 */
+    const startInlineExitAnimation = useCallback((layout: 'visual' | 'overlay') => {
+      const shell = shellRef.current
+      const toolbar = toolbarRef.current
+      const slot = slotRef.current
+      if (!shell || !toolbar || !slot) {
+        transitionPhase('closing')
+        settleInlineToView()
+        return
+      }
+
+      const first = shell.getBoundingClientRect()
+      const toolbarStyle = getComputedStyle(toolbar)
+      const geometry: InlineExitGeometry = {
+        stage: 'ready',
+        layout: 'visual',
+        fromHeight: first.height,
+        toHeight: first.height,
+        toolbarHeight: toolbar.getBoundingClientRect().height,
+        toolbarPaddingTop: toolbarStyle.paddingTop,
+        toolbarPaddingBottom: toolbarStyle.paddingBottom,
+        top: first.top,
+        left: first.left,
+        width: first.width,
+      }
+      const token = ++inlineExitTokenRef.current
+
+      suppressScrollAnchoringAround(() => {
+        // 同步提交保存后的 WdfRender 与 closing。先钉原占位,同步量取
+        // 真实 view 布局,因此保存/取消导致的正文高差也包含在终点内。
+        flushSync(() => {
+          setInlineExit(geometry)
+          transitionPhase('closing')
+        })
+        const previousHeight = shell.style.height
+        const previousToolbarStyle = toolbar.getAttribute('style')
+        const toolbarOpen = shell.dataset.toolbarOpen
+        let toHeight = geometry.fromHeight
+        try {
+          delete shell.dataset.inlineExitStage
+          shell.dataset.phase = 'view'
+          shell.dataset.toolbarOpen = 'false'
+          shell.style.height = 'auto'
+          toolbar.style.height = '0px'
+          toolbar.style.paddingBlock = '0px'
+          toHeight = shell.getBoundingClientRect().height
+        } finally {
+          shell.dataset.phase = 'closing'
+          shell.dataset.toolbarOpen = toolbarOpen
+          shell.dataset.inlineExitStage = 'ready'
+          shell.style.height = previousHeight
+          if (previousToolbarStyle === null) toolbar.removeAttribute('style')
+          else toolbar.setAttribute('style', previousToolbarStyle)
+        }
+
+        const nextGeometry: InlineExitGeometry = {
+          ...geometry,
+          toHeight,
+          layout: layout === 'overlay' && showInTopLayer(shell) ? 'overlay' : 'visual',
+        }
+        flushSync(() => setInlineExit(nextGeometry))
+        // 明确建立 before-change 几何,且让 slot 的唯一换高在豁免内布局。
+        void shell.getBoundingClientRect()
+        void slot.getBoundingClientRect()
+      })
+
+      // ready 保留实测高度(包括进入动画尚未结束就退出的半高工具栏)。
+      // 跨绘制帧后同时驱动卡片 height 与 footer height/padding,不能在
+      // 此时 endSession/切 view,否则工具栏会先归零,再次丢失卡底动画。
+      scheduleAfterPaint(() => {
+        scheduleAfterPaint(() => {
+          if (token !== inlineExitTokenRef.current) return
+          setInlineExit((current) => current && { ...current, stage: 'running' })
+          inlineExitTimerRef.current = window.setTimeout(() => {
+            if (token !== inlineExitTokenRef.current) return
+            inlineExitTimerRef.current = null
+            settleInlineToView()
+          }, INLINE_TOOLBAR_EXIT_FALLBACK)
+        })
+      })
+    }, [settleInlineToView, transitionPhase])
 
     /**
      * 对话框 settle-to-view(fix-v3 收起清理,顺序见基线 §2.2)。
@@ -448,15 +589,18 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       finishSessionMode()
     }, [endSession, finishSessionMode, transitionPhase, viewportFocus])
 
-    // 卸载兜底:清定时器、退 top layer、去 inert(对话框资源;内联
-    // 会话这些从未获得,清理为安全 no-op)。
+    // 卸载兜底:清定时器、废弃迟到回调、退 top layer、去 inert。
     useEffect(() => {
       return () => {
+        inlineExitTokenRef.current += 1
         if (timerRef.current !== null) {
           window.clearTimeout(timerRef.current)
         }
         if (readyTimerRef.current !== null) {
           window.clearTimeout(readyTimerRef.current)
+        }
+        if (inlineExitTimerRef.current !== null) {
+          window.clearTimeout(inlineExitTimerRef.current)
         }
         hideFromTopLayer(shellRef.current)
         hideFromTopLayer(backdropRef.current)
@@ -466,6 +610,29 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         inertedRef.current = []
       }
     }, [])
+
+    // top layer 不随文档滚动;动画期间跟随原槽位,避免用户滚动时
+    // 卡片悬在视口原位置。窗口换宽会改变正文换行,直接落回自然布局。
+    const overlayExit = inlineExit?.layout === 'overlay'
+    useLayoutEffect(() => {
+      if (!overlayExit) return
+      const followSlot = () => {
+        const rect = slotRef.current?.getBoundingClientRect()
+        if (!rect) return
+        setInlineExit((current) => current && {
+          ...current,
+          top: rect.top,
+          left: rect.left,
+        })
+      }
+      followSlot()
+      window.addEventListener('scroll', followSlot, true)
+      window.addEventListener('resize', settleInlineToView)
+      return () => {
+        window.removeEventListener('scroll', followSlot, true)
+        window.removeEventListener('resize', settleInlineToView)
+      }
+    }, [overlayExit, settleInlineToView])
 
     /** 显式协作点(基线 §2.1):衬底新内容先提交,收起测量后执行。 */
     const scheduleCloseFlightAfterBackingCommit = useCallback(
@@ -578,6 +745,8 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       const slot = slotRef.current
       if (!shell || !slot) return
 
+      resetInlineExitAnimation()
+
       const style = resolveEditStyle()
       resolvedEditStyleRef.current = style
       setResolvedEditStyle(style)
@@ -628,6 +797,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       isCurrentSession,
       morph,
       resolveEditStyle,
+      resetInlineExitAnimation,
       startOpening,
       transitionPhase,
       viewportFocus,
@@ -654,9 +824,14 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         closeSourceRef.current = source
 
         if (resolvedEditStyleRef.current === 'inline') {
-          // 内联:失焦收键盘 → closing 过站 → 同 tick 复位布局。
+          // 内联:失焦后按实验方案收拢真实卡片,动画终点才卸载会话。
           if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur()
+          }
+          const exitAnimation = inlineToolbarExitAnimationRef.current
+          if (!prefersReducedMotion() && exitAnimation !== 'instant') {
+            startInlineExitAnimation(exitAnimation)
+            return
           }
           transitionPhase('closing')
           settleInlineToView()
@@ -689,6 +864,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         morph,
         scheduleCloseFlightAfterBackingCommit,
         settleInlineToView,
+        startInlineExitAnimation,
         settleToView,
         transitionPhase,
         viewportFocus,
@@ -761,6 +937,21 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         editorProps?.onSelectionFormatChange?.(format)
       },
       [editorProps],
+    )
+
+    const handleInlineExitTransitionEnd = useCallback(
+      (event: ReactTransitionEvent<HTMLDivElement>) => {
+        if (event.currentTarget !== event.target || event.propertyName !== 'height') {
+          return
+        }
+        if (
+          phaseRef.current === 'closing' &&
+          inlineExitRef.current?.stage === 'running'
+        ) {
+          settleInlineToView()
+        }
+      },
+      [settleInlineToView],
     )
 
     // 内置底栏(粗体/标题/无序列表/引用,两流一致)。
@@ -837,7 +1028,12 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       <div
         className={cn('wdf-view', className)}
         ref={slotRef}
-        style={style}
+        style={inlineExit ? {
+          ...style,
+          height: inlineExit.layout === 'overlay'
+            ? inlineExit.toHeight
+            : Math.max(inlineExit.fromHeight, inlineExit.toHeight),
+        } : style}
         {...props}
       >
         <div
@@ -859,10 +1055,25 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
           aria-modal={dialogEditing ? true : undefined}
           className="wdf-view__card"
           data-edit-style={resolvedEditStyle ?? undefined}
+          data-inline-toolbar-exit={inlineToolbarExitAnimation}
+          data-inline-exit-stage={inlineExit?.stage}
+          data-inline-exit-layout={inlineExit?.layout}
           data-phase={phase}
           data-toolbar-open={inlineToolbarOpen ? 'true' : 'false'}
+          inert={inlineExit ? true : undefined}
+          onTransitionEnd={handleInlineExitTransitionEnd}
           ref={shellRef}
           role={dialogEditing ? 'dialog' : undefined}
+          style={inlineExit ? {
+            height: inlineExit.stage === 'ready'
+              ? inlineExit.fromHeight
+              : inlineExit.toHeight,
+            ...(inlineExit.layout === 'overlay' ? {
+              top: inlineExit.top,
+              left: inlineExit.left,
+              width: inlineExit.width,
+            } : {}),
+          } : undefined}
           tabIndex={-1}
         >
           <header className="wdf-view__header">
@@ -936,6 +1147,12 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
             aria-label="编辑工具栏"
             className="wdf-view__toolbar"
             inert={phase !== 'edit'}
+            ref={toolbarRef}
+            style={inlineExit?.stage === 'ready' ? {
+              height: inlineExit.toolbarHeight,
+              paddingTop: inlineExit.toolbarPaddingTop,
+              paddingBottom: inlineExit.toolbarPaddingBottom,
+            } : undefined}
           >
             <div
               aria-label="编辑操作"

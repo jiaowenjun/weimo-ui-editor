@@ -10,6 +10,10 @@ const wdfViewSource = await readFile(
   new URL('../src/components/wdf-view/wdf-view.tsx', import.meta.url),
   'utf8',
 )
+const wdfViewStyles = await readFile(
+  new URL('../src/components/wdf-view/wdf-view.css', import.meta.url),
+  'utf8',
+)
 const wdfViewDemoSource = await readFile(
   new URL(
     '../site/src/docs/catalog/packages/weimo-ui-editor/wdf-view.tsx',
@@ -17,7 +21,7 @@ const wdfViewDemoSource = await readFile(
   ),
   'utf8',
 )
-const richEditorElement = /<RichEditor[\s\S]*?\/>/.exec(wdfViewSource)?.[0]
+const richEditorElement = /<RichEditor\s[\s\S]*?\/>/.exec(wdfViewSource)?.[0]
 
 assert.ok(richEditorElement, 'WdfView must render RichEditor in edit mode')
 
@@ -32,54 +36,108 @@ assert.deepEqual(
 
 assert.match(
   wdfViewSource,
-  /renderedMode === 'edit' && mode === 'view'/,
-  'WdfView must commit its editing session while the editor is still mounted',
+  /if \(intent === 'save'\) \{[\s\S]*commitDraft\('change'\)[\s\S]*transitionPhase\('closing'\)/,
+  'WdfView must commit a valid draft before starting its close transition',
 )
 assert.match(
   wdfViewSource,
-  /editorRef\.current\?\.getContent\(\) \?\? editorContent/,
-  'WdfView must read the final editor draft when leaving edit mode',
+  /const \{[\s\S]*sessionContent[\s\S]*commitDraft[\s\S]*\} = useEditorSession\(/,
+  'WdfView must keep document conversion in its editor-session data plane',
 )
 assert.match(
   richEditorElement,
-  /defaultValue=\{editorContent\}/,
+  /defaultValue=\{sessionContent\}/,
   'WdfView editing sessions must initialize an uncontrolled RichEditor draft',
 )
 assert.doesNotMatch(
   richEditorElement,
-  /value=\{editorContent\}/,
+  /\bvalue=/,
   'WdfView must not feed each WDF conversion back into RichEditor while editing',
 )
 assert.doesNotMatch(
   richEditorElement,
   /\bonChange=/,
-  'WdfView must not publish its RichEditor draft while the session is still active',
+  'WdfView must not publish its RichEditor draft while the session is active',
+)
+assert.match(
+  wdfViewSource,
+  /aria-label="取消编辑"[\s\S]*<X \/>[\s\S]*aria-label="保存编辑"[\s\S]*<Check \/>/,
+  'WdfView must expose separate cancel and save actions while editing',
 )
 
 assert.match(
-  wdfViewDemoSource,
-  /editing \? \([\s\S]*aria-label="取消编辑"[\s\S]*<X \/>[\s\S]*aria-label="保存编辑"[\s\S]*<Check \/>/,
-  'the editing preview card must expose separate cancel and save actions',
+  wdfViewSource,
+  /inlineToolbarExitAnimation = 'instant'/,
+  'the public default must retain the Safari-stable instant exit',
 )
 assert.match(
-  wdfViewDemoSource,
-  /const cancelEditing = \(\) => \{[\s\S]*setEditingSession\(\(current\) => current \+ 1\)[\s\S]*setMode\('view'\)/,
-  'cancel must discard the local draft by replacing the editing session',
+  wdfViewSource,
+  /export type WdfViewInlineToolbarExitAnimation =[\s\S]*'instant'[\s\S]*'visual'[\s\S]*'overlay'/,
+  'WdfView must publish both comparison variants without removing instant',
+)
+const inlineExitStart = wdfViewSource.slice(
+  wdfViewSource.indexOf('const startInlineExitAnimation'),
+  wdfViewSource.indexOf('const settleToView'),
 )
 assert.match(
-  wdfViewDemoSource,
-  /const saveEditing = \(\) => setMode\('view'\)/,
-  'save must leave edit mode through the WdfView commit transition',
+  wdfViewStyles,
+  /data-edit-style='inline'[^\{]*\.wdf-view__toolbar\s*\{[^}]*transition:\s*none;/,
+  'the default inline exit must preserve the instant baseline',
 )
 assert.match(
-  wdfViewDemoSource,
-  /key=\{editingSession\}/,
-  'the preview WdfView must use the cancelable editing-session identity',
+  wdfViewSource,
+  /!prefersReducedMotion\(\) && exitAnimation !== 'instant'[\s\S]*startInlineExitAnimation\(exitAnimation\)/,
+  'both experiments must use geometry animation and respect reduced motion',
 )
 assert.doesNotMatch(
+  inlineExitStart,
+  /endSession\(|transitionPhase\('view'\)/,
+  'starting exit must retain the editor and toolbar until their heights finish transitioning',
+)
+assert.match(
+  inlineExitStart,
+  /toHeight = shell\.getBoundingClientRect\(\)\.height/,
+  'exit must measure the actual final view height, including saved or cancelled content changes',
+)
+assert.match(
+  wdfViewSource,
+  /height: inlineExit\.stage === 'ready'\s*\? inlineExit\.fromHeight\s*: inlineExit\.toHeight/,
+  'the real card must interpolate between measured start and end heights',
+)
+assert.match(
+  wdfViewStyles,
+  /\.wdf-view__card\[data-edit-style='inline'\]\[data-inline-exit-stage='running'\]\s*\{\s*transition: height 200ms ease;/,
+  'both experiments must animate the actual card border rather than only fading icons',
+)
+assert.match(
+  wdfViewStyles,
+  /data-inline-exit-stage='running'\] \.wdf-view__toolbar\s*\{[^}]*height: 0;[^}]*height 200ms ease,[^}]*padding-block 200ms ease;/,
+  'the closing toolbar must transition its height and padding on the same timeline as the card',
+)
+assert.match(
+  inlineExitStart,
+  /layout === 'overlay' && showInTopLayer\(shell\)/,
+  'overlay must detach the whole real card to avoid its overflow changing page scrollHeight',
+)
+assert.match(
+  wdfViewSource,
+  /event\.propertyName !== 'height'[\s\S]*inlineExitRef\.current\?\.stage === 'running'[\s\S]*settleInlineToView\(\)/,
+  'only the card height endpoint may finish the close, never an earlier icon opacity event',
+)
+assert.match(
   wdfViewDemoSource,
-  /\bEye\b|切换到阅读模式/,
-  'edit mode must no longer expose the ambiguous preview action',
+  /<ComparisonCard animation="visual"[\s\S]*<ComparisonCard animation="overlay"/,
+  'the docs demo must render both exit strategies for direct comparison',
+)
+assert.match(
+  wdfViewDemoSource,
+  /editStyle="inline"[\s\S]*inlineToolbarExitAnimation=\{animation\}/,
+  'the shared comparison card must force the inline path at every viewport width',
+)
+assert.match(
+  wdfViewDemoSource,
+  /card\.getBoundingClientRect\(\)\.height[\s\S]*toolbar\.getBoundingClientRect\(\)\.height/,
+  'the demo must sample real card and toolbar geometry so a zero-height snap is observable',
 )
 
 const document = {
@@ -138,4 +196,4 @@ assert.equal(
   'unsupported editor nodes must not be accepted as WDF',
 )
 
-console.log('WdfView conversion contract passed')
+console.log('WdfView behavior and conversion contract passed')
