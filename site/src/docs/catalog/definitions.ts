@@ -1,7 +1,7 @@
-import { wdfViewDefinition } from './packages/weimo-ui-editor/wdf-view'
+import { wdfCardDefinition } from './packages/weimo-ui-editor/wdf-card'
 import type { ComponentId } from './manifest'
 import type { ComponentDefinition } from './types'
 
 export const componentDefinitionsById = {
-  'wdf-view': wdfViewDefinition,
+  'wdf-card': wdfCardDefinition,
 } satisfies Record<ComponentId, ComponentDefinition>

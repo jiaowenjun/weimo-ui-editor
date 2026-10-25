@@ -9,7 +9,7 @@ import {
   handleWdfListBoundaryBackspace,
 } from '../dist/components/rich-editor/rich-editor-extensions.js'
 import { editorHasContent } from '../dist/components/rich-editor/rich-editor-content.js'
-import { toWdfEditorContent } from '../dist/components/wdf-view/wdf-editor-content.js'
+import { toWdfEditorContent } from '../dist/components/wdf-card/wdf-editor-content.js'
 
 const document = {
   schema: 'weimo.document',

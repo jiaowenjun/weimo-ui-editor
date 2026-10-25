@@ -1,5 +1,5 @@
 /*
- * CardShell 纯函数集:WdfView 的几何、popover top layer、
+ * CardShell 纯函数集:WdfCard 的几何、popover top layer、
  * fix-v3 收起清理与页面锁定工具。无 React 依赖,便于独立演进与测试。
  *
  * 背景知识(详见 docs/ios-safari-statusbar-toplayer.md):
@@ -28,7 +28,7 @@ export type ShellRect = {
   width: number
 }
 
-/** 卡片相位机生命周期(WdfView 的协调器与 card-morph/viewport-focus 共用)。 */
+/** 卡片相位机生命周期(WdfCard 的协调器与 card-morph/viewport-focus 共用)。 */
 export type CardPhase = 'view' | 'prepare' | 'opening' | 'edit' | 'closing'
 
 export function prefersReducedMotion() {

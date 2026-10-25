@@ -1,7 +1,7 @@
-/* === WdfView(前缀独立;内联轴见文末)*/
+/* === WdfCard(前缀独立;内联轴见文末)*/
 
-.wdf-view {
-  --wdf-view-morph-duration: 320ms;
+.wdf-card {
+  --wdf-card-morph-duration: 320ms;
 
   position: relative;
   width: 100%;
@@ -9,8 +9,8 @@
 }
 
 @media (max-width: 640px) {
-  .wdf-view {
-    --wdf-view-morph-duration: 320ms;
+  .wdf-card {
+    --wdf-card-morph-duration: 320ms;
   }
 }
 
@@ -20,7 +20,7 @@
  * 查看态高度由内容撑起(上限见 __render 的 max-height);会话态几何由
  * 组件的 inline fixed rect 驱动。
  */
-.wdf-view__card {
+.wdf-card__card {
   position: relative;
   z-index: 1;
   box-sizing: border-box;
@@ -39,24 +39,24 @@
   box-shadow: var(--shadow-card);
 }
 
-.dark .wdf-view__card {
+.dark .wdf-card__card {
   border-color: var(--color-border);
 }
 
-.wdf-view__card--animating {
+.wdf-card__card--animating {
   transition:
-    top var(--wdf-view-morph-duration) ease-in-out,
-    left var(--wdf-view-morph-duration) ease-in-out,
-    width var(--wdf-view-morph-duration) ease-in-out,
-    height var(--wdf-view-morph-duration) ease-in-out;
+    top var(--wdf-card-morph-duration) ease-in-out,
+    left var(--wdf-card-morph-duration) ease-in-out,
+    width var(--wdf-card-morph-duration) ease-in-out,
+    height var(--wdf-card-morph-duration) ease-in-out;
   will-change: top, left, width, height;
 }
 
 /* Keyboard height may ease; compensating Safari viewport panning must be immediate.
    Opening/closing still use the original four-property morph. NewMdfView and
-   WdfView share this rule; no transform/second positioning layer is introduced. */
+   WdfCard share this rule; no transform/second positioning layer is introduced. */
 @media (max-width: 640px) {
-  .wdf-view__card--animating[data-edit-style='dialog'][data-phase='edit'] {
+  .wdf-card__card--animating[data-edit-style='dialog'][data-phase='edit'] {
     transition-property: width, height;
     will-change: width, height;
   }
@@ -70,7 +70,7 @@
  * 提层:编辑层/错误条为不透明定位元素,会盖住图标向下溢出带外的
  * hover 圆底;标题栏 z-index 压其上,溢出部分不被裁切。
  */
-.wdf-view__header {
+.wdf-card__header {
   position: relative;
   z-index: 1;
   display: flex;
@@ -83,7 +83,7 @@
   padding: var(--space-card-pad) var(--space-card-pad) 0 var(--space-card-pad);
 }
 
-.wdf-view__title {
+.wdf-card__title {
   min-width: 0;
   overflow: hidden;
   color: var(--color-text-primary);
@@ -94,14 +94,14 @@
   white-space: nowrap;
 }
 
-.wdf-view__actions {
+.wdf-card__actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 /* 转换失败提示:保留编辑会话时显示在头部下方。 */
-.wdf-view__error {
+.wdf-card__error {
   box-sizing: border-box;
   flex-shrink: 0;
   margin: 0;
@@ -112,7 +112,7 @@
   line-height: 1.5;
 }
 
-.wdf-view__body {
+.wdf-card__body {
   position: relative;
   display: flex;
   box-sizing: border-box;
@@ -131,21 +131,21 @@
  * 标题栏→内容分区距),左右/下 = --space-card-pad(13px);与编辑层
  * 严格同值,两态替换零位移。
  */
-.wdf-view__render {
+.wdf-card__render {
   position: absolute;
   inset: 0;
   overflow: auto;
   padding: var(--space-card-section-gap) var(--space-card-pad) var(--space-card-pad);
 }
 
-.wdf-view__card[data-phase='view'] .wdf-view__render {
+.wdf-card__card[data-phase='view'] .wdf-card__render {
   position: static;
   inset: auto;
 }
 
 /* 编辑器层:会话期间覆盖衬底;就绪前不可见,由衬底顶住画面。
    padding 与衬底严格同值(对齐 BaseCard 体系),两态替换零位移。 */
-.wdf-view__editor-layer {
+.wdf-card__editor-layer {
   position: absolute;
   inset: 0;
   display: flex;
@@ -159,13 +159,13 @@
 /* 编辑层可见性由相位派生(阶段五删除 data-ready):prepare 挂载期
    隐藏(防骨架屏首帧),opening 起可见直至 settle 卸载。等价性:
    原 editorReady 的三次翻转均与相位转换同一次 React 提交。 */
-.wdf-view__card[data-phase='opening'] .wdf-view__editor-layer,
-.wdf-view__card[data-phase='edit'] .wdf-view__editor-layer,
-.wdf-view__card[data-phase='closing'] .wdf-view__editor-layer {
+.wdf-card__card[data-phase='opening'] .wdf-card__editor-layer,
+.wdf-card__card[data-phase='edit'] .wdf-card__editor-layer,
+.wdf-card__card[data-phase='closing'] .wdf-card__editor-layer {
   visibility: visible;
 }
 
-.wdf-view__editor-layer .rich-editor {
+.wdf-card__editor-layer .rich-editor {
   height: 100%;
   min-height: 0;
   flex: 1;
@@ -179,14 +179,14 @@
  * 飞行期由编辑层(卡底,隔自身 13px 底距)统一裁切;edit 态恢复
  * 滚动供长文档。两轴须同时 visible,单轴 visible 规范上计算为 auto。
  */
-.wdf-view__card[data-phase='opening'] .rich-editor__viewport,
-.wdf-view__card[data-phase='closing'] .rich-editor__viewport {
+.wdf-card__card[data-phase='opening'] .rich-editor__viewport,
+.wdf-card__card[data-phase='closing'] .rich-editor__viewport {
   overflow: visible;
 }
 
 /* 内置底栏:收起态高度 0 不占空间;展开(opening/edit)经高度/透明度
    过渡显出,贴底并让出安全区。 */
-.wdf-view__toolbar {
+.wdf-card__toolbar {
   display: flex;
   box-sizing: border-box;
   height: 0;
@@ -199,14 +199,14 @@
   opacity: 0;
   transform: translateY(12px);
   transition:
-    height var(--wdf-view-morph-duration) ease-in-out,
-    padding-block var(--wdf-view-morph-duration) ease-in-out,
-    opacity var(--wdf-view-morph-duration) ease-in-out,
-    transform var(--wdf-view-morph-duration) ease-in-out;
+    height var(--wdf-card-morph-duration) ease-in-out,
+    padding-block var(--wdf-card-morph-duration) ease-in-out,
+    opacity var(--wdf-card-morph-duration) ease-in-out,
+    transform var(--wdf-card-morph-duration) ease-in-out;
 }
 
-.wdf-view__card[data-phase='opening'] .wdf-view__toolbar,
-.wdf-view__card[data-phase='edit'] .wdf-view__toolbar {
+.wdf-card__card[data-phase='opening'] .wdf-card__toolbar,
+.wdf-card__card[data-phase='edit'] .wdf-card__toolbar {
   height: 48px;
   padding-block: 6px max(6px, env(safe-area-inset-bottom));
   opacity: 1;
@@ -214,11 +214,11 @@
 }
 
 /* 编辑态允许焦点环溢出,避免被底栏自身裁剪。 */
-.wdf-view__card[data-phase='edit'] .wdf-view__toolbar {
+.wdf-card__card[data-phase='edit'] .wdf-card__toolbar {
   overflow: visible;
 }
 
-.wdf-view__toolbar-group {
+.wdf-card__toolbar-group {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,7 +233,7 @@
  * 历史教训见 91b7fd3/ef20da2)。inset: 0 + width/height auto +
  * margin 0 = 拉伸铺满视口。
  */
-.wdf-view__backdrop {
+.wdf-card__backdrop {
   position: fixed;
   inset: 0;
   width: auto;
@@ -249,7 +249,7 @@
   transition: opacity 200ms ease;
 }
 
-.wdf-view__backdrop[data-visible='true'] {
+.wdf-card__backdrop[data-visible='true'] {
   opacity: 1;
   pointer-events: auto;
 }
@@ -267,17 +267,17 @@
    header 高度再于 edit 弹回(坍缩-恢复闪烁);保持 static 后,
    edit 时才发生单次 render→编辑层高度交接(同文档渲染,高度差
    仅编辑器自带 padding)。 */
-.wdf-view__card[data-edit-style='inline'][data-phase='prepare'] .wdf-view__render {
+.wdf-card__card[data-edit-style='inline'][data-phase='prepare'] .wdf-card__render {
   position: static;
   inset: auto;
 }
-.wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__render,
-.wdf-view__card[data-edit-style='inline'][data-phase='closing'] .wdf-view__render {
+.wdf-card__card[data-edit-style='inline'][data-phase='edit'] .wdf-card__render,
+.wdf-card__card[data-edit-style='inline'][data-phase='closing'] .wdf-card__render {
   display: none;
 }
 
-.wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__editor-layer,
-.wdf-view__card[data-edit-style='inline'][data-phase='closing'] .wdf-view__editor-layer {
+.wdf-card__card[data-edit-style='inline'][data-phase='edit'] .wdf-card__editor-layer,
+.wdf-card__card[data-edit-style='inline'][data-phase='closing'] .wdf-card__editor-layer {
   position: static;
   inset: auto;
 }
@@ -300,7 +300,7 @@
  *    底距已提供视觉间隙,层总高与 render 层逐位对齐——消除进入
  *    编辑时 body 的离散高度跳变(同文档渲染下 ±0)。
  */
-.wdf-view__card[data-edit-style='inline'] .wdf-view__toolbar {
+.wdf-card__card[data-edit-style='inline'] .wdf-card__toolbar {
   opacity: 1;
   transform: none;
   height: 0;
@@ -308,13 +308,13 @@
   transition: none;
 }
 
-.wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__toolbar {
+.wdf-card__card[data-edit-style='inline'][data-phase='edit'] .wdf-card__toolbar {
   transition:
     height 200ms ease,
     padding-block 200ms ease;
 }
 
-.wdf-view__card[data-edit-style='inline'][data-toolbar-open='true'] .wdf-view__toolbar {
+.wdf-card__card[data-edit-style='inline'][data-toolbar-open='true'] .wdf-card__toolbar {
   height: 48px;
   padding-block: 6px max(6px, env(safe-area-inset-bottom));
 }
@@ -323,16 +323,16 @@
    ready 通过内联 style 固定退出瞬间的实测几何;running 才归零 footer。
    页面占位由外层单独钉住,后续容器用等量向上位移跟随卡底,结束时
    一次释放占位并撤销位移,不能用外层定高替代卡片高度动画。 */
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='ready'],
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='fading'] {
+.wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='ready'],
+.wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='fading'] {
   transition: none;
 }
 
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] {
+.wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='running'] {
   transition: height 200ms ease;
 }
 
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar {
+.wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-card__toolbar {
   height: 0;
   padding-block: 0;
   transition:
@@ -342,27 +342,27 @@
 
 /* 先完整淡出图标,再开始收高,避免末段露出被裁掉的半个图标。
    只淡出内容组,工具栏与真实卡片仍完成整个高度过渡。 */
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='ready'] .wdf-view__toolbar-group {
+.wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='ready'] .wdf-card__toolbar-group {
   opacity: 1;
   transition: none;
 }
 
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='fading'] .wdf-view__toolbar-group,
-.wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar-group {
+.wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='fading'] .wdf-card__toolbar-group,
+.wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-card__toolbar-group {
   opacity: 0;
   transition: opacity 60ms ease-out;
 }
 
-.wdf-view__card[data-edit-style='inline'] .rich-editor__viewport {
+.wdf-card__card[data-edit-style='inline'] .rich-editor__viewport {
   padding-block-end: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wdf-view__card[data-edit-style='inline'][data-phase='edit'] .wdf-view__toolbar,
-  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'],
-  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar,
-  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='fading'] .wdf-view__toolbar-group,
-  .wdf-view__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-view__toolbar-group {
+  .wdf-card__card[data-edit-style='inline'][data-phase='edit'] .wdf-card__toolbar,
+  .wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='running'],
+  .wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-card__toolbar,
+  .wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='fading'] .wdf-card__toolbar-group,
+  .wdf-card__card[data-edit-style='inline'][data-inline-exit-stage='running'] .wdf-card__toolbar-group {
     transition: none;
   }
 }

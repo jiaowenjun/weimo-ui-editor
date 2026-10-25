@@ -14,7 +14,7 @@
 
 weimo-ui-editor 把这三个必要部分组合起来:
 
-- **WdfView** — 对外只读写 WDF,内部在阅读态使用 WdfRender,在编辑态使用 RichEditor;
+- **WdfCard** — 对外只读写 WDF,内部在阅读态使用 WdfRender,在编辑态使用 RichEditor;
 - **WdfRender** — WDF 文档对象进,直接生成排版舒适的 React 内容;
 - **RichEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
 
@@ -50,13 +50,13 @@ import 'weimo-ui-editor/styles/tokens.css'
 ```tsx
 import { useState } from 'react'
 import {
-  WdfView,
+  WdfCard,
   type WdfDocument,
-  type WdfViewMode,
-} from 'weimo-ui-editor/components/wdf-view'
+  type WdfCardMode,
+} from 'weimo-ui-editor/components/wdf-card'
 
 export function Description() {
-  const [mode, setMode] = useState<WdfViewMode>('view')
+  const [mode, setMode] = useState<WdfCardMode>('view')
   const [content, setContent] = useState<WdfDocument>({
     schema: 'weimo.document',
     version: 1,
@@ -71,13 +71,13 @@ export function Description() {
       <button onClick={() => setMode(mode === 'view' ? 'edit' : 'view')}>
         {mode === 'view' ? '编辑' : '完成'}
       </button>
-      <WdfView mode={mode} value={content} onChange={setContent} />
+      <WdfCard mode={mode} value={content} onChange={setContent} />
     </>
   )
 }
 ```
 
-`WdfView` 只维护 WDF:阅读态直接交给 `WdfRender`,进入编辑态时通过
+`WdfCard` 只维护 WDF:阅读态直接交给 `WdfRender`,进入编辑态时通过
 `weimo-wdf` 的 `toTiptap` 创建一份会话草稿。输入期间草稿留在 `RichEditor`
 内部;当 `mode` 从 `edit` 切回 `view` 时,组件才用 `fromTiptap` 转回规范化
 WDF 并调用一次 `onChange`。`mode` 由业务层控制;你也可以用 `defaultValue`
@@ -85,19 +85,19 @@ WDF 并调用一次 `onChange`。`mode` 由业务层控制;你也可以用 `defa
 
 内联编辑退出时,工具栏图标先淡出,卡片与工具栏再同步收高。
 卡片始终留在文档流内;系统开启减少动态效果时立即收起。
-若下方还有内容需要同步上移,将它们放入一个紧邻 `WdfView`、处于同一
+若下方还有内容需要同步上移,将它们放入一个紧邻 `WdfCard`、处于同一
 纵向文档流的容器,并传入 `inlineExitFollowRef`。例如:
 
 ```tsx
 import { useRef } from 'react'
-import { WdfView, type WdfDocument } from 'weimo-ui-editor/components/wdf-view'
+import { WdfCard, type WdfDocument } from 'weimo-ui-editor/components/wdf-card'
 
 export function EditableCard({ content }: { content: WdfDocument }) {
   const followingRef = useRef<HTMLDivElement>(null)
 
   return (
     <div>
-      <WdfView
+      <WdfCard
         defaultValue={content}
         editStyle="inline"
         inlineExitFollowRef={followingRef}
@@ -163,7 +163,7 @@ export function DescriptionEditor() {
 
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
-| `WdfView` | `weimo-ui-editor/components/wdf-view` | WDF 文档 ↔ WDF 文档 | 同一份内容的阅读/编辑切换 |
+| `WdfCard` | `weimo-ui-editor/components/wdf-card` | WDF 文档 ↔ WDF 文档 | 同一份内容的阅读/编辑切换 |
 | `WdfRender` | `weimo-ui-editor/components/wdf-render` | WDF 文档 → React 节点 | 直接展示规范化的 WDF 内容 |
 | `RichEditor` | `weimo-ui-editor/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 

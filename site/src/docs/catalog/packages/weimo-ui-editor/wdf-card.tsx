@@ -1,34 +1,34 @@
-import { WdfView } from 'weimo-ui-editor/components/wdf-view'
+import { WdfCard } from 'weimo-ui-editor/components/wdf-card'
 import type { WdfDocument } from 'weimo-wdf'
 
 import { wdfRenderSample } from '../../fixtures/wdf-sample'
 import type { ComponentDefinition } from '../../types'
 
 /*
- * WdfView 演示页(仅 site):单卡展示自适应编辑——窄屏(≤640px)
+ * WdfCard 演示页(仅 site):单卡展示自适应编辑——窄屏(≤640px)
  * 卡片对话框 morph,宽屏行内编辑;编辑样式会话内冻结。
  * 内联工具栏进入时展开,退出时先淡出图标再同步收拢卡片高度。
  */
 
-function WdfViewDemo() {
+function WdfCardDemo() {
   const sample = wdfRenderSample as WdfDocument
   return (
-    <WdfView
+    <WdfCard
       defaultValue={sample}
       title={
         <>
-          自适应编辑 <code className="docs-component-class">wdf-view</code>
+          自适应编辑卡片 <code className="docs-component-class">wdf-card</code>
         </>
       }
     />
   )
 }
 
-export const wdfViewDefinition = {
-  id: 'wdf-view',
+export const wdfCardDefinition = {
+  id: 'wdf-card',
   summary:
-    'WdfView:自适应编辑样式——窄屏(≤640px)卡片对话框 morph,宽屏行内编辑;样式会话内冻结',
+    'WdfCard:自适应编辑样式——窄屏(≤640px)卡片对话框 morph,宽屏行内编辑;样式会话内冻结',
   status: 'Preview',
   frame: 'plain',
-  preview: () => <WdfViewDemo />,
+  preview: () => <WdfCardDemo />,
 } satisfies ComponentDefinition

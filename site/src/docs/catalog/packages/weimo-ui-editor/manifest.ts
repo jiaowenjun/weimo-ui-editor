@@ -5,11 +5,11 @@ export const editorCatalog = {
   title: 'weimo-ui-editor',
   pages: [
     {
-      id: 'wdf-view',
-      name: 'WDF读写视图',
-      exportName: 'WdfView',
-      registryName: 'wdf-view',
-      packageExport: './components/wdf-view',
+      id: 'wdf-card',
+      name: 'WDF读写卡片',
+      exportName: 'WdfCard',
+      registryName: 'wdf-card',
+      packageExport: './components/wdf-card',
     },
   ],
 } as const satisfies PackageCatalog

@@ -28,7 +28,7 @@ import {
   type RichEditorSelectionFormat,
 } from '../rich-editor/rich-editor'
 import { WdfRender, type WdfRenderProps } from '../wdf-render/wdf-render'
-import { WdfViewBridgeContext } from './wdf-view-bridge'
+import { WdfCardBridgeContext } from './wdf-card-bridge'
 // 已验证模块与原语(时序契约见 docs/new-mobile-wdf-view-baseline.md)。
 import { useEditorSession } from './editor-session'
 import { useCardMorph } from './card-morph'
@@ -45,7 +45,7 @@ import {
   stageVisibilityHandoff,
 } from './card-shell'
 
-import 'weimo-ui-editor/styles/wdf-view.css'
+import 'weimo-ui-editor/styles/wdf-card.css'
 
 export type {
   RichEditorBlockFormat,
@@ -54,13 +54,13 @@ export type {
 } from '../rich-editor/rich-editor'
 export type { Diagnostic, WdfDocument } from 'weimo-wdf'
 
-export type WdfViewMode = 'view' | 'edit'
-export type WdfViewConversionSource = 'change' | 'save'
+export type WdfCardMode = 'view' | 'edit'
+export type WdfCardConversionSource = 'change' | 'save'
 /** 编辑样式:auto 按视口宽度(≤640px 对话框,否则内联);会话开始时
  * 解析并冻结(resolvedEditStyle),会话中途视口跨越断点不切换。 */
-export type WdfViewEditStyle = 'auto' | 'dialog' | 'inline'
+export type WdfCardEditStyle = 'auto' | 'dialog' | 'inline'
 
-const CARD_CLASS_PREFIX = 'wdf-view'
+const CARD_CLASS_PREFIX = 'wdf-card'
 const ANIMATING_CLASS = `${CARD_CLASS_PREFIX}__card--animating`
 const EDITOR_READY_TIMEOUT = 800
 const INLINE_TOOLBAR_EXIT_FADE_DURATION = 60
@@ -178,7 +178,7 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * WdfView:自适应编辑样式的 WDF 读写视图。
+ * WdfCard:自适应编辑样式的 WDF 读写视图。
  *
  * - 窄屏(≤640px)/editStyle='dialog':popover 对话框 + 卡片 morph +
  *   焦点陷阱 + fix-3 收起清理的完整编排。
@@ -190,16 +190,16 @@ function prefersReducedMotion(): boolean {
  * (resolvedEditStyle),中途视口跨越不切换,收起后下次打开重判。
  * 编辑样式轴经 data-edit-style 落 DOM,CSS 按轴分形。
  */
-export type WdfViewProps = Omit<
+export type WdfCardProps = Omit<
   ComponentPropsWithoutRef<'div'>,
   'children' | 'title' | 'onChange' | 'value' | 'defaultValue'
 > & {
   /** 受控模式;省略时组件自管理(X/Esc/遮罩收起)。 */
-  mode?: WdfViewMode
+  mode?: WdfCardMode
   /** 非受控初始模式,默认 view。 */
-  defaultMode?: WdfViewMode
+  defaultMode?: WdfCardMode
   /** 用户交互请求切换模式时触发;转换失败不触发 view。 */
-  onModeChange?: (mode: WdfViewMode) => void
+  onModeChange?: (mode: WdfCardMode) => void
   /** WDF 文档;会话期间外部更新不覆盖会话草稿。 */
   value?: WdfDocument
   defaultValue?: WdfDocument
@@ -210,14 +210,14 @@ export type WdfViewProps = Omit<
   /** 转换失败上报;组件内同时显示保留会话提示。 */
   onConversionError?: (
     diagnostics: Diagnostic[],
-    source: WdfViewConversionSource,
+    source: WdfCardConversionSource,
   ) => void
   /** 展开完成后自动聚焦,默认 false。 */
   autoFocus?: boolean
   /** 自动聚焦光标位置,默认 end。 */
   autoFocusPosition?: RichEditorFocusPosition
   /** 编辑样式,默认 auto(视口 ≤640px 对话框,否则内联);会话内冻结。 */
-  editStyle?: WdfViewEditStyle
+  editStyle?: WdfCardEditStyle
   /** 可选的后续内容容器,须紧邻组件根节点且处于同一纵向文档流。
    * 动画退出时同步移动容器,避免释放占位后跳位;仅动画期间生效。
    * 容器应包住所有需要跟随的内容,不要包含本卡片。 */
@@ -239,7 +239,7 @@ export type WdfViewProps = Omit<
   >
 }
 
-export type WdfViewHandle = {
+export type WdfCardHandle = {
   /** 请求进入编辑(受控模式下经 onModeChange,由父级决定)。 */
   open: () => void
   /** 请求收起;经转换,失败则保留会话并上报 onConversionError。 */
@@ -258,8 +258,8 @@ export type WdfViewHandle = {
   ) => boolean
 }
 
-export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
-  function WdfView(
+export const WdfCard = forwardRef<WdfCardHandle, WdfCardProps>(
+  function WdfCard(
     {
       autoFocus = false,
       autoFocusPosition = 'end',
@@ -282,12 +282,12 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
     },
     ref,
   ) {
-    const bridge = useContext(WdfViewBridgeContext)
+    const bridge = useContext(WdfCardBridgeContext)
     const bridgeRef = useRef(bridge)
     bridgeRef.current = bridge
     const titleId = useId()
     const [phase, setPhase] = useState<CardPhase>('view')
-    const [internalMode, setInternalMode] = useState<WdfViewMode>(defaultMode)
+    const [internalMode, setInternalMode] = useState<WdfCardMode>(defaultMode)
     const [selectionFormat, setSelectionFormat] =
       useState<RichEditorSelectionFormat | null>(null)
     // 会话编辑样式:打开时解析冻结,收起时清空(null=无会话)。
@@ -359,7 +359,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       if (current === next) return false
       if (!PHASE_TRANSITIONS[current].includes(next)) {
         console.warn(
-          `[wdf-view] 忽略非法相位转换 ${current} → ${next}`,
+          `[wdf-card] 忽略非法相位转换 ${current} → ${next}`,
         )
         return false
       }
@@ -790,7 +790,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         beginSession(currentDocumentRef.current)
         readyTimerRef.current = window.setTimeout(() => {
           if (isCurrentSession(session) && phaseRef.current === 'prepare') {
-            console.warn('[wdf-view] editor ready 超时,直接进入编辑')
+            console.warn('[wdf-card] editor ready 超时,直接进入编辑')
             enterInlineEdit(session)
           }
         }, EDITOR_READY_TIMEOUT)
@@ -810,7 +810,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       const topLayerSupported = showInTopLayer(backdropRef.current)
       showInTopLayer(shell)
       if (!topLayerSupported) {
-        console.warn('[wdf-view] Popover API 不可用,降级为 fixed 覆盖层')
+        console.warn('[wdf-card] Popover API 不可用,降级为 fixed 覆盖层')
       }
 
       morph.fixShellAtFolded(first)
@@ -818,7 +818,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
 
       readyTimerRef.current = window.setTimeout(() => {
         if (isCurrentSession(session) && phaseRef.current === 'prepare') {
-          console.warn('[wdf-view] editor ready 超时,直接展开')
+          console.warn('[wdf-card] editor ready 超时,直接展开')
           startOpening(session)
         }
       }, EDITOR_READY_TIMEOUT)
@@ -959,7 +959,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       }
     }, [activeMode, openCard, settleInlineToView, settleToView])
 
-    const requestMode = useCallback((next: WdfViewMode) => {
+    const requestMode = useCallback((next: WdfCardMode) => {
       if (next === 'edit' && bridgeRef.current?.readOnly) return
       onModeChangeRef.current?.(next)
       if (!isModeControlledRef.current) {
@@ -1078,7 +1078,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
 
     return (
       <div
-        className={cn('wdf-view', className)}
+        className={cn('wdf-card', className)}
         ref={slotRef}
         style={inlineExit ? {
           ...style,
@@ -1088,7 +1088,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       >
         <div
           aria-hidden="true"
-          className="wdf-view__backdrop"
+          className="wdf-card__backdrop"
           data-visible={
             resolvedEditStyle === 'dialog' &&
             (phase === 'opening' || phase === 'edit')
@@ -1103,7 +1103,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
         <div
           aria-labelledby={dialogEditing ? titleId : undefined}
           aria-modal={dialogEditing ? true : undefined}
-          className="wdf-view__card"
+          className="wdf-card__card"
           data-edit-style={resolvedEditStyle ?? undefined}
           data-inline-exit-stage={inlineExit?.stage}
           data-phase={phase}
@@ -1119,8 +1119,8 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
           } : undefined}
           tabIndex={-1}
         >
-          <header className="wdf-view__header">
-            <span className="wdf-view__title" id={titleId}>
+          <header className="wdf-card__header">
+            <span className="wdf-card__title" id={titleId}>
               {title}
             </span>
             {phase === 'view' ? (
@@ -1135,7 +1135,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
             ) : (
               <div
                 aria-label="编辑操作"
-                className="wdf-view__actions"
+                className="wdf-card__actions"
                 role="group"
               >
                 <GhostIconButton
@@ -1159,21 +1159,21 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
           </header>
 
           {conversionError && (
-            <p className="wdf-view__error" role="alert">
+            <p className="wdf-card__error" role="alert">
               草稿转换失败,已保留编辑内容;请调整格式后重试收起。
             </p>
           )}
-          {bridge?.saving && <p className="wdf-view__error" role="status">保存中…</p>}
-          {bridge?.error && <p className="wdf-view__error" role="alert">{bridge.error}</p>}
+          {bridge?.saving && <p className="wdf-card__error" role="status">保存中…</p>}
+          {bridge?.error && <p className="wdf-card__error" role="alert">{bridge.error}</p>}
 
-          <div className="wdf-view__body">
+          <div className="wdf-card__body">
             {/* WdfRender 衬底:对话框流常驻(查看态内容+准备期视觉底);
                 内联流编辑期隐藏,退出时复显最新文档。 */}
-            <div className="wdf-view__render">
+            <div className="wdf-card__render">
               <WdfRender {...renderProps} content={currentDocument} />
             </div>
             {sessionContent && (
-              <div className="wdf-view__editor-layer">
+              <div className="wdf-card__editor-layer">
                 <RichEditor
                   {...editorProps}
                   autoFocus={false}
@@ -1192,7 +1192,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
               inert 禁焦点。收起态高度为 0,不占卡片空间。 */}
           <footer
             aria-label="编辑工具栏"
-            className="wdf-view__toolbar"
+            className="wdf-card__toolbar"
             inert={phase !== 'edit'}
             ref={toolbarRef}
             style={inlineExit && inlineExit.stage !== 'running' ? {
@@ -1203,7 +1203,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
           >
             <div
               aria-label="编辑操作"
-              className="wdf-view__toolbar-group"
+              className="wdf-card__toolbar-group"
               role="group"
             >
               {toolbarButtons.map((button) => (
@@ -1227,4 +1227,4 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
   },
 )
 
-WdfView.displayName = 'WdfView'
+WdfCard.displayName = 'WdfCard'
