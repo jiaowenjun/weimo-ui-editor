@@ -85,6 +85,9 @@ WDF 并调用一次 `onChange`。`mode` 由业务层控制;你也可以用 `defa
 
 内联编辑退出时,工具栏图标先淡出,卡片与工具栏再同步收高。
 卡片始终留在文档流内;系统开启减少动态效果时立即收起。
+卡片宽度为 `auto` + stretch 对齐(填满所在容器),请将其放入常规块流
+或默认 stretch 对齐的 flex column / grid 容器;父级改为
+`align-items: center/flex-start` 等非 stretch 对齐时,卡片会收缩为内容宽。
 若下方还有内容需要同步上移,将它们放入一个紧邻 `WdfCard`、处于同一
 纵向文档流的容器,并传入 `inlineExitFollowRef`。例如:
 

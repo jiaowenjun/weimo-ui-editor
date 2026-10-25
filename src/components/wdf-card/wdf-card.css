@@ -4,7 +4,9 @@
   --wdf-card-morph-duration: 320ms;
 
   position: relative;
-  width: 100%;
+  /* auto + 所在容器的 stretch 对齐:宽度填满可用空间,
+     且自身水平 margin 不再推出父级(width: 100% 做不到) */
+  width: auto;
   min-width: 0;
 }
 
