@@ -1,5 +1,8 @@
 .docs-component-class { margin-left: 6px; color: var(--color-text-subtle); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: 400; }
 
+/* 标题区与演示卡之间的居中按钮行(hero wrapper 的纵向 gap 提供间距) */
+.docs-hero-actions { display: flex; justify-content: center; }
+
 /* 演示页底部 DEBUG 开关本体 */
 .debug-outline-toggle {
   display: flex;
@@ -20,7 +23,8 @@
   margin: 2px;
 }
 
-/* 内容列水平方向保持居中(margin-inline: auto),仅纵向加临时外距 */
-.debug-outline .weimo-mini-site-template__content {
+/* 内容列与 hero 水平方向保持居中(margin-inline: auto),仅纵向加临时外距 */
+.debug-outline .weimo-mini-site-template__content,
+.debug-outline .weimo-mini-site-template__hero {
   margin-inline: auto;
 }

@@ -2,12 +2,14 @@ import { Outlet, useMatch } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 
 import { FrostedIconButton } from 'weimo-ui-core/components/frosted-icon-button'
+import { TextButton } from 'weimo-ui-core/components/text-button'
 import { MiniSiteTemplate } from 'weimo-ui-template/components/mini-site-template'
 import { componentDocs } from '../catalog/component-docs'
 import { DebugOutlineToggle } from './debug-outline-toggle'
 import { type DocsOutletContext } from './docs-outlet-context'
 
 const homePageUrl = 'https://jiaowenjun.github.io'
+const repoUrl = 'https://github.com/jiaowenjun/weimo-ui-editor'
 
 export function DocsShell() {
   const componentMatch = useMatch('/components/:componentId')
@@ -32,6 +34,13 @@ export function DocsShell() {
         </FrostedIconButton>
       }
     >
+      <div className="docs-hero-actions">
+        <TextButton
+          onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')}
+        >
+          View on GitHub
+        </TextButton>
+      </div>
       <Outlet context={outletContext} />
       <DebugOutlineToggle />
     </MiniSiteTemplate>
