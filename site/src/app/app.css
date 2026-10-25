@@ -3,11 +3,17 @@
 /* 标题区与演示卡之间的居中按钮行(hero wrapper 的纵向 gap 提供间距) */
 .docs-hero-actions { display: flex; justify-content: center; }
 
-/* 演示页底部 DEBUG 开关本体 */
+/* main 设为定位包含块,供 DEBUG 开关贴底(不影响模板既有布局) */
+.weimo-mini-site-template { position: relative; }
+
+/* 演示页底部 DEBUG 开关本体:绝对定位沉到 main 底缘上方 10px;
+ * 内容不满屏时随 min-height: 100svh 的 main 底部,超屏时随 main 底部 */
 .debug-outline-toggle {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 10px;
   display: flex;
   justify-content: center;
-  padding-block: var(--space-gutter);
 }
 
 /* DEBUG 开关开启后勾勒站壳顶层部件:标题栏、内容区容器与内容区顶层子块;
