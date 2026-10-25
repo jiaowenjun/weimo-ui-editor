@@ -33,10 +33,6 @@
       "types": "./dist/components/wdf-view/wdf-view.d.ts",
       "import": "./dist/components/wdf-view/wdf-view.js"
     },
-    "./components/new-mdf-view": {
-      "types": "./dist/components/new-mdf-view/new-mdf-view.d.ts",
-      "import": "./dist/components/new-mdf-view/new-mdf-view.js"
-    },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
       "default": "./dist/styles/tokens.css"
@@ -52,10 +48,6 @@
     "./styles/wdf-view.css": {
       "types": "./dist/components/wdf-view/wdf-view.d.css.ts",
       "default": "./dist/components/wdf-view/wdf-view.css"
-    },
-    "./styles/new-mdf-view.css": {
-      "types": "./dist/components/new-mdf-view/new-mdf-view.d.css.ts",
-      "default": "./dist/components/new-mdf-view/new-mdf-view.css"
     }
   },
   "scripts": {
@@ -69,9 +61,8 @@
     "test:typecheck": "pnpm typecheck",
     "test:site-template": "node scripts/site-template-contract.mjs",
     "test:wdf-view": "node scripts/wdf-view-contract.mjs",
-    "test:new-mdf-view": "pnpm build && node --test scripts/new-mdf-view.test.mjs",
     "check:package": "pnpm build && node scripts/editor-schema-contract.mjs && publint && attw --pack . --profile esm-only --ignore-rules internal-resolution-error",
-    "verify": "pnpm typecheck && pnpm test:rich-editor-preview && pnpm test:site-template && pnpm test:wdf-view && pnpm check:package && node --test scripts/new-mdf-view.test.mjs && pnpm --dir site build",
+    "verify": "pnpm typecheck && pnpm test:rich-editor-preview && pnpm test:site-template && pnpm test:wdf-view && pnpm check:package && pnpm --dir site build",
     "prepack": "pnpm build"
   },
   "dependencies": {

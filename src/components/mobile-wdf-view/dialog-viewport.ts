@@ -7,7 +7,7 @@ import {
   type CardPhase,
 } from './card-shell.js'
 
-/** Shared by WdfView and NewMdfView. No input focus or page scrolling. */
+/** Shared viewport watcher. No input focus or page scrolling. */
 export function watchDialogViewport(
   shell: HTMLElement,
   phase: () => CardPhase,
