@@ -3,6 +3,23 @@
 /* 标题区与演示卡之间的居中按钮行(hero wrapper 的纵向 gap 提供间距) */
 .docs-hero-actions { display: flex; justify-content: center; }
 
+/* Hero 节奏向 LandingTemplate 对齐(演示页级调优,模板迭代收口后可上游):
+ * 行高收紧 1.25→1.1、1.7→1.4,主标题字距 -0.02em→-0.025em;
+ * 留白节奏 63/23/15 → 87/51/15(顶距抬高、标题→按钮拉大,按钮→演示保持 gap 下限) */
+.weimo-mini-site-template__headline {
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.weimo-mini-site-template__subheadline {
+  line-height: 1.4;
+}
+
+.weimo-mini-site-template__hero-head {
+  padding-top: 64px;
+  padding-bottom: 36px;
+}
+
 /* main 设为定位包含块,供 DEBUG 开关贴底(不影响模板既有布局) */
 .weimo-mini-site-template { position: relative; }
 
