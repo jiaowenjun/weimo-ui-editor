@@ -15,8 +15,10 @@ export function DocsShell() {
 
   return (
     <MiniSiteTemplate
+      headline="点开即写,收起即读"
       pageTitle={selected?.name}
       siteName="weimo-ui-editor"
+      subheadline="一份 WDF 数据同时驱动阅读与编辑:窄屏自动起飞为对话框,宽屏原地切换,保存等待与失败重试全部内置。"
     >
       <Outlet context={outletContext} />
       <DebugOutlineToggle />
