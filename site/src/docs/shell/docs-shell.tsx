@@ -2,6 +2,7 @@ import { Outlet, useMatch } from 'react-router'
 
 import { MiniSiteTemplate } from 'weimo-ui-template/components/mini-site-template'
 import { componentDocs } from '../catalog/component-docs'
+import { DebugOutlineToggle } from './debug-outline-toggle'
 import { type DocsOutletContext } from './docs-outlet-context'
 
 export function DocsShell() {
@@ -18,6 +19,7 @@ export function DocsShell() {
       siteName="weimo-ui-editor"
     >
       <Outlet context={outletContext} />
+      <DebugOutlineToggle />
     </MiniSiteTemplate>
   )
 }

@@ -1,1 +1,17 @@
 .docs-component-class { margin-left: 6px; color: var(--color-text-subtle); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: 400; }
+
+/* 演示页底部 DEBUG 开关本体 */
+.debug-outline-toggle {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--space-gutter);
+}
+
+/* DEBUG 开关开启后勾勒站壳顶层部件:标题栏、内容区容器与内容区顶层子块 */
+.debug-outline .top-bar,
+.debug-outline .weimo-mini-site-template,
+.debug-outline .weimo-mini-site-template__content,
+.debug-outline .weimo-mini-site-template__content > *:not(.debug-outline-toggle) {
+  outline: 1px dashed var(--color-border-accent);
+  outline-offset: -1px;
+}
