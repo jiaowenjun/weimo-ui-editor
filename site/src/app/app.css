@@ -27,14 +27,20 @@
   margin: 2px;
 }
 
-/* 内容列与 hero 水平方向保持居中(margin-inline: auto),仅纵向加临时外距 */
-.debug-outline .weimo-mini-site-template__content,
-.debug-outline .weimo-mini-site-template__hero {
+/* 内容列水平方向保持居中(margin-inline: auto),仅纵向加临时外距 */
+.debug-outline .weimo-mini-site-template__content {
   margin-inline: auto;
 }
 
+/* hero 原 margin 为「上 64 + inline auto + 下 0」,块轴 >0 须整体恢复,
+ * margin: 2px 简写压掉的功能值连上 margin 一起写回 */
+.debug-outline .weimo-mini-site-template__hero {
+  margin: 64px auto 0;
+}
+
 /* 临时 2px 外距只叠加在原 margin 为 0 的部件上;
- * 自带功能 margin 的部件(hero-head 节奏 64/36)恢复原值——其 margin 已提供轮廓间隙 */
+ * 自带功能 margin 的部件恢复原值——其 margin 已提供轮廓间隙
+ * (hero-head 原上 margin 为 0,故上向仍享 2px、下向 36 恢复) */
 .debug-outline .weimo-mini-site-template__hero-head {
-  margin-block: 64px 36px;
+  margin-block: 2px 36px;
 }
