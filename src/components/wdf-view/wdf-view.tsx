@@ -1,6 +1,7 @@
 import {
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useImperativeHandle,
@@ -27,6 +28,7 @@ import {
   type RichEditorSelectionFormat,
 } from '../rich-editor/rich-editor'
 import { WdfRender, type WdfRenderProps } from '../wdf-render/wdf-render'
+import { WdfViewBridgeContext } from './wdf-view-bridge'
 // 复用 MobileWdfView 的已验证模块与原语(时序契约见
 // docs/new-mobile-wdf-view-baseline.md)。
 import { useEditorSession } from '../mobile-wdf-view/editor-session'
@@ -281,6 +283,9 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
     },
     ref,
   ) {
+    const bridge = useContext(WdfViewBridgeContext)
+    const bridgeRef = useRef(bridge)
+    bridgeRef.current = bridge
     const titleId = useId()
     const [phase, setPhase] = useState<CardPhase>('view')
     const [internalMode, setInternalMode] = useState<WdfViewMode>(defaultMode)
@@ -897,7 +902,28 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
       ],
     )
     const closeEditorRef = useRef(closeEditor)
-    closeEditorRef.current = closeEditor
+    closeEditorRef.current = (intent, source) => {
+      const adapter = bridgeRef.current
+      if (!adapter) return closeEditor(intent, source)
+      if (phaseRef.current !== 'edit' || adapter.saving) return
+      if (intent === 'cancel') return closeEditor(intent, source)
+      const content = editorRef.current?.getContent()
+      if (!content) return
+      const session = sessionRef.current
+      adapter.save(content, () => {
+        if (!isCurrentSession(session) || phaseRef.current !== 'edit') return
+        // The adapter has already committed the backing document. Reuse the exact
+        // original closing path without converting or submitting that draft twice.
+        closeEditor('cancel', source)
+      })
+    }
+
+    const bridgeCancelRef = bridge?.cancelRef
+    useLayoutEffect(() => {
+      if (!bridgeCancelRef) return
+      bridgeCancelRef.current = () => closeEditorRef.current('cancel', 'user')
+      return () => { bridgeCancelRef.current = null }
+    }, [bridgeCancelRef])
 
     // mode 协调:edit 请求展开;view 请求收起(prepare/opening 直接
     // 取消落回,edit 走收起流程,external 语义)。
@@ -935,6 +961,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
     }, [activeMode, openCard, settleInlineToView, settleToView])
 
     const requestMode = useCallback((next: WdfViewMode) => {
+      if (next === 'edit' && bridgeRef.current?.readOnly) return
       onModeChangeRef.current?.(next)
       if (!isModeControlledRef.current) {
         setInternalMode(next)
@@ -1100,6 +1127,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
             {phase === 'view' ? (
               <GhostIconButton
                 aria-label="切换到编辑模式"
+                disabled={bridge?.readOnly}
                 onClick={() => requestMode('edit')}
                 size="sm"
               >
@@ -1113,7 +1141,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
               >
                 <GhostIconButton
                   aria-label="取消编辑"
-                  disabled={phase !== 'edit'}
+                  disabled={phase !== 'edit' || bridge?.saving}
                   onClick={() => closeEditorRef.current('cancel', 'user')}
                   size="sm"
                 >
@@ -1121,7 +1149,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
                 </GhostIconButton>
                 <GhostIconButton
                   aria-label="保存编辑"
-                  disabled={phase !== 'edit'}
+                  disabled={phase !== 'edit' || bridge?.saving}
                   onClick={() => closeEditorRef.current('save', 'user')}
                   size="sm"
                 >
@@ -1136,6 +1164,8 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
               草稿转换失败,已保留编辑内容;请调整格式后重试收起。
             </p>
           )}
+          {bridge?.saving && <p className="wdf-view__error" role="status">保存中…</p>}
+          {bridge?.error && <p className="wdf-view__error" role="alert">{bridge.error}</p>}
 
           <div className="wdf-view__body">
             {/* WdfRender 衬底:对话框流常驻(查看态内容+准备期视觉底);
@@ -1148,9 +1178,10 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
                 <RichEditor
                   {...editorProps}
                   autoFocus={false}
+                  disabled={editorProps?.disabled || bridge?.saving}
                   defaultValue={sessionContent}
                   onReady={handleEditorReady}
-                  onSave={handleEditorSave}
+                  onSave={bridge ? () => closeEditorRef.current('save', 'user') : handleEditorSave}
                   onSelectionFormatChange={handleSelectionFormatChange}
                   ref={editorRef}
                 />
@@ -1180,7 +1211,7 @@ export const WdfView = forwardRef<WdfViewHandle, WdfViewProps>(
                 <GhostIconButton
                   active={button.active}
                   aria-label={button.label}
-                  disabled={phase !== 'edit' || !selectionFormat}
+                  disabled={phase !== 'edit' || !selectionFormat || bridge?.saving}
                   key={button.key}
                   onClick={button.action}
                   onPointerDown={(event) => event.preventDefault()}

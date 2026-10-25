@@ -7,8 +7,9 @@ import { history, undoDepth } from '@tiptap/pm/history'
 import { EditorState } from '@tiptap/pm/state'
 import { createRichEditorExtensions } from '../dist/components/rich-editor/rich-editor-extensions.js'
 import { createMdfDraft, freshMdfEditorState, readMdfDraft } from '../dist/components/new-mdf-view/new-mdf-document.js'
-import { flowMdfTransition, morphMdfDialog, snapshotMdfTransition } from '../dist/components/new-mdf-view/new-mdf-motion.js'
-import { lockMdfPage, showMdfDialog, watchMdfViewport } from '../dist/components/new-mdf-view/new-mdf-dialog.js'
+import { flowMdfTransition } from '../dist/components/new-mdf-view/new-mdf-motion.js'
+import { resolveMdfImplementation } from '../dist/components/new-mdf-view/new-mdf-presentation.js'
+import { watchDialogViewport } from '../dist/components/mobile-wdf-view/dialog-viewport.js'
 
 const sample = {
   schema: 'weimo.document', version: 1,
@@ -144,145 +145,230 @@ test('flow exit animates actual card and toolbar heights before releasing them',
   } finally { globalThis.window = previous }
 })
 
-test('reduced motion commits once without snapshots or height animations', async () => {
+test('reduced motion commits once without height animations', async () => {
   let updates = 0
   const element = {
     getBoundingClientRect: () => ({ height: 48 }),
     animate: () => assert.fail('reduced motion must not animate'),
-    ownerDocument: { startViewTransition: () => assert.fail('reduced motion must not capture') },
   }
   const previous = globalThis.window
   globalThis.window = { matchMedia: () => ({ matches: true }) }
   try {
-    await snapshotMdfTransition({ card: element, toolbar: element }, () => updates++, true, true).finished
+    await flowMdfTransition({ card: element, toolbar: element }, () => updates++, true).finished
     assert.equal(updates, 1)
   } finally { globalThis.window = previous }
 })
 
-test('entering either edit mode never requests editor focus or a text selection', () => {
-  const source = readFileSync(new URL('../src/components/new-mdf-view/new-mdf-view.tsx', import.meta.url), 'utf8')
-  assert.match(source, /autofocus: false/)
-  const opening = source.slice(source.indexOf('async function completeOpen'), source.indexOf('function begin()'))
-  assert.doesNotMatch(opening, /\.focus\(|focusEditor|setTextSelection/)
-  assert.match(opening, /showMdfDialog\(card, headingRef\.current!\)/)
-  assert.match(source, /ref=\{headingRef\} tabIndex=\{-1\}/)
+test('narrow screens always choose original WdfView, independent of presentation', () => {
+  for (const presentation of ['auto', 'inline', 'dialog']) {
+    assert.equal(resolveMdfImplementation(true, presentation, null), 'original')
+  }
+  assert.equal(resolveMdfImplementation(false, 'auto', null), 'inline')
+  assert.equal(resolveMdfImplementation(false, 'inline', null), 'inline')
+  assert.equal(resolveMdfImplementation(false, 'dialog', null), 'original')
 })
 
-test('native dialog receives a non-editable autofocus target before opening', () => {
-  for (const autofocus of [false, true]) {
-    const heading = { autofocus }
-    const dialog = {
-      showModal() { assert.equal(heading.autofocus, true) },
+test('rotation and presentation changes cannot replace an active draft or closing component', () => {
+  for (const narrow of [false, true]) {
+    for (const presentation of ['auto', 'inline', 'dialog']) {
+      for (const session of ['inline', 'original']) {
+        assert.equal(resolveMdfImplementation(narrow, presentation, session), session)
+      }
     }
-    showMdfDialog(dialog, heading)
-    assert.equal(heading.autofocus, autofocus, 'the native focusing hint must not leak')
   }
-  const heading = { autofocus: false }
-  const dialog = { showModal() { throw new Error('detached') } }
-  assert.throws(() => showMdfDialog(dialog, heading), /detached/)
-  assert.equal(heading.autofocus, false)
 })
 
-test('return morph takes over only after keyboard recovery and viewport tracking stops', () => {
-  const source = readFileSync(new URL('../src/components/new-mdf-view/new-mdf-view.tsx', import.meta.url), 'utf8')
-  const closing = source.slice(source.indexOf('async function finish'), source.indexOf('async function save()'))
-  const steps = ['await waitMdfKeyboard', 'const from = card.getBoundingClientRect()', 'unwatch.current?.()', 'unlock.current?.()', 'const destination =', 'await morphMdfDialog']
-  const indices = steps.map((step) => closing.indexOf(step))
-  assert.ok(indices.every((index, position) => index >= 0 && (position === 0 || index > indices[position - 1])), 'live viewport writes must stop before the return animation and page unlock')
-})
+const source = (file) => readFileSync(new URL(file, import.meta.url), 'utf8')
 
-test('page lock preserves the document position and restores only its own styles once', () => {
-  const previousWindow = globalThis.window, previousDocument = globalThis.document
-  const style = { position: 'relative', top: '7px', left: '3px', width: '90%', overflow: 'auto', paddingRight: '' }
-  const original = { ...style }
-  const scrolls = []
-  globalThis.document = { body: { style }, documentElement: { clientWidth: 390 } }
-  globalThis.window = {
-    scrollX: 0, scrollY: 460, innerWidth: 405,
-    getComputedStyle: () => ({ paddingRight: '12px' }),
-    scrollTo: (position) => scrolls.push(position),
-  }
-  try {
-    const unlock = lockMdfPage()
-    assert.deepEqual(style, { ...original, overflow: 'hidden', paddingRight: 'calc(12px + 15px)' })
-    window.scrollY = 500
-    unlock()
-    unlock()
-    assert.deepEqual(style, original)
-    assert.deepEqual(scrolls, [{ left: 0, top: 460, behavior: 'instant' }])
-    scrolls.length = 0
-    window.innerWidth = 390
-    const unlockUnmoved = lockMdfPage()
-    assert.equal(style.paddingRight, '')
-    unlockUnmoved()
-    assert.equal(scrolls.length, 0, 'unchanged page position needs no programmatic scroll')
-  } finally { globalThis.window = previousWindow; globalThis.document = previousDocument }
-})
-
-test('keyboard resize cancels a captured morph before live geometry, coalesces, and cleans up', async () => {
-  const previousWindow = globalThis.window
-  const viewport = Object.assign(new EventTarget(), { height: 844, width: 390, offsetTop: 0, offsetLeft: 0 })
-  const frames = new Map(), styles = new Map(), order = []
-  let frameId = 0, cancellations = 0, cancelMorph
-  globalThis.window = Object.assign(new EventTarget(), {
-    visualViewport: viewport, innerHeight: 844, innerWidth: 390,
-    matchMedia: () => ({ matches: false }),
-    requestAnimationFrame: (callback) => { frames.set(++frameId, callback); return frameId },
-    cancelAnimationFrame: (id) => frames.delete(id),
+// Drive the actual shared viewport listener with independent Safari-style resize
+// and scroll events. These tests do not simulate the iOS compositor or keyboard.
+function viewportFixture(t, { narrow = true, visualViewport = true, phase = 'edit' } = {}) {
+  const previous = globalThis.window
+  const viewport = Object.assign(new EventTarget(), { width: 390, height: 844, offsetTop: 0, offsetLeft: 0 })
+  const timers = new Map()
+  let nextTimer = 0, currentPhase = phase, current = true
+  const browser = Object.assign(new EventTarget(), {
+    visualViewport: visualViewport ? viewport : null, innerWidth: 390, innerHeight: 844,
+    matchMedia: (query) => ({ matches: query.includes('max-width') && narrow }),
+    setTimeout: (callback) => { const id = ++nextTimer; timers.set(id, callback); return id },
+    clearTimeout: (id) => timers.delete(id),
   })
-  const flushFrame = () => {
-    const batch = [...frames.values()]
-    frames.clear()
-    batch.forEach((callback) => callback())
+  globalThis.window = browser
+  const writes = []
+  const classes = new Set()
+  const shell = {
+    style: new Proxy({ top: '12px', left: '12px', width: '366px', height: '620px' }, {
+      set(target, key, value) { writes.push(key); target[key] = value; return true },
+    }),
+    classList: { add: (name) => classes.add(name), remove: (name) => classes.delete(name) },
   }
-  const done = deferred()
-  const dialog = {
-    style: {
-      setProperty: (key, value) => { styles.set(key, value); order.push('geometry') },
-      removeProperty: (key) => styles.delete(key),
-    },
-    getBoundingClientRect: () => ({ top: 16, left: 16, width: 358, height: 300 }),
-    animate: () => ({ finished: done.promise, cancel: () => { cancellations++; done.reject(new Error('cancelled')) } }),
+  const dispose = watchDialogViewport(shell, () => currentPhase, () => current, 'animating')
+  t.after(() => { dispose(); globalThis.window = previous })
+  return {
+    viewport, browser, shell, writes, timers, classes, dispose,
+    emit(type, change = {}) { Object.assign(viewport, change); viewport.dispatchEvent(new Event(type)) },
+    setPhase(value) { currentPhase = value },
+    invalidate() { current = false },
+    flushTimers() { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach((callback) => callback()) },
+    screenTop() { return parseFloat(shell.style.top) - viewport.offsetTop },
   }
-  let unwatch
-  try {
-    unwatch = watchMdfViewport(dialog, () => { order.push('cancel'); cancelMorph?.() })
-    assert.equal(styles.get('--new-mdf-viewport-height'), '844px')
-    assert.equal(cancellations, 0, 'initial measurement must not interrupt a transition')
-    const morph = morphMdfDialog(dialog, { top: 400, left: 16, width: 358, height: 250 }, true, (cancel) => { cancelMorph = cancel })
-    order.length = 0
-    viewport.height = 460
-    viewport.offsetTop = 8
-    viewport.dispatchEvent(new Event('resize'))
-    window.dispatchEvent(new Event('resize'))
-    assert.equal(frames.size, 1)
-    assert.equal(cancellations, 0)
-    flushFrame()
-    assert.equal(order[0], 'cancel')
-    assert.equal(cancellations, 1)
-    assert.equal(styles.get('--new-mdf-viewport-height'), '460px')
-    assert.equal(styles.get('--new-mdf-viewport-top'), '8px')
-    await morph
-    cancelMorph = null
-    order.length = 0
-    viewport.dispatchEvent(new Event('resize'))
-    flushFrame()
-    assert.deepEqual(order, [], 'duplicate sizes must not rewrite geometry')
-    viewport.offsetTop = 24
-    viewport.dispatchEvent(new Event('scroll'))
-    assert.equal(frames.size, 0, 'Safari focus panning must not trigger a recenter loop')
-    viewport.height = 844
-    viewport.width = 844
-    viewport.offsetTop = 0
-    viewport.dispatchEvent(new Event('resize'))
-    flushFrame()
-    assert.equal(styles.get('--new-mdf-viewport-width'), '844px', 'rotation updates the available width')
-    viewport.dispatchEvent(new Event('resize'))
-    unwatch()
-    assert.equal(frames.size, 0)
-    assert.equal(styles.size, 0)
-    viewport.dispatchEvent(new Event('resize'))
-    window.dispatchEvent(new Event('resize'))
-    assert.equal(frames.size, 0, 'unmount removes every listener')
-  } finally { unwatch?.(); globalThis.window = previousWindow }
+}
+
+test('keyboard resize and viewport-only panning keep the mobile panel at a 12px visible margin', (t) => {
+  const f = viewportFixture(t)
+  f.emit('resize', { height: 460 })
+  assert.equal(f.shell.style.height, '436px')
+  assert.equal(f.screenTop(), 12)
+  f.writes.length = 0
+  const resizeTimer = [...f.timers.keys()]
+  for (const offsetTop of [24, 64, 96, 72, 0]) {
+    f.emit('scroll', { offsetTop, offsetLeft: offsetTop / 2 })
+    assert.equal(f.screenTop(), 12, 'position compensation must be synchronous, even without resize')
+    assert.equal(parseFloat(f.shell.style.left) - f.viewport.offsetLeft, 12)
+  }
+  assert.ok(f.writes.every((key) => key === 'top' || key === 'left'), 'panning must not restart the height animation')
+  assert.deepEqual([...f.timers.keys()], resizeTimer)
+  f.emit('resize', { height: 844 })
+  assert.equal(f.shell.style.height, '620px')
+  assert.equal(f.screenTop(), 12)
+})
+
+test('scroll-before-resize and consecutive keyboard resizes share one transition cleanup', (t) => {
+  const f = viewportFixture(t)
+  f.emit('scroll', { offsetTop: 96 })
+  assert.equal(f.screenTop(), 12)
+  assert.equal(f.timers.size, 0)
+  f.emit('resize', { height: 540 })
+  const earlier = [...f.timers.keys()][0]
+  f.emit('resize', { height: 460, offsetTop: 72 })
+  assert.equal(f.screenTop(), 12)
+  assert.equal(f.timers.size, 1)
+  assert.equal(f.timers.has(earlier), false, 'an earlier keyboard frame must not end the latest transition')
+  assert.ok(f.classes.has('animating'))
+  f.flushTimers()
+  assert.equal(f.classes.has('animating'), false)
+})
+
+test('closing, stale sessions, and disposal cannot receive viewport writes or lose the closing animation', (t) => {
+  const f = viewportFixture(t)
+  f.emit('resize', { height: 460 })
+  f.setPhase('closing')
+  f.writes.length = 0
+  f.emit('resize', { height: 844 })
+  f.emit('scroll', { offsetTop: 96 })
+  f.flushTimers()
+  assert.deepEqual(f.writes, [])
+  assert.ok(f.classes.has('animating'))
+  f.setPhase('edit')
+  f.emit('resize')
+  f.dispose()
+  assert.equal(f.timers.size, 0)
+  f.writes.length = 0
+  f.emit('resize')
+  f.emit('scroll')
+  f.browser.dispatchEvent(new Event('resize'))
+  assert.deepEqual(f.writes, [])
+  assert.ok(f.classes.has('animating'))
+})
+
+test('a replaced editing session rejects viewport updates and delayed cleanup', (t) => {
+  const f = viewportFixture(t)
+  f.emit('resize')
+  f.invalidate()
+  f.writes.length = 0
+  f.emit('resize', { height: 460 })
+  f.emit('scroll', { offsetTop: 96 })
+  f.flushTimers()
+  assert.deepEqual(f.writes, [])
+  assert.ok(f.classes.has('animating'))
+})
+
+test('opening retains the original morph and desktop panning does not run the mobile correction', (t) => {
+  const f = viewportFixture(t, { narrow: false, phase: 'opening' })
+  f.emit('resize', { height: 460 })
+  assert.equal(f.shell.style.height, '436px')
+  assert.equal(f.timers.size, 0)
+  assert.equal(f.classes.size, 0, 'opening animation ownership remains with card-morph')
+  f.writes.length = 0
+  f.emit('scroll', { offsetTop: 96 })
+  f.setPhase('edit')
+  f.emit('scroll')
+  assert.deepEqual(f.writes, [])
+})
+
+test('browsers without VisualViewport retain window resize support', (t) => {
+  const f = viewportFixture(t, { visualViewport: false })
+  f.browser.innerHeight = 460
+  f.browser.dispatchEvent(new Event('resize'))
+  assert.equal(f.shell.style.height, '436px')
+  assert.equal(f.shell.style.top, '12px')
+  f.dispose()
+  f.writes.length = 0
+  f.browser.dispatchEvent(new Event('resize'))
+  assert.deepEqual(f.writes, [])
+})
+
+test('only settled narrow dialogs exclude top and left from viewport transitions', () => {
+  const css = source('../src/components/wdf-view/wdf-view.css')
+  assert.match(css, /@media \(max-width: 640px\)\s*\{\s*\.wdf-view__card--animating\[data-edit-style='dialog'\]\[data-phase='edit'\]\s*\{\s*transition-property: width, height;/)
+  assert.match(css, /\.wdf-view__card--animating\s*\{[^}]*top [^,]+,[^}]*left [^,]+,[^}]*width [^,]+,[^}]*height /)
+})
+
+test('mobile directly renders original WdfView and owns no alternate geometry or animation', () => {
+  const mobile = source('../src/components/new-mdf-view/new-mdf-original.tsx')
+  assert.match(mobile, /import \{ WdfView,/)
+  assert.match(mobile, /<WdfView[\s\S]*editStyle="dialog" autoFocus=\{false\}/)
+  assert.doesNotMatch(mobile, /<dialog|showModal|visualViewport|getBoundingClientRect|requestAnimationFrame|\.animate\(|focus\(/)
+  const router = source('../src/components/new-mdf-view/new-mdf-view.tsx')
+  assert.match(router, /implementation === 'original' \? NewMdfOriginal : NewMdfInline/)
+  assert.match(router, /useSyncExternalStore\(subscribeNarrowScreen/)
+  assert.match(router, /setSession\(editing \? implementation : null\)/)
+})
+
+test('inline uses only flow transitions without any mobile dialog or focus code', () => {
+  const inline = source('../src/components/new-mdf-view/new-mdf-inline.tsx')
+  assert.match(inline, /flowMdfTransition\(\{ card, toolbar \}, show, false\)/)
+  assert.match(inline, /flowMdfTransition\(\{ card, toolbar \}, update, true\)/)
+  const motion = source('../src/components/new-mdf-view/new-mdf-motion.ts')
+  const api = source('../dist/components/new-mdf-view/new-mdf-view.d.ts')
+  assert.doesNotMatch(inline + motion + api, /snapshotMdfTransition|startViewTransition|viewTransitionName|view-transition-|NewMdfMotion|motion\?:/)
+  assert.match(inline, /autofocus: false/)
+  const opening = inline.slice(inline.indexOf('async function completeOpen'), inline.indexOf('function begin()'))
+  assert.doesNotMatch(opening, /\.focus\(|focusEditor|setTextSelection/)
+  assert.doesNotMatch(inline, /<dialog|showModal|visualViewport|morphMdfDialog|lockMdfPage/)
+  const css = source('../src/components/new-mdf-view/new-mdf-view.css')
+  assert.doesNotMatch(css, /:modal|::backdrop|new-mdf-viewport/)
+})
+
+test('original mobile choreography and CSS are the single source of truth', () => {
+  const original = source('../src/components/wdf-view/wdf-view.tsx')
+  const start = original.indexOf('const settleToView')
+  const finish = original.indexOf('// 卸载兜底', start)
+  const settle = original.slice(start, finish)
+  const steps = ['flushSync(', 'hideFromTopLayer(shell)', 'clearShellGeometry(', 'viewportFocus.unlockBody()', 'viewportFocus.restoreScrollPosition()', 'stageVisibilityHandoff(', 'finishSessionMode()']
+  const indices = steps.map((step) => settle.indexOf(step))
+  assert.ok(indices.every((index, position) => index >= 0 && (position === 0 || index > indices[position - 1])))
+  assert.match(original, /autoFocus = false/)
+  assert.match(original, /useCardMorph\(/)
+  assert.match(original, /useViewportAndFocus\(/)
+  assert.match(original, /KEYBOARD_CLOSE_WAIT/)
+})
+
+test('mobile persistence bridge leaves original callers unchanged and preserves save retry semantics', () => {
+  const original = source('../src/components/wdf-view/wdf-view.tsx')
+  assert.match(original, /if \(!adapter\) return closeEditor\(intent, source\)/)
+  assert.match(original, /if \(phaseRef\.current !== 'edit' \|\| adapter\.saving\) return/)
+  assert.match(original, /if \(intent === 'cancel'\) return closeEditor\(intent, source\)/)
+  assert.match(original, /if \(!isCurrentSession\(session\) \|\| phaseRef\.current !== 'edit'\) return/)
+  const mobile = source('../src/components/new-mdf-view/new-mdf-original.tsx')
+  assert.match(mobile, /await session\.save\(content, latest\.current\.onCommit\)/)
+  assert.match(mobile, /if \(!next \|\| !alive\.current \|\| draft\.current !== session\) return/)
+  assert.match(mobile, /flushSync\(\(\) => setSaving\(false\)\)[\s\S]*close\(\)/)
+  assert.match(mobile, /draft\.current\?\.dispose\(\)/)
+  assert.match(mobile, /await new Promise<void>\(\(resolve\) => \{ returned\.current = resolve; close\(\) \}\)/)
+  assert.match(mobile, /if \(next === 'view'\) \{\s*returned\.current\?\.\(\)/)
+  assert.match(mobile, /save: async \(\) => \{ view\.current\?\.close\(\); await pending\.current \}/)
+  const router = source('../src/components/new-mdf-view/new-mdf-view.tsx')
+  assert.match(router, /document=\{props\.document \?\? localDocument\}/)
+  assert.match(router, /latest\.current\.document === undefined\) setLocalDocument\(next\)/)
 })

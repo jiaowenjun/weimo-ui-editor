@@ -6,7 +6,7 @@ export const editorCatalog = {
   pages: [
     {
       id: 'new-mdf-view',
-      name: '新版WDF编辑对比',
+      name: '新版WDF读写视图',
       exportName: 'NewMdfView',
       registryName: 'new-mdf-view',
       packageExport: './components/new-mdf-view',

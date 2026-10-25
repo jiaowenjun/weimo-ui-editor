@@ -19,7 +19,7 @@ weimo-ui-editor 把这三个必要部分组合起来:
 - **RichEditor** — 格式受限的富文本编辑器,产出结构规整的 JSON 文档。
 
 另提供实验组件 **NewMdfView**,以新的交互接口重做 WDF 阅读与编辑。
-它支持保存等待和失败重试,提供两种过渡供实机对比。
+它支持保存等待和失败重试,宽屏采用连续布局过渡,窄屏沿用 WdfView 面板。
 [体验规格](./docs/new-mdf-view-design.md)只描述功能、动画和外观。
 
 ## 为什么选它
@@ -168,7 +168,7 @@ export function DescriptionEditor() {
 | 组件 | 导出入口 | 输入 → 输出 | 适合的场景 |
 | --- | --- | --- | --- |
 | `WdfView` | `weimo-ui-editor/components/wdf-view` | WDF 文档 ↔ WDF 文档 | 同一份内容的阅读/编辑切换 |
-| `NewMdfView` | `weimo-ui-editor/components/new-mdf-view` | WDF 文档 ↔ WDF 文档 | 新版阅读/编辑与两种动画方案对比,实验阶段 |
+| `NewMdfView` | `weimo-ui-editor/components/new-mdf-view` | WDF 文档 ↔ WDF 文档 | 新版阅读/编辑、连续布局过渡与异步保存,实验阶段 |
 | `WdfRender` | `weimo-ui-editor/components/wdf-render` | WDF 文档 → React 节点 | 直接展示规范化的 WDF 内容 |
 | `RichEditor` | `weimo-ui-editor/components/rich-editor` | Tiptap JSON → Tiptap JSON | 编辑描述、备注等格式受限的文本 |
 
@@ -181,7 +181,6 @@ import { NewMdfView } from 'weimo-ui-editor/components/new-mdf-view'
   defaultDocument={content}
   heading="内容"
   presentation="auto"
-  motion="flow"
   onCommit={async (document) => { await saveDocument(document) }}
   following={<p>需要跟随卡片移动的后续内容。</p>}
 />
@@ -192,19 +191,20 @@ import { NewMdfView } from 'weimo-ui-editor/components/new-mdf-view'
 等待保存时暂时禁止输入和重复操作。取消不调用 `onCommit`。
 编辑中的外部内容更新不会覆盖草稿,取消时回到最新外部内容。
 
-`presentation` 可选 `auto`、`inline`、`dialog`;`auto` 在宽度不超过
-640px 时使用面板编辑。`motion="flow"` 连续改变真实布局;
-`motion="snapshot"` 使用浏览器转场,不支持时回退 `flow`。
-两种方式都遵守系统减少动态效果设置。`following` 接收需要同步跟随的普通内容。
-两方案比较的是原位切换;面板编辑共用一套原生面板动画。方案 A 不依赖
-`following` 也会自然推动后续布局;方案 B 需要将希望连续移动的后续内容放入
-`following`,其他页面内容由浏览器默认转场处理。
+宽度不超过 640px 时,使用原 `WdfView` 的面板体验:
+阅读卡片、顶部保存/取消、底部格式工具栏、键盘避让及返回动画一致。
+`presentation` 可选 `auto`、`inline`、`dialog`;窄屏统一为原面板,
+`inline` 仅在宽屏生效,`dialog` 在宽屏也使用原面板。
+一次编辑中旋转屏幕或改变宽度不会替换正在编辑的组件;退出后重新适配。
+宽屏原位切换固定使用连续布局过渡:卡片与工具栏高度同步变化,自然推动后续内容,
+并遵守系统减少动态效果设置。无需配置动画方案。`following` 可放置卡片后方的
+普通内容;不使用此属性时,页面中的后续内容也会自然跟随。
 通过 ref 的 `edit()`、`save()`、`cancel()` 也可以从外部操作。
 进入编辑不会自动聚焦正文或唤起软件键盘;点击正文或使用键盘导航后开始输入。
-窄屏面板顶部对齐,键盘出现时调整可用高度,不反复上下居中。
+窄屏面板的尺寸、间距、滚动与焦点规则与原 `WdfView` 相同。
 
-对比页位于 `/components/new-mdf-view`,支持普通内容、长文、空内容、
-原位/面板编辑和保存等待/失败。最终方案尚待实机选择。
+演示页位于 `/components/new-mdf-view`,支持普通内容、长文、空内容、
+原位/面板编辑和保存等待/失败。
 
 ## 刻意不做的
 

@@ -10,24 +10,20 @@
 .md-style-preview__selection-highlight { padding-block: 0.4em; box-decoration-break: clone; -webkit-box-decoration-break: clone; background: var(--md-selection-bg); }
 .md-style-preview__selection-sample ::selection { background: var(--md-selection-bg); }
 .docs-component-class { margin-left: 6px; color: var(--color-text-subtle); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: 400; }
-.new-mdf-comparison { width: 100%; min-width: 0; }
-.new-mdf-comparison__description { margin-bottom: 20px; }
-.new-mdf-comparison__description h2 { font-size: 20px; font-weight: 600; }
-.new-mdf-comparison__description p, .new-mdf-comparison__intro p { margin-top: 8px; color: var(--color-text-secondary); font-size: var(--font-size-sm); line-height: 1.65; }
-.new-mdf-comparison__settings { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 24px; font-size: var(--font-size-sm); }
-.new-mdf-comparison__settings label { display: flex; align-items: center; gap: 6px; }
-.new-mdf-comparison__settings select, .new-mdf-comparison__external button, .new-mdf-comparison__settings button { padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg-card); color: var(--color-text-primary); font: inherit; cursor: pointer; }
-.new-mdf-comparison button:disabled, .new-mdf-comparison select:disabled { opacity: 0.5; cursor: default; }
-.new-mdf-comparison__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 28px; }
-.new-mdf-comparison__case { min-width: 0; }
-.new-mdf-comparison__intro { min-height: 94px; }
-.new-mdf-comparison__intro h3 { font-size: 16px; font-weight: 600; }
-.new-mdf-comparison__following { padding-top: 16px; font-size: var(--font-size-sm); line-height: 1.7; color: var(--color-text-secondary); }
-.new-mdf-comparison__following p { margin-bottom: 12px; }
-.new-mdf-comparison__reference { padding: 10px 12px; border: 1px dashed var(--color-border); border-radius: var(--radius-sm); }
-.new-mdf-comparison__external { display: flex; gap: 8px; margin-top: 8px; font-size: var(--font-size-sm); }
-.new-mdf-comparison__result { display: block; margin-top: 12px; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-.new-mdf-comparison__checklist { margin-top: 32px; font-size: var(--font-size-sm); line-height: 1.8; }
-.new-mdf-comparison__checklist ol { padding-left: 24px; list-style-type: decimal; }
-.new-mdf-comparison__spacer { display: flex; height: 65vh; align-items: center; justify-content: center; color: var(--color-text-secondary); }
-@media (max-width: 1100px) { .new-mdf-comparison__grid { grid-template-columns: minmax(0, 1fr); } }
+.new-mdf-demo { width: 100%; min-width: 0; }
+.new-mdf-demo__description { margin-bottom: 20px; }
+.new-mdf-demo__description h2 { font-size: 20px; font-weight: 600; }
+.new-mdf-demo__description p { margin-top: 8px; color: var(--color-text-secondary); font-size: var(--font-size-sm); line-height: 1.65; }
+.new-mdf-demo__settings { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-bottom: 24px; font-size: var(--font-size-sm); }
+.new-mdf-demo__settings label { display: flex; align-items: center; gap: 6px; }
+.new-mdf-demo__settings select, .new-mdf-demo__external button, .new-mdf-demo__settings button { padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-bg-card); color: var(--color-text-primary); font: inherit; cursor: pointer; }
+.new-mdf-demo button:disabled, .new-mdf-demo select:disabled { opacity: 0.5; cursor: default; }
+.new-mdf-demo__example { min-width: 0; }
+.new-mdf-demo__following { padding-top: 16px; font-size: var(--font-size-sm); line-height: 1.7; color: var(--color-text-secondary); }
+.new-mdf-demo__following p { margin-bottom: 12px; }
+.new-mdf-demo__reference { padding: 10px 12px; border: 1px dashed var(--color-border); border-radius: var(--radius-sm); }
+.new-mdf-demo__external { display: flex; gap: 8px; margin-top: 8px; font-size: var(--font-size-sm); }
+.new-mdf-demo__result { display: block; margin-top: 12px; font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.new-mdf-demo__checklist { margin-top: 32px; font-size: var(--font-size-sm); line-height: 1.8; }
+.new-mdf-demo__checklist ol { padding-left: 24px; list-style-type: decimal; }
+.new-mdf-demo__spacer { display: flex; height: 65vh; align-items: center; justify-content: center; color: var(--color-text-secondary); }

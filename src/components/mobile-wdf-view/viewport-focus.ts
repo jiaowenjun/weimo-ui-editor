@@ -7,13 +7,8 @@ import {
 } from 'react'
 
 import type { RichEditorFocusPosition, RichEditorHandle } from '../rich-editor/rich-editor'
-import {
-  applyRect,
-  getDialogRect,
-  getFocusableElements,
-  getMorphDuration,
-  MORPH_PAD,
-} from './card-shell'
+import { getFocusableElements } from './card-shell'
+import { watchDialogViewport } from './dialog-viewport'
 
 import type { CardPhase } from './card-shell'
 
@@ -26,12 +21,12 @@ const KEYBOARD_OPEN_THRESHOLD = 120
  *
  * 职责:滚动锁(body overflow + 滚动条补偿)、打开前 scrollY 保存与
  * settle 恢复、软键盘判定、visualViewport/resize 的对话框几何跟随
- * (opening/edit 态)、Esc/Tab 焦点陷阱与 focusin 拉回、编辑器自动
- * 聚焦重试。不推进业务编辑会话——Esc 经 requestCancelClose 回调交还
+ * (opening/edit 态,edit 的位置补偿不做二次过渡)、Esc/Tab 焦点陷阱与
+ * focusin 拉回、编辑器自动聚焦重试。不推进业务编辑会话——Esc 经 requestCancelClose 回调交还
  * 协调器;几何跟随与 Card Morph 共用 applyRect 原语,按相位分时写入
  * (飞行为 opening/closing、跟随为 opening/edit),无并发写权。
  *
- * 行为与拆分前逐行等价:锁体/解锁、监听挂卸、守卫(session+phase)、
+ * 锁体/解锁、监听挂卸、守卫(session+phase)、
  * 聚焦重试链(编辑器 handle + 光标位置,非 DOM 聚焦)、卸载兜底
  * (body 样式还原)不变。
  */
@@ -144,40 +139,14 @@ export function useViewportAndFocus({
     if (phase !== 'opening' && phase !== 'edit') return
 
     const session = sessionRef.current
-
-    const updateGeometry = () => {
-      const shell = shellRef.current
-      const currentPhase = phaseRef.current
-      if (
-        !shell ||
-        !isCurrentSession(session) ||
-        (currentPhase !== 'opening' && currentPhase !== 'edit')
-      ) {
-        return
-      }
-
-      if (currentPhase === 'opening') {
-        applyRect(shell, getDialogRect())
-        return
-      }
-
-      shell.classList.add(animatingClass)
-      applyRect(shell, getDialogRect())
-      window.setTimeout(() => {
-        if (isCurrentSession(session) && phaseRef.current === 'edit') {
-          shell.classList.remove(animatingClass)
-        }
-      }, getMorphDuration() + MORPH_PAD)
-    }
-
-    const viewport = window.visualViewport
-    viewport?.addEventListener('resize', updateGeometry)
-    window.addEventListener('resize', updateGeometry)
-
-    return () => {
-      viewport?.removeEventListener('resize', updateGeometry)
-      window.removeEventListener('resize', updateGeometry)
-    }
+    const shell = shellRef.current
+    if (!shell) return
+    return watchDialogViewport(
+      shell,
+      () => phaseRef.current,
+      () => isCurrentSession(session),
+      animatingClass,
+    )
   }, [animatingClass, enableDialogChrome, isCurrentSession, phase, phaseRef, sessionRef, shellRef])
 
   // Esc 收起 + Tab 焦点陷阱 + focusin 拉回(仅对话框模态;内联流

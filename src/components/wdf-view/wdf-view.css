@@ -52,6 +52,16 @@
   will-change: top, left, width, height;
 }
 
+/* Keyboard height may ease; compensating Safari viewport panning must be immediate.
+   Opening/closing still use the original four-property morph. NewMdfView and
+   WdfView share this rule; no transform/second positioning layer is introduced. */
+@media (max-width: 640px) {
+  .wdf-view__card--animating[data-edit-style='dialog'][data-phase='edit'] {
+    transition-property: width, height;
+    will-change: width, height;
+  }
+}
+
 /*
  * 标题栏与 padding 均对齐 BaseCard(.base-card)体系:内容带定高
  * --font-size-sm * 1.2(13px * 1.2 = 15.6px),28px 操作图标垂直居中、
