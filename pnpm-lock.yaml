@@ -1502,7 +1502,7 @@ packages:
       react-dom: ^19.0.0
 
   weimo-ui-template@file:../weimo-ui-template/weimo-ui-template-0.1.5.tgz:
-    resolution: {integrity: sha512-9FGxbzBCA5xj3Ynd6n5oOcZyv6/W1EtRrVtaAGNPna+uoyIpwSl1OPHc20PBIIG3/I/gsglONONM6EQ/nkQ2aA==, tarball: file:../weimo-ui-template/weimo-ui-template-0.1.5.tgz}
+    resolution: {integrity: sha512-/e8VZu++GRa4YtMMsftliXhhvL8BCXd2lW7vKtYbKGax4LP28tnah7VqF6BwPPAy34/tXw5CWnNOSyZ2QeGkdA==, tarball: file:../weimo-ui-template/weimo-ui-template-0.1.5.tgz}
     version: 0.1.5
     peerDependencies:
       '@base-ui/react': ^1.9.0
