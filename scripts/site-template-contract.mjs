@@ -27,8 +27,8 @@ const sitePackage = JSON.parse(
 
 assert.match(
   docsShell,
-  /from 'weimo-ui-template\/components\/site-template'/,
-  'DocsShell must consume the public site template component',
+  /from 'weimo-ui-template\/components\/mini-site-template'/,
+  'DocsShell must consume the public mini site template component',
 )
 assert.match(
   detailPage,
