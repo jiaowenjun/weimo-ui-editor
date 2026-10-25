@@ -1,9 +1,13 @@
 import { Outlet, useMatch } from 'react-router'
+import { ChevronLeft } from 'lucide-react'
 
+import { FrostedIconButton } from 'weimo-ui-core/components/frosted-icon-button'
 import { MiniSiteTemplate } from 'weimo-ui-template/components/mini-site-template'
 import { componentDocs } from '../catalog/component-docs'
 import { DebugOutlineToggle } from './debug-outline-toggle'
 import { type DocsOutletContext } from './docs-outlet-context'
+
+const homePageUrl = 'https://jiaowenjun.github.io'
 
 export function DocsShell() {
   const componentMatch = useMatch('/components/:componentId')
@@ -19,6 +23,14 @@ export function DocsShell() {
       pageTitle={selected?.name}
       siteName="weimo-ui-editor"
       subheadline="一份 WDF 数据同时驱动阅读与编辑:窄屏自动起飞为对话框,宽屏原地切换,保存等待与失败重试全部内置。"
+      topBarLeading={
+        <FrostedIconButton
+          aria-label="返回主页"
+          onClick={() => window.location.assign(homePageUrl)}
+        >
+          <ChevronLeft />
+        </FrostedIconButton>
+      }
     >
       <Outlet context={outletContext} />
       <DebugOutlineToggle />
