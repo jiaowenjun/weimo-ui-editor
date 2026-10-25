@@ -7,11 +7,19 @@
   padding-block: var(--space-gutter);
 }
 
-/* DEBUG 开关开启后勾勒站壳顶层部件:标题栏、内容区容器与内容区顶层子块 */
+/* DEBUG 开关开启后勾勒站壳顶层部件:标题栏、内容区容器与内容区顶层子块;
+ * 叠加临时 2px margin 让轮廓外留出空隙,关闭时随类移除自动还原 */
 .debug-outline .top-bar,
 .debug-outline .weimo-mini-site-template,
 .debug-outline .weimo-mini-site-template__content,
 .debug-outline .weimo-mini-site-template__content > *:not(.debug-outline-toggle) {
-  outline: 1px dashed var(--color-border-accent);
+  border-radius: var(--radius);
+  outline: 1px solid var(--color-border);
   outline-offset: -1px;
+  margin: 2px;
+}
+
+/* 内容列水平方向保持居中(margin-inline: auto),仅纵向加临时外距 */
+.debug-outline .weimo-mini-site-template__content {
+  margin-inline: auto;
 }
