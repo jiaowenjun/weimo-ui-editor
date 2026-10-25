@@ -12,7 +12,7 @@
 .debug-outline .top-bar,
 .debug-outline .weimo-mini-site-template,
 .debug-outline .weimo-mini-site-template__content,
-.debug-outline .weimo-mini-site-template__content > *:not(.debug-outline-toggle) {
+.debug-outline .weimo-mini-site-template__content > * {
   border-radius: var(--radius);
   outline: 1px solid var(--color-border);
   outline-offset: -1px;
