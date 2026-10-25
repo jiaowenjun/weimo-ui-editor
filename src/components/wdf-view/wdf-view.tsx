@@ -29,11 +29,10 @@ import {
 } from '../rich-editor/rich-editor'
 import { WdfRender, type WdfRenderProps } from '../wdf-render/wdf-render'
 import { WdfViewBridgeContext } from './wdf-view-bridge'
-// 复用 MobileWdfView 的已验证模块与原语(时序契约见
-// docs/new-mobile-wdf-view-baseline.md)。
-import { useEditorSession } from '../mobile-wdf-view/editor-session'
-import { useCardMorph } from '../mobile-wdf-view/card-morph'
-import { useViewportAndFocus } from '../mobile-wdf-view/viewport-focus'
+// 已验证模块与原语(时序契约见 docs/new-mobile-wdf-view-baseline.md)。
+import { useEditorSession } from './editor-session'
+import { useCardMorph } from './card-morph'
+import { useViewportAndFocus } from './viewport-focus'
 
 import {
   type CardPhase,
@@ -44,7 +43,7 @@ import {
   MOBILE_VIEWPORT_QUERY,
   showInTopLayer,
   stageVisibilityHandoff,
-} from '../mobile-wdf-view/card-shell'
+} from './card-shell'
 
 import 'weimo-ui-editor/styles/wdf-view.css'
 
@@ -79,8 +78,8 @@ type InlineExitGeometry = {
 }
 
 /**
- * 合法相位转换表:对话框路径 = MobileWdfView 原表(view→prepare→
- * opening→edit→closing→view);内联路径仅新增 prepare→edit(编辑器
+ * 合法相位转换表:对话框路径走全链(view→prepare→opening→edit→
+ * closing→view);内联路径仅新增 prepare→edit(编辑器
  * 就绪后直达,无飞行阶段)。内联退出在 closing 保留真实编辑卡片,
  * 卡片与工具栏高度到达终点后再结束会话。
  */
@@ -179,10 +178,10 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * WdfView:自适应编辑样式的 WDF 读写视图(基于 MobileWdfView 架构)。
+ * WdfView:自适应编辑样式的 WDF 读写视图。
  *
- * - 窄屏(≤640px)/editStyle='dialog':与 MobileWdfView 行为一致——
- *   popover 对话框 + 卡片 morph + 焦点陷阱 + fix-3,完整复用既有编排。
+ * - 窄屏(≤640px)/editStyle='dialog':popover 对话框 + 卡片 morph +
+ *   焦点陷阱 + fix-3 收起清理的完整编排。
  * - 宽屏/editStyle='inline':行内编辑,不锁页、无遮罩/模态语义。
  *   卡片常驻文档流;退出动画钉住页面占位,先淡出工具栏图标再收高。
  *   编辑器在动画完成后才卸载;减少动态效果时即时收起。

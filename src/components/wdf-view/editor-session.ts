@@ -7,9 +7,9 @@ import {
 } from 'weimo-wdf'
 
 import type { RichEditorHandle } from '../rich-editor/rich-editor'
-import { toWdfEditorContent } from '../wdf-view/wdf-editor-content'
+import { toWdfEditorContent } from './wdf-editor-content'
 
-/** 提交触发方:change=收起提交,save=Cmd+S 保存(MobileWdfView 退役后本地定义)。 */
+/** 提交触发方:change=收起提交,save=Cmd+S 保存。 */
 type ConversionSource = 'change' | 'save'
 
 const CONVERSION_ERROR_RESET = 3000
