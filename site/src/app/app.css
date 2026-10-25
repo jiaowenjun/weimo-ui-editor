@@ -1,8 +1,5 @@
 .docs-component-class { margin-left: 6px; color: var(--color-text-subtle); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: 400; }
 
-/* 标题区与演示卡之间的居中按钮行(hero wrapper 的纵向 gap 提供间距) */
-.docs-hero-actions { display: flex; justify-content: center; }
-
 /* main 设为定位包含块,供 DEBUG 开关贴底(不影响模板既有布局) */
 .weimo-mini-site-template { position: relative; }
 
@@ -16,7 +13,7 @@
   justify-content: center;
 }
 
-/* DEBUG 开关开启后勾勒站壳顶层部件与 hero 内子容器(标题区/按钮区/演示区);
+/* DEBUG 开关开启后勾勒站壳顶层部件与 hero 内子容器(标题区/演示区);
  * 叠加临时 2px margin 让轮廓外留出空隙,关闭时随类移除自动还原 */
 .debug-outline .top-bar,
 .debug-outline .weimo-mini-site-template,
