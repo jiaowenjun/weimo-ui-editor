@@ -4,17 +4,12 @@
  * 特异性抬到 0,2,0——组件 css 未包 layer 且加载在后,同特异性会反超) */
 .wdf-card .wdf-card__title { color: var(--color-text-subtle); }
 
-/* main 设为定位包含块,供 DEBUG 开关贴底(不影响模板既有布局) */
-.weimo-mini-site-template { position: relative; }
-
-/* 演示页底部 DEBUG 开关本体:绝对定位沉到 main 底缘上方 10px;
- * 内容不满屏时随 min-height: 100svh 的 main 底部,超屏时随 main 底部 */
+/* 演示页底部 DEBUG 开关本体:文档流排在站壳 main 末尾、内容之后,
+ * 不悬浮视口底、不遮挡内容;与上方内容按卡间同节奏留距 */
 .debug-outline-toggle {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 10px;
   display: flex;
   justify-content: center;
+  margin-block-start: calc(var(--space-gutter) * 1.6);
 }
 
 /* DEBUG 开关开启后勾勒站壳顶层部件与 hero 内子容器(标题区/演示区);
