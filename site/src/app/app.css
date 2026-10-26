@@ -1,5 +1,9 @@
 .docs-component-class { margin-left: 6px; color: var(--color-text-subtle); font-family: var(--font-mono); font-size: var(--font-size-xs); font-weight: 400; }
 
+/* 演示卡标题弱化为辅助色(示例站点层覆盖,组件默认仍是 text-primary;
+ * 特异性抬到 0,2,0——组件 css 未包 layer 且加载在后,同特异性会反超) */
+.wdf-card .wdf-card__title { color: var(--color-text-subtle); }
+
 /* main 设为定位包含块,供 DEBUG 开关贴底(不影响模板既有布局) */
 .weimo-mini-site-template { position: relative; }
 
