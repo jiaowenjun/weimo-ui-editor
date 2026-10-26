@@ -12,16 +12,7 @@ import type { ComponentDefinition } from '../../types'
 
 function WdfCardDemo() {
   const sample = wdfRenderSample as WdfDocument
-  return (
-    <WdfCard
-      defaultValue={sample}
-      title={
-        <>
-          自适应编辑卡片 <code className="docs-component-class">wdf-card</code>
-        </>
-      }
-    />
-  )
+  return <WdfCard defaultValue={sample} title="WdfCard" />
 }
 
 export const wdfCardDefinition = {
