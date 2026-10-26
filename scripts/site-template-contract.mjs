@@ -76,13 +76,10 @@ for (const forbidden of [
   )
 }
 
-assert.ok(
-  [
-    '~0.1.0',
-    'file:../../weimo-ui-template/weimo-ui-template-0.1.9.tgz',
-  ].includes(sitePackage.dependencies['weimo-ui-template']),
-  'the site template dependency must use the published npm package ' +
-    '(the local tarball is only the interim until weimo-ui-template publishes 0.1.9)',
+assert.equal(
+  sitePackage.dependencies['weimo-ui-template'],
+  '~0.2.0',
+  'the site template dependency must use the published npm package',
 )
 assert.equal(
   sitePackage.dependencies['class-variance-authority'],
