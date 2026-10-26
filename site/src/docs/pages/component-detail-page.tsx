@@ -21,23 +21,25 @@ export function ComponentDetailPage() {
   }
 
   if (selected.frame === 'plain') {
-    return <>{selected.preview()}</>
+    return <div className="component-detail-page">{selected.preview()}</div>
   }
 
   return (
-    <ComponentPreviewCard
-      data-component-id={selected.id}
-      label={
-        <>
-          {selected.name}{' '}
-          <code className="docs-component-class">{selected.id}</code>
-        </>
-      }
-    >
-      {selected.summary ? (
-        <p>{selected.summary}</p>
-      ) : null}
-      {selected.preview()}
-    </ComponentPreviewCard>
+    <div className="component-detail-page">
+      <ComponentPreviewCard
+        data-component-id={selected.id}
+        label={
+          <>
+            {selected.name}{' '}
+            <code className="docs-component-class">{selected.id}</code>
+          </>
+        }
+      >
+        {selected.summary ? (
+          <p>{selected.summary}</p>
+        ) : null}
+        {selected.preview()}
+      </ComponentPreviewCard>
+    </div>
   )
 }
