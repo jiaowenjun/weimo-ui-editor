@@ -39,7 +39,7 @@ export function DocsShell() {
       pageTitle={selected?.name}
       showThemeToggle={false}
       siteName="weimo-ui-editor"
-      subheadline="一份 WDF 数据同时驱动阅读与编辑：窄屏起飞为对话框，宽屏原地切换。"
+      subheadline="把富文本编辑器做进一张卡片"
       topBarActions={
         <FrostedIconButton
           aria-label="GitHub 仓库"
