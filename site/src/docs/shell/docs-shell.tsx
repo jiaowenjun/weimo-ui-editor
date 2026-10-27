@@ -1,15 +1,12 @@
 import { Outlet, useMatch } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronLeft, Plus } from 'lucide-react'
 
 import { FrostedIconButton } from 'weimo-ui-core/components/frosted-icon-button'
 import { MiniSiteTemplate } from 'weimo-ui-template/components/mini-site-template'
 import { componentDocs } from '../catalog/component-docs'
+import { useComposerPlayground } from '../composer-playground'
 import { DebugOutlineToggle } from './debug-outline-toggle'
-import {
-  type DocsOutletContext,
-  type DocsTopBarAction,
-} from './docs-outlet-context'
+import { type DocsOutletContext } from './docs-outlet-context'
 
 const homePageUrl = 'https://jiaowenjun.github.io'
 const repoUrl = 'https://github.com/jiaowenjun/weimo-ui-editor'
@@ -35,10 +32,12 @@ export function DocsShell() {
   const selected = activeComponentId
     ? componentDocs.find((doc) => doc.id === activeComponentId)
     : undefined
-  const [topBarAction, setTopBarAction] = useState<DocsTopBarAction | null>(null)
+  // 主页展示区(`/` 重定向落地的第一个组件页):顶栏 + 驱动 composer,
+  // 卡片与示例卡同列呈现。
+  const homePlayground = useComposerPlayground()
+  const isHome = activeComponentId === componentDocs[0].id
   const outletContext: DocsOutletContext = {
     docs: componentDocs,
-    setTopBarAction,
   }
 
   return (
@@ -50,13 +49,13 @@ export function DocsShell() {
       subheadline="把富文本编辑器做进一张卡片"
       topBarActions={
         <>
-          {topBarAction ? (
+          {isHome ? (
             <FrostedIconButton
-              aria-label={topBarAction.ariaLabel}
-              disabled={topBarAction.disabled}
-              onClick={topBarAction.onClick}
+              aria-label="新建笔记"
+              disabled={homePlayground.hasActive}
+              onClick={homePlayground.openNew}
             >
-              {topBarAction.icon}
+              <Plus />
             </FrostedIconButton>
           ) : null}
           <FrostedIconButton
@@ -76,7 +75,14 @@ export function DocsShell() {
         </FrostedIconButton>
       }
     >
-      <Outlet context={outletContext} />
+      {isHome ? (
+        <div className="docs-home-column">
+          {homePlayground.renderList()}
+          <Outlet context={outletContext} />
+        </div>
+      ) : (
+        <Outlet context={outletContext} />
+      )}
       <DebugOutlineToggle />
     </MiniSiteTemplate>
   )
