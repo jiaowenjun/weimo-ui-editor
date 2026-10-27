@@ -53,9 +53,3 @@
   max-width: var(--size-content-max-width);
   align-self: center;
 }
-
-/* CardComposer 演示:列表场景——壳层自带 margin-bottom,下方笔记卡
- * 以同距排布,节奏与组件列表一致 */
-.card-composer-demo .wdf-card {
-  margin-bottom: var(--space-gutter);
-}

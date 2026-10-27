@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import { cn } from 'weimo-ui-core/lib/utils'
@@ -38,6 +38,22 @@ export const ComposerShell = forwardRef<HTMLDivElement, ComposerShellProps>(
     forwardedRef,
   ) {
     const wrapperRef = useRef<HTMLDivElement | null>(null)
+    // 稳态标记:进场动画结束后放开 overflow,让卡片投影溢出壳层
+    // (0fr 折叠的动画遮罩只在进出场期需要);closing 起时撤回,退场
+    // 动画重新获得遮罩。纯装饰性放开,定时器到达即可,无需精确事件。
+    const [settled, setSettled] = useState(false)
+
+    useEffect(() => {
+      const timer = window.setTimeout(
+        () => setSettled(true),
+        COMPOSER_SHELL_TRANSITION_MS + 80,
+      )
+      return () => window.clearTimeout(timer)
+    }, [])
+
+    useEffect(() => {
+      if (isClosing) setSettled(false)
+    }, [isClosing])
 
     function setWrapperNode(node: HTMLDivElement | null) {
       wrapperRef.current = node
@@ -116,6 +132,7 @@ export const ComposerShell = forwardRef<HTMLDivElement, ComposerShellProps>(
       <div
         {...props}
         className={cn('wdf-card-composer', className)}
+        data-settled={settled ? 'true' : undefined}
         data-state={isClosing ? 'closing' : undefined}
         ref={setWrapperNode}
       >

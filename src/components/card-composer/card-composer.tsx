@@ -11,8 +11,6 @@ import { ComposerShell } from './composer-shell'
 
 import 'weimo-ui-editor/styles/card-composer.css'
 
-const EMPTY_DOCUMENT = WdfDocument.empty()
-
 /**
  * CardComposer:列表内「新建」占位,编排 WdfCard 的会话与壳层生命周期。
  *
@@ -22,11 +20,11 @@ const EMPTY_DOCUMENT = WdfDocument.empty()
  *   编辑态,无 view 中间态——壳层 0fr→1fr 进场首帧不可见,挂载效应里
  *   openCard 已启动(窄屏量到的折叠矩形是 slot 自然高度,不受 0fr 裁切
  *   影响)。
- * - 会话落定 view(取消/空保存/有内容保存)即收起整个 composer(onCancel
- *   → 父级 isClosing → 退场动画 → onExitAnimationEnd → 卸载);保存的
- *   笔记经 onSave 上抛由父级落列表,占位卡不遗留。
+ * - 保存即落位:有内容保存时更新受控文档,落定后卡片原地变形为展示该
+ *   笔记的查看态并常驻列表(后续铅笔可再编辑,取消则回到上次保存的
+ *   内容);空内容退出(取消/空保存)仍整体收走。落定分流依据=当前
+ *   受控文档是否为空,保存与落定之间必然隔一段变形动画,无闭包过期。
  * - 不自动聚焦:编辑器亮着等用户点进去(autoFocus 恒 false)。
- * - WdfCard 以受控 value=空文档常量挂载:会话草稿始终从空文档开始。
  * - 空内容(单空段落)的保存/取消视为丢弃,不上抛 onSave。
  */
 export type CardComposerProps = {
@@ -86,12 +84,21 @@ export function CardComposer({
   title = '新建笔记',
 }: CardComposerProps) {
   const shellRef = useRef<HTMLDivElement | null>(null)
-  // 占位卡的会话态:编辑期隐藏 ✕(此时 WdfCard 自带 取消/保存 组,
-  // 叠加的 ✕ 会与其自身取消钮重合),落回 view 后恢复。初始值镜像
-  // defaultMode——挂载即编辑时 onModeChange('edit') 不会发声。
+  // 占位卡的会话态:编辑期隐藏叠加 ✕(此时 WdfCard 自带 取消/保存 组,
+  // 叠加的 ✕ 会与其自身取消钮重合)。初始值镜像 defaultMode——挂载即
+  // 编辑时 onModeChange('edit') 不会发声。落回 view 后叠加 ✕ 仅在
+  // 受控文档仍为空(空占位)时渲染;已保存落位的笔记卡是普通卡片,
+  // 只留铅笔编辑入口。
   const [cardMode, setCardMode] = useState<WdfCardMode>(
     autoEnterEdit ? 'edit' : 'view',
   )
+  // 受控文档:从空文档开始,保存有效内容后更新——落定的卡面即笔记,
+  // composer 由此常驻列表。会话期间的外部更新不会覆盖草稿(WdfCard
+  // 契约),落定时才采用。
+  const [cardDocument, setCardDocument] = useState<WdfDocument>(() =>
+    WdfDocument.empty(),
+  )
+
   function blurCardFocus() {
     const activeElement = document.activeElement
     if (
@@ -102,21 +109,24 @@ export function CardComposer({
     }
   }
 
-  // 任何会话落定 view(取消/空保存/有内容保存)都收起整个 composer:
-  // 保存的笔记经 onChange 上抛由父级落列表,占位卡没有继续存在的理由。
+  // 落定 view 时分流:已有笔记(保存过)→ 原地常驻;仍是空文档(取消/
+  // 空保存)→ 收起整个 composer。保存与落定之间隔着 WdfCard 的变形
+  // 动画,handleModeChange 每次渲染重建,读到的是最新受控文档。
   function handleModeChange(nextMode: WdfCardMode) {
     setCardMode(nextMode)
 
     if (nextMode === 'edit' || isClosing) return
+    if (!isWdfDocumentEmpty(cardDocument)) return
 
     blurCardFocus()
     onCancel?.()
   }
 
-  function handleCardChange(document: WdfDocument) {
-    if (isWdfDocumentEmpty(document)) return
+  function handleCardChange(nextDocument: WdfDocument) {
+    if (isWdfDocumentEmpty(nextDocument)) return
 
-    onSave?.(document)
+    setCardDocument(nextDocument)
+    onSave?.(nextDocument)
   }
 
   function handleClose() {
@@ -136,7 +146,7 @@ export function CardComposer({
       style={style}
     >
       <div className="wdf-card-composer__inner">
-        {cardMode === 'view' ? (
+        {cardMode === 'view' && isWdfDocumentEmpty(cardDocument) ? (
           <GhostIconButton
             aria-label={cancelLabel}
             className="wdf-card-composer__close"
@@ -155,7 +165,7 @@ export function CardComposer({
           onModeChange={handleModeChange}
           renderProps={renderProps}
           title={title}
-          value={EMPTY_DOCUMENT}
+          value={cardDocument}
         />
       </div>
     </ComposerShell>
