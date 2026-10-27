@@ -22,11 +22,11 @@ const EMPTY_DOCUMENT = WdfDocument.empty()
  *   编辑态,无 view 中间态——壳层 0fr→1fr 进场首帧不可见,挂载效应里
  *   openCard 已启动(窄屏量到的折叠矩形是 slot 自然高度,不受 0fr 裁切
  *   影响)。
- * - 会话未产生笔记即退出(取消,或空内容保存)时,落定后自动收起整个
- *   composer(onCancel → 父级 isClosing → 退场动画 → onExitAnimationEnd
- *   → 卸载),不停留在空占位;有内容保存则落笔记、占位留给下一条。
+ * - 会话落定 view(取消/空保存/有内容保存)即收起整个 composer(onCancel
+ *   → 父级 isClosing → 退场动画 → onExitAnimationEnd → 卸载);保存的
+ *   笔记经 onSave 上抛由父级落列表,占位卡不遗留。
  * - 不自动聚焦:编辑器亮着等用户点进去(autoFocus 恒 false)。
- * - WdfCard 以受控 value=空文档常量挂载:保存落定后自动复位为空占位。
+ * - WdfCard 以受控 value=空文档常量挂载:会话草稿始终从空文档开始。
  * - 空内容(单空段落)的保存/取消视为丢弃,不上抛 onSave。
  */
 export type CardComposerProps = {
@@ -92,11 +92,6 @@ export function CardComposer({
   const [cardMode, setCardMode] = useState<WdfCardMode>(
     autoEnterEdit ? 'edit' : 'view',
   )
-  // 本会话是否"未产生笔记":取消路径不触发 onChange,空保存的 onChange
-  // 在此丢弃——两种都意味着落定后应收起整个 composer;有内容保存在
-  // handleCardChange 里翻回 false。会话开启(edit)时重置为 true。
-  const closeAfterSettleRef = useRef(true)
-
   function blurCardFocus() {
     const activeElement = document.activeElement
     if (
@@ -107,26 +102,20 @@ export function CardComposer({
     }
   }
 
+  // 任何会话落定 view(取消/空保存/有内容保存)都收起整个 composer:
+  // 保存的笔记经 onChange 上抛由父级落列表,占位卡没有继续存在的理由。
   function handleModeChange(nextMode: WdfCardMode) {
     setCardMode(nextMode)
 
-    if (nextMode === 'edit') {
-      closeAfterSettleRef.current = true
-      return
-    }
+    if (nextMode === 'edit' || isClosing) return
 
-    // 落定 view:未产生笔记的退出(取消/空保存)直接收起 composer,
-    // 不停留在空占位卡。
-    if (closeAfterSettleRef.current && !isClosing) {
-      blurCardFocus()
-      onCancel?.()
-    }
+    blurCardFocus()
+    onCancel?.()
   }
 
   function handleCardChange(document: WdfDocument) {
     if (isWdfDocumentEmpty(document)) return
 
-    closeAfterSettleRef.current = false
     onSave?.(document)
   }
 
