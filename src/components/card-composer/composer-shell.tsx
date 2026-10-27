@@ -5,7 +5,7 @@ import { cn } from 'weimo-ui-core/lib/utils'
 
 import 'weimo-ui-editor/styles/card-composer.css'
 
-export const COMPOSER_SHELL_TRANSITION_MS = 180
+const COMPOSER_SHELL_TRANSITION_MS = 180
 
 export type ComposerShellProps = Omit<
   ComponentPropsWithoutRef<'div'>,
