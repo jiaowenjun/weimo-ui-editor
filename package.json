@@ -86,8 +86,8 @@
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "weimo-wdf": "^0.1.0",
-    "weimo-ui-core": "~0.2.0"
+    "weimo-ui-core": "~0.2.0",
+    "weimo-wdf": "^0.1.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
@@ -98,7 +98,7 @@
     "react-dom": "19.3.0",
     "rimraf": "^6.1.3",
     "typescript": "~7.0.2",
-    "weimo-wdf": "^0.1.0",
-    "weimo-ui-core": "~0.2.0"
+    "weimo-ui-core": "~0.2.1",
+    "weimo-wdf": "^0.1.0"
   }
 }

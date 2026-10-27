@@ -15,7 +15,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "8.4.0",
-    "weimo-ui-core": "~0.2.0",
+    "weimo-ui-core": "~0.2.1",
     "weimo-ui-editor": "workspace:*",
     "weimo-ui-template": "~0.3.0",
     "weimo-wdf": "^0.1.0"

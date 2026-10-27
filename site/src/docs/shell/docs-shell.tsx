@@ -54,6 +54,7 @@ export function DocsShell() {
               aria-label="新建笔记"
               disabled={homePlayground.hasActive}
               onClick={homePlayground.openNew}
+              tooltip="新建笔记"
             >
               <Plus />
             </FrostedIconButton>
