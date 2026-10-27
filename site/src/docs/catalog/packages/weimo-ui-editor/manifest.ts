@@ -11,5 +11,12 @@ export const editorCatalog = {
       registryName: 'wdf-card',
       packageExport: './components/wdf-card',
     },
+    {
+      id: 'card-composer',
+      name: '新建占位壳层',
+      exportName: 'CardComposer',
+      registryName: 'card-composer',
+      packageExport: './components/card-composer',
+    },
   ],
 } as const satisfies PackageCatalog

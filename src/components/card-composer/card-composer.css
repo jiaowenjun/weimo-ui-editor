@@ -1,0 +1,89 @@
+/*
+ * CardComposer 壳层:列表内「新建」占位的 0fr↔1fr 折叠动画,移植自
+ * weimo-ui 的 ComposerShell。grid-template-rows 插值不需要 JS 测量
+ * 内容高度;margin-bottom 同步动画,收起时列表间距随之归零。
+ * overflow: hidden 是折叠的动画遮罩,稳态会裁掉卡片投影(与 weimo-ui
+ * 现状相同),后续按「动画期裁切/稳态放开(settled 标记)」演进。
+ */
+.wdf-card-composer {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 1fr;
+  margin-bottom: var(--space-gutter);
+  overflow: hidden;
+  transform-origin: top center;
+  animation: wdf-card-composer-enter 180ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.wdf-card-composer[data-state='closing'] {
+  pointer-events: none;
+  animation: wdf-card-composer-exit 180ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.wdf-card-composer__frame {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@keyframes wdf-card-composer-enter {
+  0% {
+    grid-template-rows: 0fr;
+    margin-bottom: 0;
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  100% {
+    grid-template-rows: 1fr;
+    margin-bottom: var(--space-gutter);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wdf-card-composer-exit {
+  0% {
+    grid-template-rows: 1fr;
+    margin-bottom: var(--space-gutter);
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    grid-template-rows: 0fr;
+    margin-bottom: 0;
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wdf-card-composer {
+    animation: none;
+    margin-bottom: var(--space-gutter);
+  }
+
+  .wdf-card-composer[data-state='closing'] {
+    margin-bottom: 0;
+  }
+}
+
+/*
+ * ✕ 关闭钮:叠在占位卡 header 的铅笔左边。几何镜像 .wdf-card__header
+ * (定高 band + align-items: center)与 .wdf-card__actions 的 4px 间距,
+ * 全部取 token,不依赖 WdfCard 开 slot。编辑会话期由 wrapper 卸载;
+ * 对话框会话期另被 inertSiblingsOf 禁用。
+ */
+.wdf-card-composer__inner {
+  position: relative;
+  min-width: 0;
+}
+
+.wdf-card-composer__close {
+  position: absolute;
+  top: calc(
+    (var(--space-card-pad) + var(--font-size-sm) * 1.2 - var(--size-icon-button-sm)) / 2
+  );
+  right: calc(var(--space-card-pad) + var(--size-icon-button-sm) + 4px);
+  z-index: 2;
+}

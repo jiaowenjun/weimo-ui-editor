@@ -33,6 +33,10 @@
       "types": "./dist/components/wdf-card/wdf-card.d.ts",
       "import": "./dist/components/wdf-card/wdf-card.js"
     },
+    "./components/card-composer": {
+      "types": "./dist/components/card-composer/card-composer.d.ts",
+      "import": "./dist/components/card-composer/card-composer.js"
+    },
     "./styles/tokens.css": {
       "types": "./dist/styles/tokens.d.css.ts",
       "default": "./dist/styles/tokens.css"
@@ -48,6 +52,10 @@
     "./styles/wdf-card.css": {
       "types": "./dist/components/wdf-card/wdf-card.d.css.ts",
       "default": "./dist/components/wdf-card/wdf-card.css"
+    },
+    "./styles/card-composer.css": {
+      "types": "./dist/components/card-composer/card-composer.d.css.ts",
+      "default": "./dist/components/card-composer/card-composer.css"
     }
   },
   "scripts": {

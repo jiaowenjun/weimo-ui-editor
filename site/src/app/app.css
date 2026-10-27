@@ -53,3 +53,23 @@
   max-width: var(--size-content-max-width);
   align-self: center;
 }
+
+/* CardComposer 演示:列表场景——壳层自带 margin-bottom,下方笔记卡
+ * 以同距排布,节奏与组件列表一致 */
+.card-composer-demo .wdf-card {
+  margin-bottom: var(--space-gutter);
+}
+
+/* 壳层卸载后的「重新打开」入口:虚线幽灵钮,宽度对齐卡片 */
+.card-composer-demo__reopen {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: var(--space-gutter);
+  padding: calc(var(--space-card-pad) + 2px);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
