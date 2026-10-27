@@ -62,6 +62,7 @@ export function DocsShell() {
           <FrostedIconButton
             aria-label="GitHub 仓库"
             onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')}
+            tooltip="GitHub 仓库"
           >
             <GitHubIcon />
           </FrostedIconButton>
@@ -71,6 +72,7 @@ export function DocsShell() {
         <FrostedIconButton
           aria-label="返回主页"
           onClick={() => window.location.assign(homePageUrl)}
+          tooltip="返回主页"
         >
           <ChevronLeft />
         </FrostedIconButton>
