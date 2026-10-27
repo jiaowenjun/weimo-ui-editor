@@ -53,6 +53,7 @@ export function DocsShell() {
           {topBarAction ? (
             <FrostedIconButton
               aria-label={topBarAction.ariaLabel}
+              disabled={topBarAction.disabled}
               onClick={topBarAction.onClick}
             >
               {topBarAction.icon}

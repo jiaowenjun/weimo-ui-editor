@@ -8,6 +8,8 @@ export type DocsTopBarAction = {
   ariaLabel: string
   icon: ReactNode
   onClick: () => void
+  /** 置灰禁用(钮常驻,由页面按自身状态切换)。 */
+  disabled?: boolean
 }
 
 export type DocsOutletContext = {

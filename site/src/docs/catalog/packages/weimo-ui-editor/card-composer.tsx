@@ -9,30 +9,26 @@ import { useDocsOutletContext } from '../../../shell/docs-outlet-context'
 import type { ComponentDefinition } from '../../types'
 
 /*
- * CardComposer 演示页(仅 site):列表场景的「新建」占位——壳层 0fr
- * 折叠展开,打开即编辑(窄屏对话框/宽屏行内);保存后占位复位、笔记
- * 落进下方列表;空内容退出(取消/空保存)整体收走。composer 收起后,
- * 顶栏右侧出现 + 钮(经 setTopBarAction 注册到站壳)重新打开。
+ * CardComposer 演示页(仅 site):列表场景的「新建」占位——composer 默认
+ * 关闭,点顶栏 + 开启(壳层 0fr 折叠展开,打开即编辑,窄屏对话框/宽屏
+ * 行内);开启期间 + 置灰禁用;保存后占位复位、笔记落进下方列表;空
+ * 内容退出(取消/空保存)整体收走,+ 恢复可用。
  */
 
 let noteSeq = 0
 
 function CardComposerDemo() {
   const [notes, setNotes] = useState<{ id: number; document: WdfDocument }[]>([])
-  const [composerVisible, setComposerVisible] = useState(true)
+  const [composerVisible, setComposerVisible] = useState(false)
   const [composerClosing, setComposerClosing] = useState(false)
   const { setTopBarAction } = useDocsOutletContext()
 
   useEffect(() => {
-    if (composerVisible) {
-      setTopBarAction(null)
-      return
-    }
-
     setTopBarAction({
       ariaLabel: '新建笔记',
       icon: <Plus />,
       onClick: () => setComposerVisible(true),
+      disabled: composerVisible,
     })
     return () => setTopBarAction(null)
   }, [composerVisible, setTopBarAction])
