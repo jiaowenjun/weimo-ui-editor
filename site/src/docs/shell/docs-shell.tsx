@@ -1,11 +1,15 @@
 import { Outlet, useMatch } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
+import { useState } from 'react'
 
 import { FrostedIconButton } from 'weimo-ui-core/components/frosted-icon-button'
 import { MiniSiteTemplate } from 'weimo-ui-template/components/mini-site-template'
 import { componentDocs } from '../catalog/component-docs'
 import { DebugOutlineToggle } from './debug-outline-toggle'
-import { type DocsOutletContext } from './docs-outlet-context'
+import {
+  type DocsOutletContext,
+  type DocsTopBarAction,
+} from './docs-outlet-context'
 
 const homePageUrl = 'https://jiaowenjun.github.io'
 const repoUrl = 'https://github.com/jiaowenjun/weimo-ui-editor'
@@ -31,7 +35,11 @@ export function DocsShell() {
   const selected = activeComponentId
     ? componentDocs.find((doc) => doc.id === activeComponentId)
     : undefined
-  const outletContext: DocsOutletContext = { docs: componentDocs }
+  const [topBarAction, setTopBarAction] = useState<DocsTopBarAction | null>(null)
+  const outletContext: DocsOutletContext = {
+    docs: componentDocs,
+    setTopBarAction,
+  }
 
   return (
     <MiniSiteTemplate
@@ -41,12 +49,22 @@ export function DocsShell() {
       siteName="weimo-ui-editor"
       subheadline="把富文本编辑器做进一张卡片"
       topBarActions={
-        <FrostedIconButton
-          aria-label="GitHub 仓库"
-          onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')}
-        >
-          <GitHubIcon />
-        </FrostedIconButton>
+        <>
+          {topBarAction ? (
+            <FrostedIconButton
+              aria-label={topBarAction.ariaLabel}
+              onClick={topBarAction.onClick}
+            >
+              {topBarAction.icon}
+            </FrostedIconButton>
+          ) : null}
+          <FrostedIconButton
+            aria-label="GitHub 仓库"
+            onClick={() => window.open(repoUrl, '_blank', 'noopener,noreferrer')}
+          >
+            <GitHubIcon />
+          </FrostedIconButton>
+        </>
       }
       topBarLeading={
         <FrostedIconButton
