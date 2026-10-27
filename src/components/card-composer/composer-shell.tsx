@@ -56,17 +56,25 @@ export const ComposerShell = forwardRef<HTMLDivElement, ComposerShellProps>(
       if (!isClosing) return
 
       let cancelled = false
+      let observed = false
       let frame = 0
       let fallbackTimer = 0
+      let settleTimer = 0
 
       function finishExitAnimation() {
         if (cancelled) return
 
+        cancelled = true
+        window.clearTimeout(fallbackTimer)
+        window.clearTimeout(settleTimer)
         onExitAnimationEnd?.()
       }
 
-      // 先等一帧再取动画列表,保证 data-state 切换的动画已注册到元素上。
-      frame = window.requestAnimationFrame(() => {
+      function observeExitAnimations() {
+        if (observed || cancelled) return
+        observed = true
+        window.cancelAnimationFrame(frame)
+
         const animations = wrapperRef.current?.getAnimations() ?? []
         if (animations.length === 0) {
           fallbackTimer = window.setTimeout(
@@ -81,12 +89,26 @@ export const ComposerShell = forwardRef<HTMLDivElement, ComposerShellProps>(
             animation.finished.then(() => undefined),
           ),
         ).then(finishExitAnimation)
-      })
+        // 冻结环境(后台标签页/自动化节流)下 CSS 动画可能停摆不 finish,
+        // 定时器竞速保证退场回调必达——父级靠它卸载,等不起。
+        settleTimer = window.setTimeout(
+          finishExitAnimation,
+          COMPOSER_SHELL_TRANSITION_MS * 3,
+        )
+      }
+
+      // 观察入口同样须竞速:rAF 本身可能挂起(同上),定时器兜底进入。
+      frame = window.requestAnimationFrame(observeExitAnimations)
+      fallbackTimer = window.setTimeout(
+        observeExitAnimations,
+        COMPOSER_SHELL_TRANSITION_MS * 2,
+      )
 
       return () => {
         cancelled = true
         window.cancelAnimationFrame(frame)
         window.clearTimeout(fallbackTimer)
+        window.clearTimeout(settleTimer)
       }
     }, [isClosing, onExitAnimationEnd])
 
