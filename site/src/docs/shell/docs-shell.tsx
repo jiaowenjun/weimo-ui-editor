@@ -5,7 +5,6 @@ import { FrostedIconButton } from 'weimo-ui-core/components/frosted-icon-button'
 import { MiniSiteTemplate } from 'weimo-ui-template/components/mini-site-template'
 import { componentDocs } from '../catalog/component-docs'
 import { useComposerPlayground } from '../composer-playground'
-import { DebugOutlineToggle } from './debug-outline-toggle'
 import { type DocsOutletContext } from './docs-outlet-context'
 
 const homePageUrl = 'https://jiaowenjun.github.io'
@@ -86,7 +85,6 @@ export function DocsShell() {
       ) : (
         <Outlet context={outletContext} />
       )}
-      <DebugOutlineToggle />
     </MiniSiteTemplate>
   )
 }
