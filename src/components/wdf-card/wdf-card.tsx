@@ -53,6 +53,8 @@ export type {
   RichEditorSelectionFormat,
 } from '../rich-editor/rich-editor'
 export type { Diagnostic, WdfDocument } from 'weimo-wdf'
+// 只读/异步保存协作点:消费方经 Context 注入(如只读详情卡禁用编辑入口)
+export { WdfCardBridgeContext, type WdfCardBridge } from './wdf-card-bridge'
 
 export type WdfCardMode = 'view' | 'edit'
 export type WdfCardConversionSource = 'change' | 'save'
@@ -224,6 +226,12 @@ export type WdfCardProps = Omit<
   inlineExitFollowRef?: RefObject<HTMLElement | null>
   /** 卡片标题(对话框态作为可访问名称)。 */
   title?: ReactNode
+  /** 常驻卡内附加行(标签栏等),渲染在正文与编辑工具栏之间;查看态
+   *  即可交互,不参与编辑工具栏的高度编排。空插槽不占卡内空间。 */
+  bottomBar?: ReactNode
+  /** 顶栏操作插槽,渲染在标题与编辑入口(铅笔/取消保存组)之间;
+   *  内容与交互由消费方自治,空插槽不占位。 */
+  actionSlot?: ReactNode
   /** 透传 WdfRender(查看态与衬底)。 */
   renderProps?: Omit<WdfRenderProps, 'content'>
   /** 透传 RichEditor(内容通道与聚焦时序由组件接管)。 */
@@ -263,6 +271,8 @@ export const WdfCard = forwardRef<WdfCardHandle, WdfCardProps>(
     {
       autoFocus = false,
       autoFocusPosition = 'end',
+      actionSlot,
+      bottomBar,
       className,
       defaultMode = 'view',
       defaultValue,
@@ -1123,6 +1133,9 @@ export const WdfCard = forwardRef<WdfCardHandle, WdfCardProps>(
             <span className="wdf-card__title" id={titleId}>
               {title}
             </span>
+            {actionSlot !== undefined && actionSlot !== null ? (
+              <div className="wdf-card__action-slot">{actionSlot}</div>
+            ) : null}
             {phase === 'view' ? (
               <GhostIconButton
                 aria-label="切换到编辑模式"
@@ -1187,6 +1200,13 @@ export const WdfCard = forwardRef<WdfCardHandle, WdfCardProps>(
               </div>
             )}
           </div>
+
+          {/* 底部插槽:常驻可交互的卡内附加行(标签栏等)。不参与工具栏
+              的编辑态高度编排;内容高度需在会话两态间保持稳定,避免
+              进入/退出动画窗口内的额外换挡。 */}
+          {bottomBar !== undefined && bottomBar !== null ? (
+            <div className="wdf-card__bottom-bar">{bottomBar}</div>
+          ) : null}
 
           {/* 内置底栏:常驻 DOM,编辑态经高度/透明度过渡显出;非编辑态
               inert 禁焦点。收起态高度为 0,不占卡片空间。 */}

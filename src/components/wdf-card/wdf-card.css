@@ -102,6 +102,19 @@
   gap: 4px;
 }
 
+/* 顶栏操作插槽:贴齐标题右侧、编辑入口之前;空插槽不占位。 */
+.wdf-card__action-slot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.wdf-card__action-slot:empty {
+  display: none;
+}
+
 /* 转换失败提示:保留编辑会话时显示在头部下方。 */
 .wdf-card__error {
   box-sizing: border-box;
@@ -122,6 +135,17 @@
   flex: 1 1 auto;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* 底部插槽:常驻可交互的卡内附加行(标签栏等),左右/下与卡内边距
+   对齐;不参与编辑工具栏的高度编排,空插槽不占卡内空间。 */
+.wdf-card__bottom-bar {
+  flex: none;
+  padding: 0 var(--space-card-pad) var(--space-card-pad);
+}
+
+.wdf-card__bottom-bar:empty {
+  display: none;
 }
 
 /*

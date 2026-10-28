@@ -50,6 +50,12 @@ export type CardComposerProps = {
   editorProps?: WdfCardProps['editorProps']
   /** 透传 WdfCard 转换失败上报。 */
   onConversionError?: WdfCardProps['onConversionError']
+  /** 透传 WdfCard 底部插槽(标签栏等常驻卡内附加行)。 */
+  bottomBar?: WdfCardProps['bottomBar']
+  /** 透传 WdfCard 顶栏操作插槽。 */
+  actionSlot?: WdfCardProps['actionSlot']
+  /** WdfCard 模式变化冒泡;落定 view 常被消费方用作过渡完成信号。 */
+  onModeChange?: WdfCardProps['onModeChange']
   className?: string
   style?: CSSProperties
 }
@@ -69,7 +75,9 @@ export function isWdfDocumentEmpty(document: WdfDocument): boolean {
 }
 
 export function CardComposer({
+  actionSlot,
   autoEnterEdit = true,
+  bottomBar,
   cancelLabel = '收起新建',
   clientId,
   className,
@@ -78,6 +86,7 @@ export function CardComposer({
   onCancel,
   onConversionError,
   onExitAnimationEnd,
+  onModeChange,
   onSave,
   renderProps,
   style,
@@ -114,6 +123,7 @@ export function CardComposer({
   // 动画,handleModeChange 每次渲染重建,读到的是最新受控文档。
   function handleModeChange(nextMode: WdfCardMode) {
     setCardMode(nextMode)
+    onModeChange?.(nextMode)
 
     if (nextMode === 'edit' || isClosing) return
     if (!isWdfDocumentEmpty(cardDocument)) return
@@ -158,6 +168,8 @@ export function CardComposer({
           </GhostIconButton>
         ) : null}
         <WdfCard
+          actionSlot={actionSlot}
+          bottomBar={bottomBar}
           defaultMode={autoEnterEdit ? 'edit' : 'view'}
           editorProps={editorProps}
           onChange={handleCardChange}

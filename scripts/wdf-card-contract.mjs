@@ -65,6 +65,37 @@ assert.match(
   'WdfCard must expose separate cancel and save actions while editing',
 )
 
+assert.match(
+  wdfCardSource,
+  /className="wdf-card__body"[\s\S]*wdf-card__bottom-bar[\s\S]*aria-label="编辑工具栏"/,
+  'the bottom bar slot must render between the body and the edit toolbar',
+)
+assert.match(
+  wdfCardStyles,
+  /\.wdf-card__bottom-bar\s*\{[^}]*flex: none;[^}]*padding: 0 var\(--space-card-pad\) var\(--space-card-pad\);/,
+  'the bottom bar must align with card padding without joining toolbar choreography',
+)
+assert.match(
+  wdfCardStyles,
+  /\.wdf-card__bottom-bar:empty\s*\{\s*display: none;/,
+  'an empty bottom bar must not reserve space inside the card',
+)
+assert.match(
+  wdfCardSource,
+  /className="wdf-card__action-slot"/,
+  'WdfCard must expose a header action slot for consumer chrome',
+)
+assert.match(
+  wdfCardStyles,
+  /\.wdf-card__action-slot:empty\s*\{\s*display: none;/,
+  'an empty action slot must not reserve header space',
+)
+assert.match(
+  wdfCardDemoSource,
+  /bottomBar=/,
+  'the docs demo must exercise the bottom bar slot',
+)
+
 assert.doesNotMatch(
   wdfCardSource,
   /WdfCardInlineToolbarExitAnimation|inlineToolbarExitAnimation|data-inline-exit-layout/,
