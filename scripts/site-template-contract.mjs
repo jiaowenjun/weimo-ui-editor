@@ -78,7 +78,7 @@ for (const forbidden of [
 
 assert.equal(
   sitePackage.dependencies['weimo-ui-template'],
-  '~0.3.0',
+  '~0.3.1',
   'the site template dependency must use the published npm package',
 )
 assert.equal(
