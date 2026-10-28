@@ -5,6 +5,6 @@ minimumReleaseAgeExclude:
   - '@base-ui/react@1.9.0'
   - '@base-ui/utils@0.5.0'
   - lucide-react@1.54.0
-  - weimo-ui-core@0.1.0 || 0.2.0 || 0.2.1
-  - weimo-ui-template@0.1.0 || 0.1.2 || 0.2.0 || 0.3.0 || 0.3.1
+  - weimo-ui-core@0.1.0 || 0.2.0 || 0.2.1 || 0.2.2
+  - weimo-ui-template@0.1.0 || 0.1.2 || 0.2.0 || 0.3.0 || 0.3.1 || 0.3.3
   - weimo-wdf@0.1.0
