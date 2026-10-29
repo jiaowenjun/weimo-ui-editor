@@ -32,16 +32,15 @@ weimo-ui-editor 把这三个必要部分组合起来:
 pnpm add weimo-ui-editor weimo-wdf weimo-ui-core react react-dom
 ```
 
-需要 React 19。`weimo-ui-editor@0.2.x` 与 `weimo-wdf@0.1.x`、`weimo-ui-core@0.1.x`
+需要 React 19。`weimo-ui-editor@0.4.x` 与 `weimo-wdf@0.1.x`、`weimo-ui-core@0.2.x`
 搭配使用,应用里分别保留一份兼容的 WDF 模型和 core 即可。
 
-然后在应用入口引入唯一必需的样式:
-
-```ts
-import 'weimo-ui-editor/styles/tokens.css'
-```
-
-它会顺带引入 `weimo-ui-core` 的基础 token,并定义 `--md-*` 系列 Markdown 变量;给根元素挂上 `.dark` 类即可切换暗色主题。
+样式零配置:引入任意组件子路径,组件 JS 会一并加载自身样式与 token
+(`styles/tokens.css`,并顺带引入 `weimo-ui-core` 的基础 token、定义 `--md-*`
+系列 Markdown 变量),无需在应用入口手动引入任何 CSS。给根元素挂上 `.dark`
+类即可切换暗色主题;要定制主题,在自己的 CSS 中覆盖对应变量即可
+(级联取后者,天然生效)。仍可显式引入 `weimo-ui-editor/styles/tokens.css`,
+`:root` 定义幂等,重复引入无害。
 
 ## 三十秒上手
 

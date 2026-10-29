@@ -45,6 +45,7 @@ import {
   stageVisibilityHandoff,
 } from './card-shell'
 
+import 'weimo-ui-editor/styles/tokens.css'
 import 'weimo-ui-editor/styles/wdf-card.css'
 
 export type {

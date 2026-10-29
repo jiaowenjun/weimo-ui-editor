@@ -14,6 +14,7 @@ import type {
 
 import { cn } from 'weimo-ui-core/lib/utils'
 
+import 'weimo-ui-editor/styles/tokens.css'
 import 'weimo-ui-editor/styles/markdown-content.css'
 
 export type {

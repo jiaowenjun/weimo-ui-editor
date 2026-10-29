@@ -10,6 +10,7 @@ import {
   type RichEditorSelectionFormat,
 } from './use-rich-editor'
 
+import 'weimo-ui-editor/styles/tokens.css'
 import 'weimo-ui-editor/styles/rich-editor.css'
 
 export type {

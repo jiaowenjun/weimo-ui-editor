@@ -9,6 +9,7 @@ import { WdfCard } from '../wdf-card/wdf-card'
 import type { WdfCardMode, WdfCardProps } from '../wdf-card/wdf-card'
 import { ComposerShell } from './composer-shell'
 
+import 'weimo-ui-editor/styles/tokens.css'
 import 'weimo-ui-editor/styles/card-composer.css'
 
 /**
