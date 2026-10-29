@@ -232,6 +232,9 @@ export type WdfCardProps = Omit<
   /** 顶栏操作插槽,渲染在标题与编辑入口(铅笔/取消保存组)之间;
    *  内容与交互由消费方自治,空插槽不占位。 */
   actionSlot?: ReactNode
+  /** 隐藏查看态的铅笔编辑入口(消费方经 handle.open() 或自定义菜单进入
+   *  编辑);编辑态的取消/保存组不受影响。 */
+  hideEditEntry?: boolean
   /** 透传 WdfRender(查看态与衬底)。 */
   renderProps?: Omit<WdfRenderProps, 'content'>
   /** 透传 RichEditor(内容通道与聚焦时序由组件接管)。 */
@@ -278,6 +281,7 @@ export const WdfCard = forwardRef<WdfCardHandle, WdfCardProps>(
       defaultValue,
       editStyle = 'auto',
       editorProps,
+      hideEditEntry = false,
       inlineExitFollowRef,
       mode,
       onChange,
@@ -1137,14 +1141,16 @@ export const WdfCard = forwardRef<WdfCardHandle, WdfCardProps>(
               <div className="wdf-card__action-slot">{actionSlot}</div>
             ) : null}
             {phase === 'view' ? (
-              <GhostIconButton
-                aria-label="切换到编辑模式"
-                disabled={bridge?.readOnly}
-                onClick={() => requestMode('edit')}
-                size="sm"
-              >
-                <Pencil />
-              </GhostIconButton>
+              hideEditEntry ? null : (
+                <GhostIconButton
+                  aria-label="切换到编辑模式"
+                  disabled={bridge?.readOnly}
+                  onClick={() => requestMode('edit')}
+                  size="sm"
+                >
+                  <Pencil />
+                </GhostIconButton>
+              )
             ) : (
               <div
                 aria-label="编辑操作"

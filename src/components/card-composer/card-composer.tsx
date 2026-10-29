@@ -54,6 +54,8 @@ export type CardComposerProps = {
   bottomBar?: WdfCardProps['bottomBar']
   /** 透传 WdfCard 顶栏操作插槽。 */
   actionSlot?: WdfCardProps['actionSlot']
+  /** 透传 WdfCard 隐藏查看态铅笔入口开关。 */
+  hideEditEntry?: WdfCardProps['hideEditEntry']
   /** WdfCard 模式变化冒泡;落定 view 常被消费方用作过渡完成信号。 */
   onModeChange?: WdfCardProps['onModeChange']
   className?: string
@@ -77,6 +79,7 @@ export function isWdfDocumentEmpty(document: WdfDocument): boolean {
 export function CardComposer({
   actionSlot,
   autoEnterEdit = true,
+  hideEditEntry = false,
   bottomBar,
   cancelLabel = '收起新建',
   clientId,
@@ -171,6 +174,7 @@ export function CardComposer({
           actionSlot={actionSlot}
           bottomBar={bottomBar}
           defaultMode={autoEnterEdit ? 'edit' : 'view'}
+          hideEditEntry={hideEditEntry}
           editorProps={editorProps}
           onChange={handleCardChange}
           onConversionError={onConversionError}

@@ -86,6 +86,16 @@ assert.match(
   'WdfCard must expose a header action slot for consumer chrome',
 )
 assert.match(
+  wdfCardSource,
+  /phase === 'view' \? \(\s*hideEditEntry \? null : \(\s*<GhostIconButton[\s\S]*?aria-label="切换到编辑模式"/,
+  'hideEditEntry must remove only the view-mode pencil; edit-mode cancel/save stays',
+)
+assert.match(
+  wdfCardSource,
+  /hideEditEntry = false/,
+  'hideEditEntry must default to showing the pencil entry',
+)
+assert.match(
   wdfCardStyles,
   /\.wdf-card__action-slot:empty\s*\{\s*display: none;/,
   'an empty action slot must not reserve header space',
